@@ -1,0 +1,5 @@
+jugaad-data>=0.35
+bse>=3.3
+nsepython>=2.9
+requests>=2.31
+pandas>=2.0
