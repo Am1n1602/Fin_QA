@@ -2,7 +2,7 @@
 import json,time
 
 from src.config import COMPANIES, REQUEST_DELAY_SECONDS, META_DIR
-from src.extraction import nse_source, pdf_downloader,bse_source
+from src.fetch import nse_source, pdf_downloader,bse_source
 
 
 def extract_attachment_url(record: dict, source: str) -> str | None:
