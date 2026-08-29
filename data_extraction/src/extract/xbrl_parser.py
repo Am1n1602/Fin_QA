@@ -1,23 +1,10 @@
+# this can work as a fallback if we need to directly fetch it from nse/bse website
+
 """
 Parses one XBRL instance document into the normalized schema:
 company, period_start, period_end, line_item (raw XBRL tag), value, unit,
 context_id, source_doc.
 
-WHY YOU MUST PASS THE ORIGINAL URL, NOT THE LOCAL FILE PATH:
-NSE's XBRL instances use a RELATIVE <schemaRef> (e.g.
-"in-capmkt-ent-2026-01-31.xsd"). On NSE's own server that resolves fine
-because the schema sits in the same folder as the instance document. Once
-downloaded to local disk, Arelle resolves that same relative path against
-your LOCAL folder instead — finds nothing there — and silently returns
-zero facts (confirmed live: this produced "[IOerror] Could not load file
-from local filesystem... in-capmkt-ent-2026-01-31.xsd" plus a long list of
-"schemaImportMissing" warnings once logging was turned on).
-Fix: load directly from the original https://nsearchives.nseindia.com/...
-URL instead. Arelle then resolves the relative schemaRef against NSE's
-own server, where the schema genuinely lives, and fetches it
-automatically over the network — no manual taxonomy package needed. Your
-local downloaded copy stays as your permanent audit-trail record; you
-simply don't hand THAT copy to Arelle for parsing.
 """
 import json
 import sys
@@ -32,7 +19,7 @@ def find_source_url(local_path: str, symbol: str) -> str | None:
     """Look up the original NSE/BSE URL for a locally downloaded file,
     from this company's metadata index (data/meta/{symbol}_filings.jsonl).
     Needed because parsing must happen against the original URL, not the
-    local copy — see module docstring."""
+    local copy"""
     meta_path = META_DIR / f"{symbol}_filings.jsonl"
     if not meta_path.exists():
         return None
@@ -46,24 +33,9 @@ def find_source_url(local_path: str, symbol: str) -> str | None:
 
 
 def parse_xbrl_file(filepath: str, company: str = "", skip_dts: bool = True) -> list[dict]:
-    """Load one XBRL instance and return a list of normalized fact records.
-    `filepath` should be the ORIGINAL https:// URL (see module docstring),
-    not a local path — pass a local path only if you've separately
-    verified this specific taxonomy resolves fine offline.
-
-    `skip_dts=True` (default) skips Arelle's full DTS discovery — i.e. it
-    does NOT walk and fetch the entire imported-schema/linkbase tree,
-    which for the Ind AS taxonomy is large and can take many minutes on a
-    slow connection. We only need fact tag names + values for the ratio
-    engine, not labels/presentation/calculation linkbases, so this is safe
-    for this use case. Set False only if you specifically need Arelle's
-    full validation (e.g. checking calculation-linkbase consistency)."""
-    ctrl = Cntlr.Cntlr(logFileName="logToPrint")  # was None — that silenced all diagnostics
+    """Load one XBRL instance and return a list of normalized fact records."""
+    ctrl = Cntlr.Cntlr(logFileName="logToPrint")  # change to None to remove diagnostis
     ctrl.modelManager.skipDTS = skip_dts
-    # Arelle's default User-Agent openly identifies it as "Arelle/x.x.x" —
-    # NSE's server appears to silently drop connections from that (same
-    # reason jugaad-data/nsepython need a browser-like session). Override
-    # with a normal browser UA before making any request.
     ctrl.webCache.httpUserAgent = USER_AGENT
     model = ctrl.modelManager.load(filepath)
 
@@ -77,8 +49,6 @@ def parse_xbrl_file(filepath: str, company: str = "", skip_dts: bool = True) -> 
 
     records = []
     for fact in model.facts:
-        # Skip non-numeric/tuple facts (footnotes, text blocks) for the
-        # ratio-engine use case — keep only concepts with a resolvable value.
         if fact.isNil:
             continue
         ctx = fact.context
@@ -133,17 +103,12 @@ if __name__ == "__main__":
     recs = parse_xbrl_file(target, company)
     print(f"Extracted {len(recs)} facts.")
 
-    # Save the FULL set to disk — 152 facts is too many to read in a
-    # terminal, and you'll want this file to build the tag-mapping layer.
     out_path = Path("data/extracted") / f"{company}_facts_raw.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(recs, indent=2, default=str))
     print(f"Full fact list saved to {out_path}")
 
     # Print only the facts whose tag name suggests it's a P&L/balance-sheet
-    # line item worth mapping — filters ~150 facts down to a scannable
-    # handful. Extend this keyword list if you notice relevant tags being
-    # missed (e.g. sector-specific ones for banks/NBFCs later).
     KEYWORDS = [
         "revenue", "income", "expense", "profit", "tax", "eps",
         "asset", "liabilit", "equity", "reserve", "borrowing",

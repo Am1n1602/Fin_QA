@@ -3,4 +3,8 @@
 [*] -> Implemented
 
 TODO:
-Create Data Acquistion/Extraction pipeline: [-]
+Create Data Acquistion/Extraction pipeline: [~]
+    - Create fetching data from NSE/BSE: [*]
+    - Parsering XBRL to JSON: [*]
+    - Using a pdf to JSON parser: [-]
+    

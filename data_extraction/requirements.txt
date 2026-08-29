@@ -1,5 +1,15 @@
+# --- Phase 1: data acquisition ---
 jugaad-data>=0.35
 bse>=3.3
 nsepython>=2.9
 requests>=2.31
 pandas>=2.0
+# --- Phase 2: extraction ---
+arelle-release>=2.44        # XBRL parsing
+pdfplumber>=0.11            # PDF table extraction (primary)
+camelot-py[cv]>=1.0         # PDF table extraction (fallback) — also needs
+                             # Ghostscript installed at the OS level, NOT
+                             # via pip:
+                             #   Windows: install from ghostscript.com, add to PATH
+                             #   macOS:   brew install ghostscript
+                             #   Ubuntu:  sudo apt install ghostscript python3-tk
