@@ -1,0 +1,6 @@
+[-] -> Pending
+[~] -> In Process
+[*] -> Implemented
+
+TODO:
+Create Data Acquistion/Extraction pipeline: [-]
