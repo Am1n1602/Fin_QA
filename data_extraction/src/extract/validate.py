@@ -4,7 +4,6 @@ anything extracted (XBRL facts or PDF tables) before trusting it. A failed
 check should route the record to manual review, not silently pass through.
 """
 
-
 def to_number(raw: str) -> float | None:
     """Parse Indian-formatted numbers: '59,553.00', '(1,234.5)' for
     negatives, strip currency symbols/footnote markers."""
@@ -45,12 +44,6 @@ def check_pnl_arithmetic(revenue: float, total_expenses: float, pbt: float,
 
 def check_period_consistency(current_period_value: float, prior_period_comparative: float,
                               tolerance_pct: float = 0.5) -> bool:
-    """Cross-check: does this quarter's 'previous period' comparative
-    column match what you actually extracted as the current-period value
-    from THAT prior quarter's filing? A mismatch usually means a
-    misaligned column in table extraction, not a real restatement —
-    though restatements do happen, so a genuine mismatch is worth a
-    manual look either way."""
     if None in (current_period_value, prior_period_comparative) or prior_period_comparative == 0:
         return False
     pct_diff = abs(current_period_value - prior_period_comparative) / abs(prior_period_comparative) * 100
@@ -58,13 +51,6 @@ def check_period_consistency(current_period_value: float, prior_period_comparati
 
 
 def validate_extracted_record(record: dict) -> dict:
-    """
-    Run all applicable checks on one normalized filing record (a dict with
-    keys like total_assets, total_liabilities, total_equity, revenue,
-    total_expenses, pbt — whatever you've mapped from XBRL/PDF extraction).
-    Returns the record with a `_validation` block attached; does not raise,
-    so you can batch-process and filter failures afterward.
-    """
     results = {}
     if all(k in record for k in ("total_assets", "total_liabilities", "total_equity")):
         results["balance_sheet_balances"] = check_balance_sheet_balances(

@@ -99,17 +99,15 @@ if __name__ == "__main__":
     recs = parse_xbrl_file(path, company)
     print(f"Extracted {len(recs)} facts (no network, no taxonomy needed).")
 
-
     stem = Path(path).stem
-    if "consolidated" in stem.lower():
-        filing_type = "consolidated"
-    elif "standalone" in stem.lower():
-        filing_type = "standalone"
-    else:
-        filing_type = stem[:40]  
+    filing_type = "consolidated" if "consolidated" in stem.lower() else \
+                  "standalone" if "standalone" in stem.lower() else "unknown"
 
-    out_path = Path("data/extracted") / f"{company}_{filing_type}_facts_raw.json"
-    out_path.parent.mkdir(parents=True, exist_ok=True)
+    import re
+    date_match = re.match(r"^(\d{2}-[A-Za-z]{3}-\d{4})", stem)
+    period_tag = date_match.group(1) if date_match else stem[:20]
+
+    out_path = Path("data/extracted") / f"{company}_{filing_type}_{period_tag}_facts_raw.json"
     out_path.write_text(json.dumps(recs, indent=2, default=str))
     print(f"Full fact list saved to {out_path}")
 
@@ -118,9 +116,11 @@ if __name__ == "__main__":
         "asset", "liabilit", "equity", "reserve", "borrowing",
         "depreciation", "cash", "dividend",
     ]
-    print(f"\n--- Facts matching financial-statement keywords ---")
-    for r in recs:
-        tag = (r["line_item_tag"] or "").lower()
-        if any(kw in tag for kw in KEYWORDS):
-            print(f"{r['line_item_tag']:70s} = {r['value']!s:20s} "
-                  f"[ctx={r['context_id']}, period_end={r['period_end']}]")
+
+    #  Uncomment for getting facts in terminal
+    # print(f"\n--- Facts matching financial-statement keywords ---")
+    # for r in recs:
+    #     tag = (r["line_item_tag"] or "").lower()
+    #     if any(kw in tag for kw in KEYWORDS):
+    #         print(f"{r['line_item_tag']:70s} = {r['value']!s:20s} "
+    #               f"[ctx={r['context_id']}, period_end={r['period_end']}]")

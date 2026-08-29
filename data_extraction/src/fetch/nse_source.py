@@ -15,7 +15,7 @@ from src.config import REQUEST_DELAY_SECONDS, PRICE_DIR
 
 
 # fetch the Open, High, Low, Close values for given days.
-def fetch_price_history(nse_symbol: str, days_back: int = 365) -> pd.DataFrame:
+def fetch_price_history(nse_symbol: str, days_back: int = 180) -> pd.DataFrame:
     """Pull daily OHLCV history for one company and cache it to CSV."""
     to_date = date.today()
     from_date = to_date - timedelta(days=days_back)
@@ -28,7 +28,7 @@ def fetch_price_history(nse_symbol: str, days_back: int = 365) -> pd.DataFrame:
 # Inspect one response with print() the first time you run this to see
 # the exact keys NSE returns (field names have shifted over API versions).
 
-def fetch_corporate_filings(nse_symbol: str, days_back: int = 180) -> list[dict]:
+def fetch_corporate_filings(nse_symbol: str, days_back: int = 365) -> list[dict]:
     """
     Pull recent 'Integrated Filing - Financials' entries for one company.
     Returns a list of dicts as given by NSE's API — each typically
@@ -55,7 +55,7 @@ def fetch_corporate_filings(nse_symbol: str, days_back: int = 180) -> list[dict]
     return records or []
 
 
-def fetch_corporate_announcements(nse_symbol: str, days_back: int = 180) -> list[dict]:
+def fetch_corporate_announcements(nse_symbol: str, days_back: int = 365) -> list[dict]:
     """
     Broader net than fetch_corporate_filings: general corporate
     announcements (includes results, but also other disclosures).

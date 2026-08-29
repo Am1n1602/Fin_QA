@@ -7,7 +7,7 @@ import time
 import requests
 
 from src.config import USER_AGENT, REQUEST_DELAY_SECONDS
-from src.extraction.data_storage import (
+from src.fetch.data_storage import (
     company_raw_dir,
     already_downloaded,
     append_meta_record,

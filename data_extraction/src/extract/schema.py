@@ -39,14 +39,44 @@ TAG_MAP = {
     "total_equity": None,
 }
 
-# Matches "OneD", "TwoD", "ThreeD", "OneI", "TwoI", etc. — the primary
-# whole-company contexts. Rejects anything with extra suffix text
-# (segment/note-breakdown contexts like "OneReportable1D", "OneExpenses2D").
 PRIMARY_CONTEXT_PATTERN = re.compile(r"^(One|Two|Three|Four|Five|Six)[DI]$")
 
 
 def is_primary_context(context_id: str) -> bool:
     return bool(PRIMARY_CONTEXT_PATTERN.match(context_id or ""))
+
+
+def validate_canonical_record(record: dict, tolerance: float = 1.0) -> dict:
+    checks = {}
+
+    if all(record.get(k) is not None for k in ("total_income", "total_expenses", "pbt_before_exceptional")):
+        checks["income_minus_expenses_eq_pbt_before_exceptional"] = (
+            abs((record["total_income"] - record["total_expenses"]) - record["pbt_before_exceptional"]) <= tolerance
+        )
+
+    if all(record.get(k) is not None for k in ("pbt_before_exceptional", "exceptional_items", "pbt")):
+        checks["pbt_before_exceptional_plus_exceptional_eq_pbt"] = (
+            abs((record["pbt_before_exceptional"] + record["exceptional_items"]) - record["pbt"]) <= tolerance
+        )
+
+    if all(record.get(k) is not None for k in ("current_tax", "deferred_tax", "tax_expense")):
+        checks["current_plus_deferred_tax_eq_tax_expense"] = (
+            abs((record["current_tax"] + record["deferred_tax"]) - record["tax_expense"]) <= tolerance
+        )
+
+    if all(record.get(k) is not None for k in ("pbt", "tax_expense", "net_profit")):
+        checks["pbt_minus_tax_eq_net_profit"] = (
+            abs((record["pbt"] - record["tax_expense"]) - record["net_profit"]) <= tolerance
+        )
+
+    if all(record.get(k) is not None for k in ("net_profit", "oci", "total_comprehensive_income")):
+        checks["net_profit_plus_oci_eq_total_comprehensive_income"] = (
+            abs((record["net_profit"] + record["oci"]) - record["total_comprehensive_income"]) <= tolerance
+        )
+
+    record["_validation"] = checks
+    record["_needs_review"] = len(checks) > 0 and not all(checks.values())
+    return record
 
 
 def map_facts_to_canonical(facts: list[dict]) -> list[dict]:
@@ -94,10 +124,10 @@ def map_facts_to_canonical(facts: list[dict]) -> list[dict]:
         record["_missing_fields"] = [
             k for k in TAG_MAP if TAG_MAP[k] is not None and k not in fields
         ]
+        record = validate_canonical_record(record)
         records.append(record)
 
-    # Sort by period_end (or instant) so the current quarter is first —
-    # makes the output easier to scan.
+
     records.sort(key=lambda r: r.get("period_end") or r.get("instant") or "", reverse=True)
     return records
 
@@ -121,9 +151,14 @@ if __name__ == "__main__":
         label = r.get("period_end") or r.get("instant")
         print(f"--- context={r['context_id']}  period={label} ---")
         for k, v in r.items():
-            if k in ("context_id", "period_start", "period_end", "instant", "_missing_fields"):
+            if k in ("context_id", "period_start", "period_end", "instant", "_missing_fields", "_validation", "_needs_review"):
                 continue
             print(f"  {k:30s} = {v}")
         if r["_missing_fields"]:
             print(f"  (not found in this context: {', '.join(r['_missing_fields'])})")
+        if r["_needs_review"]:
+            failed = [k for k, v in r["_validation"].items() if not v]
+            print(f" VALIDATION FAILED: {', '.join(failed)}")
+        else:
+            print(f" all arithmetic checks passed")
         print()

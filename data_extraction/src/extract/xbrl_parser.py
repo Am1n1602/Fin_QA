@@ -108,7 +108,6 @@ if __name__ == "__main__":
     out_path.write_text(json.dumps(recs, indent=2, default=str))
     print(f"Full fact list saved to {out_path}")
 
-    # Print only the facts whose tag name suggests it's a P&L/balance-sheet
     KEYWORDS = [
         "revenue", "income", "expense", "profit", "tax", "eps",
         "asset", "liabilit", "equity", "reserve", "borrowing",
