@@ -8,8 +8,8 @@ from pathlib import Path
 
 COMPANIES = [
     {"name": "Tata Consultancy Services", "nse_symbol": "TCS", "bse_scrip": "532540"},
-    # {"name": "Infosys", "nse_symbol": "INFY", "bse_scrip": "500209"},
-    # {"name": "HCL Technologies", "nse_symbol": "HCLTECH", "bse_scrip": "532281"},
+    {"name": "Infosys", "nse_symbol": "INFY", "bse_scrip": "500209"},
+    {"name": "HCL Technologies", "nse_symbol": "HCLTECH", "bse_scrip": "532281"},
 ]
 
 # Storage Paths

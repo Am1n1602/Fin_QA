@@ -29,16 +29,23 @@ TAG_MAP = {
     "total_comprehensive_income": "in-capmkt:ComprehensiveIncomeForThePeriod",
     "net_profit_owners": "in-capmkt:ProfitOrLossAttributableToOwnersOfParent",
     "net_profit_nci": "in-capmkt:ProfitOrLossAttributableToNonControllingInterests",
+    "eps_basic": "in-capmkt:BasicEarningsLossPerShareFromContinuingAndDiscontinuedOperations",
+    "eps_diluted": "in-capmkt:DilutedEarningsLossPerShareFromContinuingAndDiscontinuedOperations",
 
     # Equity/capital
     "paid_up_equity_capital": "in-capmkt:PaidUpValueOfEquityShareCapital",
     "face_value_per_share": "in-capmkt:FaceValueOfEquityShareCapital",
     "debt_equity_ratio_reported": "in-capmkt:DebtEquityRatio",
+
+    # Will update these next
     "total_assets": None,
     "total_liabilities": None,
     "total_equity": None,
 }
 
+# Matches "OneD", "TwoD", "ThreeD", "OneI", "TwoI", etc. — the primary
+# whole-company contexts. Rejects anything with extra suffix text
+# (segment/note-breakdown contexts like "OneReportable1D", "OneExpenses2D").
 PRIMARY_CONTEXT_PATTERN = re.compile(r"^(One|Two|Three|Four|Five|Six)[DI]$")
 
 
@@ -47,6 +54,9 @@ def is_primary_context(context_id: str) -> bool:
 
 
 def validate_canonical_record(record: dict, tolerance: float = 1.0) -> dict:
+    """P&L arithmetic checks specific to this schema's field names.
+    Attaches a `_validation` dict; never raises, so batch runs don't stop
+    on a bad quarter — flag it and move on."""
     checks = {}
 
     if all(record.get(k) is not None for k in ("total_income", "total_expenses", "pbt_before_exceptional")):
@@ -96,14 +106,14 @@ def map_facts_to_canonical(facts: list[dict]) -> list[dict]:
 
     for fact in facts:
         ctx_id = fact.get("context_id")
-        if not is_primary_context(ctx_id): # type: ignore
+        if not is_primary_context(ctx_id):
             continue
         tag = fact.get("line_item_tag")
         canonical_name = tag_to_canonical.get(tag)
         if canonical_name is None:
-            continue  
+            continue  # not a field we're tracking
 
-        value = to_number(fact.get("value"))  # type: ignore
+        value = to_number(fact.get("value"))
         if value is not None and fact.get("sign") == "-":
             value = -value
 
@@ -127,9 +137,22 @@ def map_facts_to_canonical(facts: list[dict]) -> list[dict]:
         record = validate_canonical_record(record)
         records.append(record)
 
-
+    # Sort by period_end (or instant) so the current quarter is first —
+    # makes the output easier to scan.
     records.sort(key=lambda r: r.get("period_end") or r.get("instant") or "", reverse=True)
     return records
+
+
+def map_and_save(raw_json_path) -> tuple[Path, int]:
+    """Load a *_facts_raw.json, map it to canonical schema, save
+    *_canonical.json alongside it. Returns (output_path, period_count) —
+    used by both the CLI below and run_extraction.py's batch runner."""
+    raw_json_path = Path(raw_json_path)
+    facts = json.loads(raw_json_path.read_text())
+    canonical = map_facts_to_canonical(facts)
+    out_path = raw_json_path.parent / raw_json_path.name.replace("_facts_raw.json", "_canonical.json")
+    out_path.write_text(json.dumps(canonical, indent=2, default=str))
+    return out_path, len(canonical)
 
 
 if __name__ == "__main__":
@@ -139,16 +162,14 @@ if __name__ == "__main__":
         sys.exit(1)
 
     raw_path = Path(sys.argv[1])
+    out_path, n_periods = map_and_save(raw_path)
     facts = json.loads(raw_path.read_text())
-    canonical = map_facts_to_canonical(facts)
+    canonical = json.loads(out_path.read_text())
 
-    out_path = raw_path.parent / raw_path.name.replace("_facts_raw.json", "_canonical.json")
-    out_path.write_text(json.dumps(canonical, indent=2, default=str))
-
-    print(f"Mapped {len(facts)} raw facts into {len(canonical)} period record(s).")
+    print(f"Mapped {len(facts)} raw facts into {n_periods} period record(s).")
     print(f"Saved to {out_path}\n")
     for r in canonical:
-        label = r.get("period_end") or r.get("instant")
+        label = f"{r.get('period_start')} to {r.get('period_end')}" if r.get("period_start") else (r.get("period_end") or r.get("instant"))
         print(f"--- context={r['context_id']}  period={label} ---")
         for k, v in r.items():
             if k in ("context_id", "period_start", "period_end", "instant", "_missing_fields", "_validation", "_needs_review"):

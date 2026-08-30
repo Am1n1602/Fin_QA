@@ -10,4 +10,3 @@ Create Data Acquistion/Extraction pipeline: [*]
 
 Create Data Analysis: [~]
     - Create Generalized Ratios: [~]
-     # Need to add function which will run the data analysis on its own instead of manually doing it 4 times for each quarter

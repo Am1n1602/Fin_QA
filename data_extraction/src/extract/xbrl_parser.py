@@ -1,17 +1,13 @@
-# this can work as a fallback if we need to directly fetch it from nse/bse website
-
 """
 Parses one XBRL instance document into the normalized schema:
 company, period_start, period_end, line_item (raw XBRL tag), value, unit,
 context_id, source_doc.
-
+Can use this when we need to live update the data. say on reporting date (will implement this later)
 """
 import json
 import sys
 from pathlib import Path
-
 from arelle import Cntlr
-
 from src.config import META_DIR, USER_AGENT
 
 

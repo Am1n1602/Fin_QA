@@ -1,15 +1,5 @@
-"""
-Lightweight replacement for xbrl_parser.py (Arelle-based). Parses the XBRL
-instance XML directly with lxml — no taxonomy schema, no network calls, no
-DTS discovery. This works because everything we actually need (tag name,
-value, period, unit) is self-contained in the instance document itself;
-contexts and units are defined right there in the same file. We only
-needed the taxonomy schema for things we don't use (labels, calculation
-validation, presentation order).
-
-pip install lxml
-"""
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -43,6 +33,8 @@ def parse_xbrl_file(filepath: str, company: str = "") -> list[dict]:
     tree = etree.parse(filepath)
     root = tree.getroot()
 
+    # Build a URI->prefix map from whatever this document declared, so
+    # output tag names match the taxonomy's own prefixes (in-capmkt, etc.)
     nsmap_by_uri = {uri: prefix for prefix, uri in root.nsmap.items() if prefix}
 
     # --- Parse all contexts: id -> period info ---
@@ -89,6 +81,29 @@ def parse_xbrl_file(filepath: str, company: str = "") -> list[dict]:
     return records
 
 
+def derive_output_name(filepath: str, company: str) -> str:
+    """Consolidated/Standalone + quarter-end date, parsed from the source
+    filename, so each quarter/filing-type gets its own unique output file."""
+    stem = Path(filepath).stem
+    filing_type = "consolidated" if "consolidated" in stem.lower() else \
+                  "standalone" if "standalone" in stem.lower() else "unknown"
+    date_match = re.match(r"^(\d{2}-[A-Za-z]{3}-\d{4})", stem)
+    period_tag = date_match.group(1) if date_match else stem[:20]
+    return f"{company}_{filing_type}_{period_tag}"
+
+
+def parse_and_save(filepath: str, company: str, out_dir: str = "data/extracted") -> tuple[Path, int]:
+    """Parse one XBRL file and save its raw facts to disk. Returns
+    (output_path, fact_count) — used by both the CLI below and
+    run_extraction.py's multi-quarter batch runner."""
+    recs = parse_xbrl_file(filepath, company)
+    name = derive_output_name(filepath, company)
+    out_path = Path(out_dir) / f"{name}_facts_raw.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(recs, indent=2, default=str))
+    return out_path, len(recs)
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python -m src.extract.xbrl_lite_parser <local-path-to-.xbrl-file> [company_symbol]")
@@ -96,31 +111,19 @@ if __name__ == "__main__":
     path = sys.argv[1]
     company = sys.argv[2] if len(sys.argv) > 2 else ""
 
-    recs = parse_xbrl_file(path, company)
-    print(f"Extracted {len(recs)} facts (no network, no taxonomy needed).")
-
-    stem = Path(path).stem
-    filing_type = "consolidated" if "consolidated" in stem.lower() else \
-                  "standalone" if "standalone" in stem.lower() else "unknown"
-
-    import re
-    date_match = re.match(r"^(\d{2}-[A-Za-z]{3}-\d{4})", stem)
-    period_tag = date_match.group(1) if date_match else stem[:20]
-
-    out_path = Path("data/extracted") / f"{company}_{filing_type}_{period_tag}_facts_raw.json"
-    out_path.write_text(json.dumps(recs, indent=2, default=str))
+    out_path, n_facts = parse_and_save(path, company)
+    print(f"Extracted {n_facts} facts (no network, no taxonomy needed).")
     print(f"Full fact list saved to {out_path}")
 
+    recs = json.loads(out_path.read_text())
     KEYWORDS = [
         "revenue", "income", "expense", "profit", "tax", "eps",
         "asset", "liabilit", "equity", "reserve", "borrowing",
         "depreciation", "cash", "dividend",
     ]
-
-    #  Uncomment for getting facts in terminal
-    # print(f"\n--- Facts matching financial-statement keywords ---")
-    # for r in recs:
-    #     tag = (r["line_item_tag"] or "").lower()
-    #     if any(kw in tag for kw in KEYWORDS):
-    #         print(f"{r['line_item_tag']:70s} = {r['value']!s:20s} "
-    #               f"[ctx={r['context_id']}, period_end={r['period_end']}]")
+    print(f"\n--- Facts matching financial-statement keywords ---")
+    for r in recs:
+        tag = (r["line_item_tag"] or "").lower()
+        if any(kw in tag for kw in KEYWORDS):
+            print(f"{r['line_item_tag']:70s} = {r['value']!s:20s} "
+                  f"[ctx={r['context_id']}, period_end={r['period_end']}]")

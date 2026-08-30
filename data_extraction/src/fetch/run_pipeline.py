@@ -6,10 +6,6 @@ from src.fetch import nse_source, pdf_downloader,bse_source
 
 
 def extract_attachment_url(record: dict, source: str) -> str | None:
-    """Best-effort extraction of a document URL from an NSE/BSE record.
-    Different endpoints use different key names for the attachment link;
-    try the common ones and fall back to None (meaning: nothing to
-    download for this record, e.g. it's a text-only disclosure)."""
     if source == "NSE":
         for key in ("xbrl", "ixbrl", "pdf_attach"):
             url = record.get(key)
