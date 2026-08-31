@@ -25,6 +25,11 @@ def _is_single_quarter(record: dict, tolerance: int = 20) -> bool:
     return days is not None and abs(days - 91) <= tolerance
 
 
+def _is_annual(record: dict, tolerance: int = 20) -> bool:
+    days = _duration_days(record)
+    return days is not None and abs(days - 365) <= tolerance
+
+
 def compute_ebit(record: dict):
     pbt_before_exceptional = record.get("pbt_before_exceptional")
     if pbt_before_exceptional is None:
@@ -106,6 +111,7 @@ def compute_period_ratios(record: dict) -> dict:
         "ebit": compute_ebit(r),  # currency amount, not a % — see _RATIO_UNIT_OVERRIDES
     }
 
+
     op_ebit = operating_ebit(r)
     net_debt = compute_net_debt(r)
 
@@ -124,6 +130,17 @@ def compute_period_ratios(record: dict) -> dict:
         None if net_debt is None or not op_ebit else
         _safe_div(net_debt, op_ebit, as_pct=False)
     )
+
+    ratios["longterm_leverage_pct"] = (
+        None if r.get("total_assets") is None else
+        _safe_div(r.get("borrowings_noncurrent") or 0, r["total_assets"])
+    )  # absent borrowings_noncurrent treated as 0, matching compute_total_debt's debt-free-company convention
+    ratios["ebit_to_assets_pct"] = (
+        None if r.get("total_assets") is None or compute_ebit(r) is None else
+        _safe_div(compute_ebit(r), r["total_assets"])
+    )
+    ratios["cfo_pct"] = _safe_div(r.get("operating_cash_flow"), r.get("total_assets"))
+    ratios["payout_ratio_pct"] = _safe_div(r.get("dividends"), r.get("net_profit"))
 
     if None not in (r.get("pbt_before_exceptional"), depreciation, other_income) and revenue:
         ebitda_approx = r["pbt_before_exceptional"] + depreciation + finance_costs - other_income
@@ -168,7 +185,7 @@ def compute_trends(records: list[dict]) -> list[dict]:
                     prev_val,
                 )
 
-           # Operating leverage signal: is revenue growing faster than costs?
+        # Operating leverage signal: is revenue growing faster than costs?
         # Positive = margin tailwind (revenue outpacing expense growth),
         # negative = margin pressure. None if either growth % wasn't
         # meaningful (see negative-base handling above).

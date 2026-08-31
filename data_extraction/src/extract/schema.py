@@ -1,4 +1,3 @@
-
 import json
 import re
 import sys
@@ -48,6 +47,14 @@ TAG_MAP = {
     "borrowings_current": "in-capmkt:BorrowingsCurrent",
     "borrowings_noncurrent": "in-capmkt:BorrowingsNoncurrent",
     "cash_and_equivalents": "in-capmkt:CashAndCashEquivalents",
+
+    "operating_cash_flow": "in-capmkt:CashFlowsFromUsedInOperatingActivities",
+    "investing_cash_flow": "in-capmkt:CashFlowsFromUsedInInvestingActivities",
+    "financing_cash_flow": "in-capmkt:CashFlowsFromUsedInFinancingActivities",
+    "dividends": "in-capmkt:DividendsPaidClassifiedAsFinancingActivities",
+
+    "capex_ppe": "in-capmkt:PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
+    "capex_intangibles": "in-capmkt:PurchaseOfIntangibleAssetsClassifiedAsInvestingActivities",
 }
 
 # Matches "OneD", "TwoD", "ThreeD", "OneI", "TwoI", etc. — the primary

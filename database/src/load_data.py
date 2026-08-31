@@ -8,7 +8,6 @@ import re
 import sys
 from datetime import date, datetime
 from pathlib import Path
-
 from src.config import EXTRACTED_DIR, ANALYSIS_DIR, PRICES_DIR, COMPANY_NAMES
 from src.db import get_connection, init_db
 
@@ -21,13 +20,11 @@ def _duration_days(period_start, period_end) -> int | None:
     except (ValueError, TypeError):
         return None
 
-
 def _classify_duration(period_start, period_end) -> tuple[bool, bool]:
     days = _duration_days(period_start, period_end)
     if days is None:
         return False, False
     return abs(days - 91) <= 20, abs(days - 365) <= 20
-
 
 def upsert_company(conn, symbol: str):
     conn.execute(
@@ -35,7 +32,6 @@ def upsert_company(conn, symbol: str):
         "ON CONFLICT(symbol) DO UPDATE SET name=excluded.name",
         (symbol, COMPANY_NAMES.get(symbol, symbol)),
     )
-
 
 def upsert_filing(conn, symbol: str, filing_type: str, record: dict, source_file: str) -> int:
     context_id = record["context_id"]
@@ -64,10 +60,8 @@ def upsert_filing(conn, symbol: str, filing_type: str, record: dict, source_file
     ).fetchone()
     return row["id"]
 
-
 _META_KEYS = {"context_id", "period_start", "period_end", "instant",
               "_missing_fields", "_validation", "_needs_review"}
-
 
 def load_facts_for_filing(conn, filing_id: int, record: dict):
     for key, value in record.items():
@@ -81,11 +75,9 @@ def load_facts_for_filing(conn, filing_id: int, record: dict):
             (filing_id, key, float(value)),
         )
 
-
 _UNIT_MAP = {
-    "growth_note": None,  # skip text fields, not a metric value
+    "growth_note": None, 
 }
-
 
 def _infer_unit(metric_name: str) -> str | None:
     if metric_name.endswith("_pct"):
@@ -93,14 +85,14 @@ def _infer_unit(metric_name: str) -> str | None:
     if metric_name in ("interest_coverage_ratio", "current_ratio", "debt_to_equity", "asset_turnover",
                         "cash_ratio", "net_debt_to_operating_ebit", "pe_ratio", "pb_ratio", "ev_to_sales"):
         return "x"
-    if metric_name in ("ebit", "operating_ebit", "net_debt", "enterprise_value", "ttm_ebit", "ttm_revenue"):
+    if metric_name in ("ebit", "operating_ebit", "net_debt", "enterprise_value", "ttm_ebit", "ttm_revenue",
+                        "total_dividends_paid", "dividend_per_share", "book_value_per_share", "ttm_eps", "latest_close"):
         return "currency"
     if metric_name == "shares_outstanding":
         return "count"
     if metric_name == "operating_leverage_signal":
         return "pp"
     return None
-
 
 def load_metrics_for_filing(conn, filing_id: int, ratios: dict):
     for metric_name, value in ratios.items():
@@ -111,7 +103,6 @@ def load_metrics_for_filing(conn, filing_id: int, ratios: dict):
             "ON CONFLICT(filing_id, metric_name) DO UPDATE SET value=excluded.value, unit=excluded.unit",
             (filing_id, metric_name, float(value), _infer_unit(metric_name)),
         )
-
 
 def load_canonical_facts(conn, company_filter: str | None = None):
     """data_extraction's canonical JSONs -> companies + filings + financial_facts."""
@@ -132,7 +123,6 @@ def load_canonical_facts(conn, company_filter: str | None = None):
             load_facts_for_filing(conn, filing_id, record)
             count_filings += 1
     print(f"[load_data] Loaded facts for {count_filings} filing period(s) from data_extraction")
-
 
 def load_ratios(conn, company_filter: str | None = None):
     """data_analysis's *_combined_ratios.json -> financial_metrics, matched
@@ -163,7 +153,6 @@ def load_ratios(conn, company_filter: str | None = None):
             load_metrics_for_filing(conn, row["id"], period.get("ratios", {}))
             count_metrics += 1
     print(f"[load_data] Loaded ratios for {count_metrics} filing period(s) from data_analysis")
-
 
 def load_valuation(conn, company_filter: str | None = None):
     """data_analysis's *_valuation.json / *_pb.json -> a synthetic 'TTM'
@@ -206,9 +195,15 @@ def load_valuation(conn, company_filter: str | None = None):
             evs_metrics = {k: v for k, v in evs_data.items()
                           if k in ("ttm_revenue", "ev_to_sales") and isinstance(v, (int, float))}
             load_metrics_for_filing(conn, filing_id, evs_metrics)
+
+        dy_path = path.parent / path.name.replace("_valuation.json", "_dividend_yield.json")
+        if dy_path.exists():
+            dy_data = json.loads(dy_path.read_text())
+            dy_metrics = {k: v for k, v in dy_data.items()
+                          if k in ("total_dividends_paid", "dividend_per_share", "dividend_yield_pct") and isinstance(v, (int, float))}
+            load_metrics_for_filing(conn, filing_id, dy_metrics)
         count += 1
     print(f"[load_data] Loaded valuation for {count} company/filing-type combination(s)")
-
 
 def load_prices(conn, company_filter: str | None = None):
     """data_extraction's price CSVs -> share_prices."""
@@ -243,7 +238,6 @@ def load_prices(conn, company_filter: str | None = None):
                 count += 1
     print(f"[load_data] Loaded {count} price row(s)")
 
-
 def load_all(company_filter: str | None = None):
     init_db()
     with get_connection() as conn:
@@ -252,7 +246,6 @@ def load_all(company_filter: str | None = None):
         load_valuation(conn, company_filter)
         load_prices(conn, company_filter)
     print("[load_data] Done.")
-
 
 if __name__ == "__main__":
     company = sys.argv[1] if len(sys.argv) > 1 else None

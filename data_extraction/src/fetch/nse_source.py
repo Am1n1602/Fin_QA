@@ -15,7 +15,7 @@ from src.config import REQUEST_DELAY_SECONDS, PRICE_DIR
 
 
 # fetch the Open, High, Low, Close values for given days.
-def fetch_price_history(nse_symbol: str, days_back: int = 180) -> pd.DataFrame:
+def fetch_price_history(nse_symbol: str, days_back: int = 365) -> pd.DataFrame:
     """Pull daily OHLCV history for one company and cache it to CSV."""
     to_date = date.today()
     from_date = to_date - timedelta(days=days_back)

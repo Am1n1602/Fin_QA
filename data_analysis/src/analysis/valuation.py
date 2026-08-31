@@ -143,6 +143,66 @@ def compute_pb(company: str, filing_type: str = "consolidated") -> dict:
     return result
 
 
+def compute_dividend_yield(company: str, filing_type: str = "consolidated") -> dict:
+    """Dividend Yield = Dividend Per Share / Latest Price, where DPS is
+    derived (total cash dividends paid / shares outstanding) rather than
+    directly tagged — Ind AS reports dividends as a single cumulative
+    financing-activity cash amount, not a per-share declared figure.
+
+    Same single-latest-snapshot pattern as compute_pb() above, NOT
+    TTM-summed like compute_ttm_eps()/compute_ttm_ebit() — 'dividends'
+    only populates on annual (FourD-context) records to begin with,
+    since Ind AS cash flow statements are cumulative-from-FY-start, so
+    the latest annual record's dividends figure already IS the full
+    year's total, the same way total_equity's latest snapshot already is
+    the point-in-time balance.
+
+    Caveat carried from ratios.py's payout_ratio_pct: 'dividends' is
+    cash PAID during the fiscal year, which typically includes the
+    PRIOR year's final dividend alongside the current year's interim —
+    a standard cash-vs-declaration-basis timing mismatch, not an error.
+    """
+    price, price_date = get_latest_close_price(company)
+
+    files = find_canonical_files(company, filing_type)
+    all_records = []
+    for f in files:
+        all_records.extend(json.loads(f.read_text()))
+
+    with_dividends = [r for r in all_records if r.get("dividends") is not None]
+    with_dividends.sort(key=lambda r: r.get("period_end") or "", reverse=True)
+
+    result = {
+        "company": company, "filing_type": filing_type,
+        "latest_close": price, "price_date": price_date,
+        "period": None, "total_dividends_paid": None,
+        "shares_outstanding": None, "dividend_per_share": None,
+        "dividend_yield_pct": None, "note": None,
+    }
+
+    if not with_dividends:
+        result["note"] = "No record with dividends data found — needs an annual filing with the cash flow statement extracted."
+        return result
+    if price is None:
+        result["note"] = "No price data found."
+        return result
+
+    latest = with_dividends[0]
+    shares = _safe_div(latest.get("paid_up_equity_capital"), latest.get("face_value_per_share"), as_pct=False)
+    result["period"] = latest.get("period_end")
+    result["total_dividends_paid"] = latest["dividends"]
+    result["shares_outstanding"] = shares
+
+    if not shares:
+        result["note"] = "Could not derive shares outstanding (missing paid_up_equity_capital/face_value_per_share on this record)."
+        return result
+
+    dividend_per_share = latest["dividends"] / shares
+    result["dividend_per_share"] = dividend_per_share
+    result["dividend_yield_pct"] = (dividend_per_share / price) * 100 if price else None
+    return result
+
+
 def compute_enterprise_value(company: str, filing_type: str = "consolidated") -> dict:
     """EV = Market Cap + Total Debt - Cash, using the same
     most-recent-balance-sheet-record lookup compute_pb() already uses
@@ -332,4 +392,15 @@ if __name__ == "__main__":
     else:
         print(f"EV/Sales:             N/A — {evs_result['note']}")
 
-    print(f"\nSaved to {out_path}, {pb_out_path}, {ey_out_path}, and {evs_out_path}")
+    dy_result = compute_dividend_yield(company, filing_type)
+    dy_out_path = ANALYSIS_OUTPUT_DIR / f"{company}_{filing_type}_dividend_yield.json"
+    dy_out_path.write_text(json.dumps(dy_result, indent=2, default=str))
+    print()
+    if dy_result["dividend_yield_pct"] is not None:
+        print(f"Total dividends paid: {dy_result['total_dividends_paid']:,.0f} (as of {dy_result['period']})")
+        print(f"Dividend/share:       {dy_result['dividend_per_share']:.2f}")
+        print(f"Dividend Yield:       {dy_result['dividend_yield_pct']:.2f}%")
+    else:
+        print(f"Dividend Yield:       N/A — {dy_result['note']}")
+
+    print(f"\nSaved to {out_path}, {pb_out_path}, {ey_out_path}, {evs_out_path}, and {dy_out_path}")
