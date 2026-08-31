@@ -1,4 +1,52 @@
 """
+data_analysis/src/analysis/peer_comparison.py
+
+Stage 5 — Peer Comparison (roadmap Section 13 / Section 15).
+
+Scope for this first pass:
+  - User-supplied peer group (list of symbols) — no auto peer-detection yet.
+  - Sector median / mean / percentile IS included, but "sector" here just
+    means "the peer group you passed in" — the `companies` table has no
+    `sector` column (see schema.sql), so there is nothing to derive this
+    from automatically. If/when a `sector` column gets added to
+    `companies`, this module doesn't need to change — the caller would
+    just build `symbols` from a DB query instead of a hardcoded list.
+
+IMPORTANT — why this file does NOT import database/src/query.py:
+    This is a Python *module-name collision*, not a venv-isolation issue
+    — there is one shared venv at the project root, covering
+    data_extraction/, data_analysis/, and database/ alike. The problem is
+    that `data_analysis/` and `database/` each have their own top-level
+    package literally named `src` (this file is `data_analysis`'s
+    `src.analysis.peer_comparison`; the target is `database`'s
+    `src.query`, which itself does `from src.db import get_connection`).
+    Python's module cache (`sys.modules`) can only hold one package named
+    `src` at a time — whichever gets imported first "wins" that name, and
+    the other's `import src.whatever` statements resolve against the
+    wrong package (or fail outright). No amount of venv sharing or
+    `sys.path` reordering fixes this on its own; the packages need
+    distinct names, or the shared code needs to live outside both `src`
+    trees.
+
+    Rather than patch this with sys.path / importlib module-aliasing
+    tricks — which would quietly re-couple two projects you've kept
+    deliberately separate — this module talks to the SQLite file
+    directly via the stdlib `sqlite3` module. `_all_companies_latest()`
+    below is a deliberate, minimal re-implementation of
+    `database/src/query.py`'s `get_all_companies_latest()` (same SQL).
+    This is safe to duplicate because it's a read-only retrieval query,
+    NOT a financial calculation — Section 6's "single source of truth"
+    rule is about ratio/metric math (ROE, NPM, etc.), which this file
+    never computes. All values here are loaded verbatim from
+    `financial_metrics`, exactly as `database/` already guarantees.
+
+    If this duplication ever becomes a maintenance problem, the real fix
+    is a `shared/` sibling folder (NOT named `src`) holding just
+    `get_connection`/`get_all_companies_latest`, which both `database`
+    and `data_analysis` import by that distinct name — since there's
+    already one shared venv, this is purely a naming/layout fix, no
+    environment changes needed.
+
 Usage:
     from src.analysis.peer_comparison import compare_peers
 
@@ -41,9 +89,22 @@ METRIC_DIRECTION = {
     "employee_cost_intensity_pct": "lower",
     "employee_cost_pct_of_total_expenses": "lower",
     "other_expenses_pct_of_revenue": "lower",
-    # Valuation — neutral, never auto-judged
+    # Valuation — neutral, never auto-judged (roadmap explicit warning)
     "pe_ratio": "neutral",
     "pb_ratio": "neutral",
+    "ev_to_sales": "neutral",
+    # Added this session alongside ratios.py/valuation.py's new metrics —
+    # these predate ranking.py but were missing here, meaning they'd have
+    # silently defaulted to "neutral" (wrong for most of them; unlike
+    # pe_ratio, there's no principled reason to withhold judgment on
+    # cash_ratio or roa_pct being higher-is-better).
+    "roa_pct": "higher",
+    "operating_roce_pct": "higher",
+    "working_capital_to_assets_pct": "higher",
+    "equity_to_liabilities_pct": "higher",
+    "cash_ratio": "higher",
+    "net_debt_to_operating_ebit": "lower",
+    "earnings_yield_pct": "higher",
 }
 
 
@@ -58,6 +119,10 @@ def _get_connection(db_path: str) -> sqlite3.Connection:
 
 
 def _all_companies_latest(conn: sqlite3.Connection, metric_name: str, filing_type: str):
+    """Deliberate local re-implementation of database/src/query.py's
+    get_all_companies_latest() — see module docstring for why this is
+    duplicated rather than imported. Keep this in sync manually if that
+    function's SQL ever changes."""
     rows = conn.execute(
         """SELECT f.company_symbol, f.period_end, f.instant, m.value
            FROM financial_metrics m
@@ -78,6 +143,10 @@ def _all_companies_latest(conn: sqlite3.Connection, metric_name: str, filing_typ
 
 
 def _percentile(value: float, all_values: list, direction: str) -> float:
+    """Percentile rank of `value` within `all_values`, direction-aware.
+    Higher percentile always means 'more favourable' for higher/lower
+    metrics. For neutral metrics this is just a raw rank-percentile with
+    no favourable/unfavourable connotation (see module docstring)."""
     n = len(all_values)
     if n <= 1:
         return 100.0
@@ -128,15 +197,28 @@ def compare_peers(
           },
           ...
         }
+
+    Never fabricates values: a symbol missing from the DB for a given
+    metric gets value=None, status="insufficient_data", and an explicit
+    reason — it is excluded from median/mean/percentile math, never
+    silently treated as zero (per roadmap Section 32).
     """
     if filing_type != "consolidated":
+        # Policy decision (confirmed against real data): standalone figures
+        # can be badly distorted by one-off items — e.g. HCLTECH standalone
+        # npm_pct came back ~49% (leader) purely from a one-off Other Income
+        # item, per data_analysis's own documented guidance to prefer
+        # consolidated for genuine operating-performance comparisons.
+        # Not blocked, just flagged loudly so it's never silently trusted
+        # as equivalent to a consolidated comparison.
         print(
             f"NOTE: compare_peers() called with filing_type='{filing_type}' — "
             f"standalone figures are diagnostic only and may be distorted by "
-            f"one-off items (e.g. subsidiary dividends). Do not feed standalone ",
+            f"one-off items (e.g. subsidiary dividends). Do not feed standalone "
+            f"results into Ranking (Stage 6) or Reports (Stage 8) without review.",
             file=sys.stderr,
         )
-        
+
     if conn is None:
         if db_path is None:
             raise ValueError("compare_peers requires either db_path or conn")
@@ -187,6 +269,9 @@ def compare_peers(
                 # (roadmap: don't imply e.g. lowest PE = "winner")
 
             # rank by raw value, descending; ties share the same rank
+            # (standard competition ranking, e.g. 1,2,2,4 — not 1,2,3,4).
+            # Confirmed necessary against real data: TCS/INFY tie exactly
+            # at debt_to_equity=0.0000 and must not be split into 2/3.
             ranked = sorted(present, key=lambda r: r[2], reverse=True)
             rank_by_symbol = {}
             current_rank = 0
@@ -225,6 +310,8 @@ def compare_peers(
 
 
 def print_comparison(result: dict, symbols: list) -> None:
+    """Simple terminal table, one block per metric — for quick eyeballing
+    against real DB output before this gets wired into anything else."""
     for metric_name, data in result.items():
         print(f"\n--- {metric_name} ({data['direction']}) ---")
         if data["sector_median"] is not None:
@@ -251,7 +338,27 @@ def save_comparison(
     filing_type: str,
     output_dir: str = "data/processed/peer_comparison",
 ) -> str:
+    """Persist a compare_peers() result to disk as JSON.
 
+    ASSUMPTION FLAGGED: I don't have visibility into the exact file-naming
+    / directory convention data_extraction's run_extraction.py or
+    data_analysis's combine_and_analyze.py already use for their processed
+    output — PROJECT_STATUS.md documents them functionally but not their
+    literal output paths. `output_dir` defaults to
+    'data/processed/peer_comparison' (relative to wherever this runs from
+    — i.e. data_analysis/ when invoked via the CLI below), which matches
+    the roadmap's data/processed/ convention but may not match what the
+    other two modules actually do on disk. Override output_dir to match
+    if it doesn't — this is a one-parameter change, nothing else in this
+    module depends on the path.
+
+    Filename: peer_comparison_<filing_type>_<SYM1-SYM2-...>.json (sorted
+    symbols, so the same peer group always overwrites the same file
+    instead of accumulating timestamped duplicates — mirrors how
+    financial_metrics itself is idempotent/re-runnable per PROJECT_STATUS).
+
+    Returns the path written.
+    """
     os.makedirs(output_dir, exist_ok=True)
     symbol_slug = "-".join(sorted(symbols))
     filename = f"peer_comparison_{filing_type}_{symbol_slug}.json"
@@ -270,6 +377,10 @@ def save_comparison(
 
 
 if __name__ == "__main__":
+    # python -m src.analysis.peer_comparison <db_path> <filing_type> <symbol1,symbol2,...> <metric1,metric2,...>
+    # Example:
+    #   python -m src.analysis.peer_comparison ../database/data/financial_intelligence.db \
+    #       consolidated TCS,INFY,HCLTECH npm_pct,roe_pct,debt_to_equity,pe_ratio
     if len(sys.argv) < 5:
         print("Usage: python -m src.analysis.peer_comparison <db_path> <filing_type> <sym1,sym2,...> <metric1,metric2,...>")
         sys.exit(1)

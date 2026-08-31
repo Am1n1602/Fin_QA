@@ -25,6 +25,34 @@ def _is_single_quarter(record: dict, tolerance: int = 20) -> bool:
     return days is not None and abs(days - 91) <= tolerance
 
 
+def compute_ebit(record: dict):
+    pbt_before_exceptional = record.get("pbt_before_exceptional")
+    if pbt_before_exceptional is None:
+        return None
+    return pbt_before_exceptional + (record.get("finance_costs") or 0)
+
+
+def operating_ebit(record: dict):
+    revenue = record.get("revenue")
+    employee_expense = record.get("employee_expense")
+    depreciation = record.get("depreciation")
+    other_expenses = record.get("other_expenses")
+    if None in (revenue, employee_expense, depreciation, other_expenses):
+        return None
+    return revenue - employee_expense - depreciation - other_expenses
+
+
+def compute_total_debt(record: dict):
+    return (record.get("borrowings_current") or 0) + (record.get("borrowings_noncurrent") or 0)
+
+
+def compute_net_debt(record: dict):
+
+    if record.get("cash_and_equivalents") is None:
+        return None
+    return compute_total_debt(record) - record["cash_and_equivalents"]
+
+
 def compute_period_ratios(record: dict) -> dict:
     """Compute P&L ratios for one period record (one context/quarter)."""
     r = record  # short alias
@@ -60,28 +88,43 @@ def compute_period_ratios(record: dict) -> dict:
         "current_ratio": _safe_div(r.get("current_assets"), r.get("current_liabilities"), as_pct=False),
         "debt_to_equity": (
             None if r.get("total_equity") is None else
-            _safe_div(
-                (r.get("borrowings_current") or 0) + (r.get("borrowings_noncurrent") or 0),
-                r.get("total_equity"),
-                as_pct=False,
-            )
+            _safe_div(compute_total_debt(r), r.get("total_equity"), as_pct=False)
         ),
         "roe_pct": _safe_div(r.get("net_profit"), r.get("total_equity")),
         "roce_pct": (
-            None if None in (r.get("pbt_before_exceptional"), r.get("total_assets"), r.get("current_liabilities")) else
-            _safe_div(
-                r["pbt_before_exceptional"] + (r.get("finance_costs") or 0),
-                r["total_assets"] - r["current_liabilities"],
-            )
+            None if None in (r.get("total_assets"), r.get("current_liabilities")) or compute_ebit(r) is None else
+            _safe_div(compute_ebit(r), r["total_assets"] - r["current_liabilities"])
         ),
         "asset_turnover": _safe_div(revenue, r.get("total_assets"), as_pct=False),
+
+        "roa_pct": _safe_div(r.get("net_profit"), r.get("total_assets")),
+        "working_capital_to_assets_pct": (
+            None if None in (r.get("current_assets"), r.get("current_liabilities"), r.get("total_assets")) else
+            _safe_div(r["current_assets"] - r["current_liabilities"], r["total_assets"])
+        ),
+        "equity_to_liabilities_pct": _safe_div(r.get("total_equity"), r.get("total_liabilities")),
+        "ebit": compute_ebit(r),  # currency amount, not a % — see _RATIO_UNIT_OVERRIDES
     }
 
-    # Approximate EBITDA margin: PBT before exceptional items, add back
-    # D&A and finance costs (non-operating financing cost), subtract
-    # other income (non-operating). This is an approximation — other
-    # income is assumed purely non-operating, which is usually but not
-    # always exactly true; treat as directional, not exact.
+    op_ebit = operating_ebit(r)
+    net_debt = compute_net_debt(r)
+
+    ratios["cash_ratio"] = _safe_div(r.get("cash_and_equivalents"), r.get("current_liabilities"), as_pct=False)
+    ratios["total_debt_to_assets_pct"] = (
+        None if r.get("total_assets") is None else
+        _safe_div(compute_total_debt(r), r.get("total_assets"))
+    )
+    ratios["net_debt"] = net_debt  # currency amount
+    ratios["operating_ebit"] = op_ebit  # currency amount — Other-Income-excluded EBIT, see function docstring
+    ratios["operating_roce_pct"] = (
+        None if None in (r.get("total_assets"), r.get("current_liabilities")) or op_ebit is None else
+        _safe_div(op_ebit, r["total_assets"] - r["current_liabilities"])
+    )
+    ratios["net_debt_to_operating_ebit"] = (
+        None if net_debt is None or not op_ebit else
+        _safe_div(net_debt, op_ebit, as_pct=False)
+    )
+
     if None not in (r.get("pbt_before_exceptional"), depreciation, other_income) and revenue:
         ebitda_approx = r["pbt_before_exceptional"] + depreciation + finance_costs - other_income
         ratios["ebitda_margin_pct_approx"] = (ebitda_approx / revenue) * 100
@@ -125,7 +168,7 @@ def compute_trends(records: list[dict]) -> list[dict]:
                     prev_val,
                 )
 
-        # Operating leverage signal: is revenue growing faster than costs?
+           # Operating leverage signal: is revenue growing faster than costs?
         # Positive = margin tailwind (revenue outpacing expense growth),
         # negative = margin pressure. None if either growth % wasn't
         # meaningful (see negative-base handling above).
@@ -165,6 +208,11 @@ _RATIO_UNIT_OVERRIDES = {
     "current_ratio": "x",
     "debt_to_equity": "x",
     "asset_turnover": "x",
+    "ebit": "currency",
+    "cash_ratio": "x",
+    "net_debt": "currency",
+    "operating_ebit": "currency",
+    "net_debt_to_operating_ebit": "x",
 }
 
 
@@ -182,6 +230,8 @@ def format_ratio_value(key: str, value) -> str:
         return f"{value:,.0f}"
     if unit == "pp":
         return f"{value:+.2f}pp"
+    if unit == "currency":
+        return f"{value:,.0f}"
     return f"{value:+.2f}%" if key.endswith(("_growth_pct",)) else f"{value:.2f}%"
 
 

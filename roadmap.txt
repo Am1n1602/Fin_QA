@@ -3,10 +3,26 @@
 [*] -> Implemented
 
 TODO:
-Create Data Acquistion/Extraction pipeline: [*]
+Data Acquistion/Extraction pipeline: [*]
     - Create fetching data from NSE/BSE: [*]
     - Parsering XBRL to JSON: [*]
     - Using a pdf to JSON parser: [-]
 
-Create Data Analysis: [~]
-    - Create Generalized Ratios: [~]
+Data Analysis: [~]
+    - Create Generalized Ratios: [*]
+    - Create Valuation Ratios: [*]
+    - Create Peers Comparison: [*]
+    - Rank companies using fundamental factors [~]
+
+
+Evaluate financial health and accounting risk: [-]
+
+Automatically generate investment research reports: [-]
+
+Answer financial questions using structured data and RAG: [-]
+
+Use a hybrid local/cloud LLM architecture: [-]
+    -Provide source-grounded answers.
+
+Expose the system through APIs. (Optional) [-]
+    -Provide a web dashboard.

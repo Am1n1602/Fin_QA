@@ -46,6 +46,14 @@ def upsert_filing(conn, symbol: str, filing_type: str, record: dict, source_file
     has_bs = record.get("total_assets") is not None
 
     conn.execute(
+        "INSERT INTO filings "
+        "(company_symbol, filing_type, context_id, period_start, period_end, instant, "
+        "is_single_quarter, is_annual, has_balance_sheet, source_file, loaded_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT(company_symbol, filing_type, context_id, COALESCE(period_end, ''), COALESCE(instant, '')) "
+        "DO UPDATE SET period_start=excluded.period_start, is_single_quarter=excluded.is_single_quarter, "
+        "is_annual=excluded.is_annual, has_balance_sheet=excluded.has_balance_sheet, "
+        "source_file=excluded.source_file, loaded_at=excluded.loaded_at",
         (symbol, filing_type, context_id, period_start, period_end, instant,
          int(is_sq), int(is_ann), int(has_bs), source_file, datetime.now().isoformat()),
     )
@@ -82,8 +90,11 @@ _UNIT_MAP = {
 def _infer_unit(metric_name: str) -> str | None:
     if metric_name.endswith("_pct"):
         return "pct"
-    if metric_name in ("interest_coverage_ratio", "current_ratio", "debt_to_equity", "asset_turnover"):
+    if metric_name in ("interest_coverage_ratio", "current_ratio", "debt_to_equity", "asset_turnover",
+                        "cash_ratio", "net_debt_to_operating_ebit", "pe_ratio", "pb_ratio", "ev_to_sales"):
         return "x"
+    if metric_name in ("ebit", "operating_ebit", "net_debt", "enterprise_value", "ttm_ebit", "ttm_revenue"):
+        return "currency"
     if metric_name == "shares_outstanding":
         return "count"
     if metric_name == "operating_leverage_signal":
@@ -181,6 +192,20 @@ def load_valuation(conn, company_filter: str | None = None):
             pb_metrics = {k: v for k, v in pb_data.items()
                           if k in ("book_value_per_share", "pb_ratio") and isinstance(v, (int, float))}
             load_metrics_for_filing(conn, filing_id, pb_metrics)
+
+        ey_path = path.parent / path.name.replace("_valuation.json", "_earnings_yield.json")
+        if ey_path.exists():
+            ey_data = json.loads(ey_path.read_text())
+            ey_metrics = {k: v for k, v in ey_data.items()
+                          if k in ("enterprise_value", "ttm_ebit", "earnings_yield_pct") and isinstance(v, (int, float))}
+            load_metrics_for_filing(conn, filing_id, ey_metrics)
+
+        evs_path = path.parent / path.name.replace("_valuation.json", "_ev_to_sales.json")
+        if evs_path.exists():
+            evs_data = json.loads(evs_path.read_text())
+            evs_metrics = {k: v for k, v in evs_data.items()
+                          if k in ("ttm_revenue", "ev_to_sales") and isinstance(v, (int, float))}
+            load_metrics_for_filing(conn, filing_id, evs_metrics)
         count += 1
     print(f"[load_data] Loaded valuation for {count} company/filing-type combination(s)")
 

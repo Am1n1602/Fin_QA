@@ -33,7 +33,7 @@ def get_scrip_code(company_name: str) -> str | None:
     return result
 
 
-def fetch_announcements(bse_scrip: str, days_back: int = 365) -> list[dict]:
+def fetch_announcements(bse_scrip: str, days_back: int = 1095) -> list[dict]:
     """
     Pull corporate announcements for one scrip, filtered to results-related
     categories where possible. Returns BSE's raw 'Table' list — each entry

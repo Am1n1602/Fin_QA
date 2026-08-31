@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.analysis.ratios import _is_single_quarter, _safe_div
+from src.analysis.ratios import _is_single_quarter, _safe_div, compute_ebit, compute_net_debt, compute_total_debt
 from src.analysis.combine_and_analyze import find_canonical_files
 from src.config import EXTRACTION_PROJECT_DIR, ANALYSIS_OUTPUT_DIR
 
@@ -23,23 +23,46 @@ def get_latest_close_price(symbol: str) -> tuple[float, str] | tuple[None, None]
     return float(latest["CLOSE"]), str(latest["DATE"].date())
 
 
-def compute_ttm_eps(company: str, filing_type: str, eps_field: str = "eps_basic") -> tuple[float, int] | tuple[None, int]:
-    """Sums eps_basic across the last 4 single-quarter periods found across
-    ALL canonical files for this company/filing_type. Returns
-    (ttm_eps, quarters_used) — quarters_used < 4 means the TTM figure is
-    partial (fewer than 4 real quarters available yet)."""
+def _sum_last_4_quarters(company: str, filing_type: str, value_fn) -> tuple[float, int] | tuple[None, int]:
+    """Generic TTM-summing helper: sums value_fn(record) across the last
+    4 single-quarter periods found across ALL canonical files for this
+    company/filing_type. Returns (total, quarters_used) —
+    quarters_used < 4 means the figure is partial.
+
+    This is the one shared implementation behind compute_ttm_eps(),
+    compute_ttm_ebit(), and compute_ttm_revenue() below — previously
+    each was its own near-identical copy of this same find-filter-sort-
+    sum sequence; consolidated here once a third copy would have made
+    it four.
+    """
     files = find_canonical_files(company, filing_type)
     all_records = []
     for f in files:
         all_records.extend(json.loads(f.read_text()))
 
-    quarterly = [r for r in all_records if _is_single_quarter(r) and r.get(eps_field) is not None]
+    quarterly = [r for r in all_records if _is_single_quarter(r) and value_fn(r) is not None]
     quarterly.sort(key=lambda r: r.get("period_end") or "", reverse=True)
     last_4 = quarterly[:4]
 
     if not last_4:
         return None, 0
-    return sum(r[eps_field] for r in last_4), len(last_4)
+    return sum(value_fn(r) for r in last_4), len(last_4)
+
+
+def compute_ttm_eps(company: str, filing_type: str, eps_field: str = "eps_basic") -> tuple[float, int] | tuple[None, int]:
+    """Sums eps_basic across the last 4 single-quarter periods found across
+    ALL canonical files for this company/filing_type. Returns
+    (ttm_eps, quarters_used) — quarters_used < 4 means the TTM figure is
+    partial (fewer than 4 real quarters available yet)."""
+    return _sum_last_4_quarters(company, filing_type, lambda r: r.get(eps_field))
+
+
+def compute_ttm_ebit(company: str, filing_type: str = "consolidated") -> tuple[float, int] | tuple[None, int]:
+    """Sums compute_ebit() across the last 4 single-quarter periods —
+    so Earnings Yield uses a trailing-twelve-month EBIT the same way
+    P/E uses trailing EPS, rather than mixing a TTM numerator with a
+    single-quarter one."""
+    return _sum_last_4_quarters(company, filing_type, compute_ebit)
 
 
 def compute_pe(company: str, filing_type: str = "consolidated", eps_field: str = "eps_basic") -> dict:
@@ -120,6 +143,144 @@ def compute_pb(company: str, filing_type: str = "consolidated") -> dict:
     return result
 
 
+def compute_enterprise_value(company: str, filing_type: str = "consolidated") -> dict:
+    """EV = Market Cap + Total Debt - Cash, using the same
+    most-recent-balance-sheet-record lookup compute_pb() already uses
+    (debt and cash are balance-sheet-only fields, same annual/half-yearly
+    availability constraint as total_equity).
+
+    Borrowings absent on a record is treated as 0, matching
+    ratios.py's existing debt_to_equity convention (debt-free IT
+    companies genuinely have no borrowings tag at all). Cash absent is
+    NOT defaulted to 0 — unlike "no debt", "no cash reported" almost
+    certainly means missing data, not an actual zero cash balance, and
+    defaulting it would silently understate Enterprise Value.
+    """
+    price, price_date = get_latest_close_price(company)
+
+    files = find_canonical_files(company, filing_type)
+    all_records = []
+    for f in files:
+        all_records.extend(json.loads(f.read_text()))
+
+    with_equity = [r for r in all_records if r.get("total_equity") is not None]
+    with_equity.sort(key=lambda r: r.get("period_end") or r.get("instant") or "", reverse=True)
+
+    result = {
+        "company": company, "filing_type": filing_type,
+        "latest_close": price, "price_date": price_date,
+        "balance_sheet_as_of": None,
+        "shares_outstanding": None, "market_cap": None,
+        "total_debt": None, "cash_and_equivalents": None,
+        "enterprise_value": None, "note": None,
+    }
+
+    if not with_equity:
+        result["note"] = "No record with balance-sheet data found — need an annual/half-yearly filing extracted first."
+        return result
+    if price is None:
+        result["note"] = "No price data found."
+        return result
+
+    latest = with_equity[0]
+    shares = _safe_div(latest.get("paid_up_equity_capital"), latest.get("face_value_per_share"), as_pct=False)
+    result["balance_sheet_as_of"] = latest.get("period_end") or latest.get("instant")
+    result["shares_outstanding"] = shares
+
+    if not shares:
+        result["note"] = "Could not derive shares outstanding (missing paid_up_equity_capital/face_value_per_share on this record)."
+        return result
+
+    if latest.get("cash_and_equivalents") is None:
+        result["note"] = "cash_and_equivalents missing on this record — Enterprise Value not computed (defaulting it to 0 would silently overstate EV)."
+        return result
+
+    market_cap = price * shares
+    net_debt = compute_net_debt(latest)  # shared with ratios.py — see its docstring
+    total_debt = compute_total_debt(latest)  # shared, not re-derived
+    cash = latest["cash_and_equivalents"]
+
+    result["market_cap"] = market_cap
+    result["total_debt"] = total_debt
+    result["cash_and_equivalents"] = cash
+    result["enterprise_value"] = market_cap + net_debt
+    return result
+
+
+def compute_earnings_yield(company: str, filing_type: str = "consolidated") -> dict:
+    """Earnings Yield = TTM EBIT / Enterprise Value — Greenblatt's Magic
+    Formula valuation metric. Uses the Capital-Employed-style EBIT
+    already shared with roce_pct (see ratios.compute_ebit) rather than
+    Greenblatt's literal formula, which needs Net Fixed Assets excluding
+    goodwill — a field this pipeline doesn't have tagged and won't
+    approximate. Both operands here are exact: EBIT is a real accounting
+    identity, Enterprise Value is a real point-in-time balance-sheet +
+    market-price computation.
+    """
+    ev_result = compute_enterprise_value(company, filing_type)
+    ttm_ebit, n_quarters = compute_ttm_ebit(company, filing_type)
+
+    result = {
+        "company": company, "filing_type": filing_type,
+        "enterprise_value": ev_result["enterprise_value"],
+        "ttm_ebit": ttm_ebit,
+        "quarters_used_for_ttm_ebit": n_quarters,
+        "earnings_yield_pct": None,
+        "note": None,
+    }
+
+    if n_quarters < 4:
+        result["note"] = f"Only {n_quarters}/4 quarters available — TTM EBIT is partial, Earnings Yield not computed."
+        return result
+    if ev_result["enterprise_value"] is None:
+        result["note"] = f"Enterprise Value not available — {ev_result['note']}"
+        return result
+    if ev_result["enterprise_value"] <= 0:
+        result["note"] = "Enterprise Value is zero/negative (net cash exceeds market cap) — Earnings Yield not meaningful as a standard ratio."
+        return result
+
+    result["earnings_yield_pct"] = (ttm_ebit / ev_result["enterprise_value"]) * 100
+    return result
+
+
+def compute_ttm_revenue(company: str, filing_type: str = "consolidated") -> tuple[float, int] | tuple[None, int]:
+    """Sums revenue across the last 4 single-quarter periods, feeding
+    compute_ev_to_sales() below."""
+    return _sum_last_4_quarters(company, filing_type, lambda r: r.get("revenue"))
+
+
+def compute_ev_to_sales(company: str, filing_type: str = "consolidated") -> dict:
+    """EV/Sales = Enterprise Value / TTM Revenue. Unlike P/E and Earnings
+    Yield, this stays meaningful for companies with negative or
+    near-zero earnings — worth having once ranking scales past IT
+    services into sectors/companies where that's a real possibility.
+    """
+    ev_result = compute_enterprise_value(company, filing_type)
+    ttm_revenue, n_quarters = compute_ttm_revenue(company, filing_type)
+
+    result = {
+        "company": company, "filing_type": filing_type,
+        "enterprise_value": ev_result["enterprise_value"],
+        "ttm_revenue": ttm_revenue,
+        "quarters_used_for_ttm_revenue": n_quarters,
+        "ev_to_sales": None,
+        "note": None,
+    }
+
+    if n_quarters < 4:
+        result["note"] = f"Only {n_quarters}/4 quarters available — TTM Revenue is partial, EV/Sales not computed."
+        return result
+    if ev_result["enterprise_value"] is None:
+        result["note"] = f"Enterprise Value not available — {ev_result['note']}"
+        return result
+    if not ttm_revenue:
+        result["note"] = "TTM Revenue is zero — EV/Sales not meaningful."
+        return result
+
+    result["ev_to_sales"] = ev_result["enterprise_value"] / ttm_revenue
+    return result
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python -m src.analysis.valuation <company_symbol> [consolidated|standalone]")
@@ -150,4 +311,25 @@ if __name__ == "__main__":
     else:
         print(f"P/B ratio:            N/A — {pb_result['note']}")
 
-    print(f"\nSaved to {out_path} and {pb_out_path}")
+    ey_result = compute_earnings_yield(company, filing_type)
+    ey_out_path = ANALYSIS_OUTPUT_DIR / f"{company}_{filing_type}_earnings_yield.json"
+    ey_out_path.write_text(json.dumps(ey_result, indent=2, default=str))
+    print()
+    if ey_result["earnings_yield_pct"] is not None:
+        print(f"Enterprise Value:     {ey_result['enterprise_value']:,.0f}")
+        print(f"TTM EBIT:             {ey_result['ttm_ebit']:,.0f} ({ey_result['quarters_used_for_ttm_ebit']}/4 quarters)")
+        print(f"Earnings Yield:       {ey_result['earnings_yield_pct']:.2f}%")
+    else:
+        print(f"Earnings Yield:       N/A — {ey_result['note']}")
+
+    evs_result = compute_ev_to_sales(company, filing_type)
+    evs_out_path = ANALYSIS_OUTPUT_DIR / f"{company}_{filing_type}_ev_to_sales.json"
+    evs_out_path.write_text(json.dumps(evs_result, indent=2, default=str))
+    print()
+    if evs_result["ev_to_sales"] is not None:
+        print(f"TTM Revenue:          {evs_result['ttm_revenue']:,.0f} ({evs_result['quarters_used_for_ttm_revenue']}/4 quarters)")
+        print(f"EV/Sales:             {evs_result['ev_to_sales']:.2f}x")
+    else:
+        print(f"EV/Sales:             N/A — {evs_result['note']}")
+
+    print(f"\nSaved to {out_path}, {pb_out_path}, {ey_out_path}, and {evs_out_path}")
