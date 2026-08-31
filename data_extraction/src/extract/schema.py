@@ -37,16 +37,25 @@ TAG_MAP = {
     "face_value_per_share": "in-capmkt:FaceValueOfEquityShareCapital",
     "debt_equity_ratio_reported": "in-capmkt:DebtEquityRatio",
 
-    # Will update these next
-    "total_assets": None,
-    "total_liabilities": None,
-    "total_equity": None,
+    # Balance sheet
+    "total_assets": "in-capmkt:Assets",
+    "total_liabilities": "in-capmkt:Liabilities",
+    "total_equity": "in-capmkt:Equity",
+    "current_assets": "in-capmkt:CurrentAssets",
+    "noncurrent_assets": "in-capmkt:NoncurrentAssets",
+    "current_liabilities": "in-capmkt:CurrentLiabilities",
+    "noncurrent_liabilities": "in-capmkt:NoncurrentLiabilities",
+    "borrowings_current": "in-capmkt:BorrowingsCurrent",
+    "borrowings_noncurrent": "in-capmkt:BorrowingsNoncurrent",
+    "cash_and_equivalents": "in-capmkt:CashAndCashEquivalents",
 }
 
 # Matches "OneD", "TwoD", "ThreeD", "OneI", "TwoI", etc. — the primary
-# whole-company contexts. Rejects anything with extra suffix text
-# (segment/note-breakdown contexts like "OneReportable1D", "OneExpenses2D").
-PRIMARY_CONTEXT_PATTERN = re.compile(r"^(One|Two|Three|Four|Five|Six)[DI]$")
+# whole-company contexts. Also matches "PY_D"/"PY_I" (prior-year contexts
+# seen in annual filings — e.g. "PY_I" for the prior year-end balance
+# sheet snapshot). Rejects anything with extra suffix text (segment/note-
+# breakdown contexts like "OneReportable1D", "OneExpenses2D").
+PRIMARY_CONTEXT_PATTERN = re.compile(r"^(One|Two|Three|Four|Five|Six)[DI]$|^PY_[DI]$")
 
 
 def is_primary_context(context_id: str) -> bool:
@@ -82,6 +91,23 @@ def validate_canonical_record(record: dict, tolerance: float = 1.0) -> dict:
     if all(record.get(k) is not None for k in ("net_profit", "oci", "total_comprehensive_income")):
         checks["net_profit_plus_oci_eq_total_comprehensive_income"] = (
             abs((record["net_profit"] + record["oci"]) - record["total_comprehensive_income"]) <= tolerance
+        )
+
+    # Balance sheet checks — only run once these fields exist on a record
+    # (post-merge with an instant context; see merge_periods()).
+    if all(record.get(k) is not None for k in ("total_assets", "total_liabilities", "total_equity")):
+        checks["assets_eq_liabilities_plus_equity"] = (
+            abs(record["total_assets"] - (record["total_liabilities"] + record["total_equity"])) <= tolerance
+        )
+
+    if all(record.get(k) is not None for k in ("current_assets", "noncurrent_assets", "total_assets")):
+        checks["current_plus_noncurrent_assets_eq_total_assets"] = (
+            abs((record["current_assets"] + record["noncurrent_assets"]) - record["total_assets"]) <= tolerance
+        )
+
+    if all(record.get(k) is not None for k in ("current_liabilities", "noncurrent_liabilities", "total_liabilities")):
+        checks["current_plus_noncurrent_liabilities_eq_total_liabilities"] = (
+            abs((record["current_liabilities"] + record["noncurrent_liabilities"]) - record["total_liabilities"]) <= tolerance
         )
 
     record["_validation"] = checks
@@ -143,6 +169,47 @@ def map_facts_to_canonical(facts: list[dict]) -> list[dict]:
     return records
 
 
+def merge_periods(records: list[dict]) -> list[dict]:
+    duration_records = [r for r in records if r.get("period_end") is not None]
+    instant_records = [r for r in records if r.get("instant") is not None]
+
+    instant_by_date = defaultdict(list)
+    for r in instant_records:
+        instant_by_date[r["instant"]].append(r)
+
+    used_instant_context_ids = set()
+    merged = []
+    for d in duration_records:
+        matches = instant_by_date.get(d.get("period_end"), [])
+        if not matches:
+            merged.append(d)
+            continue
+
+        inst = matches[0]  # normally exactly one primary instant context per date
+        used_instant_context_ids.add(inst["context_id"])
+
+        combined = dict(d)
+        combined["context_id"] = f"{d['context_id']}+{inst['context_id']}"
+        skip_keys = {"context_id", "period_start", "period_end", "instant", "_missing_fields", "_validation", "_needs_review"}
+        for k, v in inst.items():
+            if k in skip_keys:
+                continue
+            combined[k] = v
+
+        combined["_missing_fields"] = [
+            k for k in TAG_MAP if TAG_MAP[k] is not None and combined.get(k) is None
+        ]
+        combined = validate_canonical_record(combined)
+        merged.append(combined)
+
+    for inst in instant_records:
+        if inst["context_id"] not in used_instant_context_ids:
+            merged.append(inst)
+
+    merged.sort(key=lambda r: r.get("period_end") or r.get("instant") or "", reverse=True)
+    return merged
+
+
 def map_and_save(raw_json_path) -> tuple[Path, int]:
     """Load a *_facts_raw.json, map it to canonical schema, save
     *_canonical.json alongside it. Returns (output_path, period_count) —
@@ -150,6 +217,7 @@ def map_and_save(raw_json_path) -> tuple[Path, int]:
     raw_json_path = Path(raw_json_path)
     facts = json.loads(raw_json_path.read_text())
     canonical = map_facts_to_canonical(facts)
+    canonical = merge_periods(canonical)
     out_path = raw_json_path.parent / raw_json_path.name.replace("_facts_raw.json", "_canonical.json")
     out_path.write_text(json.dumps(canonical, indent=2, default=str))
     return out_path, len(canonical)
@@ -179,7 +247,7 @@ if __name__ == "__main__":
             print(f"  (not found in this context: {', '.join(r['_missing_fields'])})")
         if r["_needs_review"]:
             failed = [k for k, v in r["_validation"].items() if not v]
-            print(f" VALIDATION FAILED: {', '.join(failed)}")
+            print(f"  ⚠ VALIDATION FAILED: {', '.join(failed)}")
         else:
-            print(f" all arithmetic checks passed")
+            print(f"  ✓ all arithmetic checks passed")
         print()

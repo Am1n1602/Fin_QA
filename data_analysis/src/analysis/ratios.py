@@ -3,7 +3,6 @@ import sys
 from datetime import date
 from pathlib import Path
 
-
 def _safe_div(numerator, denominator, as_pct: bool = True):
     if numerator is None or denominator in (None, 0):
         return None
@@ -22,11 +21,6 @@ def _duration_days(record: dict) -> int | None:
 
 
 def _is_single_quarter(record: dict, tolerance: int = 20) -> bool:
-    """True only for ~3-month duration periods. Filters out YTD/cumulative
-    and full-year contexts (Ind AS 'FourD'-style contexts) that can share
-    a period_end with a real quarterly context and would otherwise get
-    wrongly compared against it (e.g. a 9-month cumulative figure zipped
-    against a single quarter as if consecutive)."""
     days = _duration_days(record)
     return days is not None and abs(days - 91) <= tolerance
 
@@ -34,7 +28,7 @@ def _is_single_quarter(record: dict, tolerance: int = 20) -> bool:
 def compute_period_ratios(record: dict) -> dict:
     """Compute P&L ratios for one period record (one context/quarter)."""
     r = record  # short alias
-    finance_costs = r.get("finance_costs") or 0  # many debt-free companies won't have this tag at all — treat absent as 0, not unknown
+    finance_costs = r.get("finance_costs") or 0  # many IT/debt-free companies won't have this tag at all — treat absent as 0, not unknown
     depreciation = r.get("depreciation")
     other_income = r.get("other_income")
     revenue = r.get("revenue")
@@ -53,10 +47,6 @@ def compute_period_ratios(record: dict) -> dict:
         "employee_cost_pct_of_total_expenses": _safe_div(r.get("employee_expense"), r.get("total_expenses")),
         "other_expenses_pct_of_revenue": _safe_div(r.get("other_expenses"), revenue),
 
-        # --- Leverage/coverage (from P&L alone — doesn't need balance sheet) ---
-        # Ratio, not a %: e.g. 45.2 means core profit covers interest cost
-        # 45x over. None when finance_costs is 0/absent (debt-free quarter
-        # — genuinely "infinite" coverage, not a missing-data gap).
         "interest_coverage_ratio": (
             None if not finance_costs else
             _safe_div(r.get("pbt_before_exceptional"), finance_costs, as_pct=False)
@@ -67,6 +57,24 @@ def compute_period_ratios(record: dict) -> dict:
 
         # --- Share count (not a %, a count) ---
         "shares_outstanding": _safe_div(r.get("paid_up_equity_capital"), r.get("face_value_per_share"), as_pct=False),
+        "current_ratio": _safe_div(r.get("current_assets"), r.get("current_liabilities"), as_pct=False),
+        "debt_to_equity": (
+            None if r.get("total_equity") is None else
+            _safe_div(
+                (r.get("borrowings_current") or 0) + (r.get("borrowings_noncurrent") or 0),
+                r.get("total_equity"),
+                as_pct=False,
+            )
+        ),
+        "roe_pct": _safe_div(r.get("net_profit"), r.get("total_equity")),
+        "roce_pct": (
+            None if None in (r.get("pbt_before_exceptional"), r.get("total_assets"), r.get("current_liabilities")) else
+            _safe_div(
+                r["pbt_before_exceptional"] + (r.get("finance_costs") or 0),
+                r["total_assets"] - r["current_liabilities"],
+            )
+        ),
+        "asset_turnover": _safe_div(revenue, r.get("total_assets"), as_pct=False),
     }
 
     # Approximate EBITDA margin: PBT before exceptional items, add back
@@ -102,7 +110,11 @@ def compute_trends(records: list[dict]) -> list[dict]:
             prev_val = prev.get(field)
             curr_val = curr.get(field)
             if prev_val is not None and prev_val <= 0:
-                entry[f"{field}_growth_pct"] = ""
+                # Growth % from a zero/negative base is mathematically
+                # correct but not meaningful (e.g. -880% when the prior
+                # quarter itself was a loss) — report the raw change
+                # instead of a misleading percentage.
+                entry[f"{field}_growth_pct"] = None 
                 entry[f"{field}_change_absolute"] = (
                     curr_val - prev_val if curr_val is not None else None
                 )
@@ -112,6 +124,11 @@ def compute_trends(records: list[dict]) -> list[dict]:
                     (curr_val - prev_val) if None not in (curr_val, prev_val) else None,
                     prev_val,
                 )
+
+        # Operating leverage signal: is revenue growing faster than costs?
+        # Positive = margin tailwind (revenue outpacing expense growth),
+        # negative = margin pressure. None if either growth % wasn't
+        # meaningful (see negative-base handling above).
         rev_g, exp_g = entry.get("revenue_growth_pct"), entry.get("total_expenses_growth_pct")
         entry["operating_leverage_signal"] = (
             rev_g - exp_g if None not in (rev_g, exp_g) else None
@@ -138,10 +155,16 @@ def analyze(canonical_records: list[dict]) -> dict:
     }
 
 
+# Fields that are NOT plain percentages — used by both this file's __main__
+# and combine_and_analyze.py's __main__ so display formatting stays
+# consistent everywhere this data gets printed.
 _RATIO_UNIT_OVERRIDES = {
-    "interest_coverage_ratio": "x",       
+    "interest_coverage_ratio": "x",       # e.g. "45.2x" — a multiple, not a %
     "shares_outstanding": "count",
-    "operating_leverage_signal": "pp",  
+    "operating_leverage_signal": "pp",    # percentage-point spread, not itself a %
+    "current_ratio": "x",
+    "debt_to_equity": "x",
+    "asset_turnover": "x",
 }
 
 

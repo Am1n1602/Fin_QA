@@ -3,7 +3,7 @@ import re
 import sys
 from pathlib import Path
 
-from lxml import etree
+from lxml import etree # type: ignore
 
 NS = {
     "xbrli": "http://www.xbrl.org/2003/instance",
@@ -100,6 +100,10 @@ def parse_and_save(filepath: str, company: str, out_dir: str = "data/extracted")
     name = derive_output_name(filepath, company)
     out_path = Path(out_dir) / f"{name}_facts_raw.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
+    if out_path.exists():
+        print(f"  [xbrl_lite_parser] NOTE: overwriting existing {out_path.name} "
+              f"— this filing is replacing a previously processed one for the "
+              f"same period (expected for Original -> Revision refilings).")
     out_path.write_text(json.dumps(recs, indent=2, default=str))
     return out_path, len(recs)
 

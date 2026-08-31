@@ -3,10 +3,10 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from src.analysis.ratios import _is_single_quarter
+
+from src.analysis.ratios import _is_single_quarter, _safe_div
 from src.analysis.combine_and_analyze import find_canonical_files
 from src.config import EXTRACTION_PROJECT_DIR, ANALYSIS_OUTPUT_DIR
-
 
 def get_latest_close_price(symbol: str) -> tuple[float, str] | tuple[None, None]:
     """Reads {symbol}_prices.csv from data_extraction. Sorts explicitly by
@@ -72,6 +72,54 @@ def compute_pe(company: str, filing_type: str = "consolidated", eps_field: str =
     return result
 
 
+def compute_pb(company: str, filing_type: str = "consolidated") -> dict:
+    """P/B = latest price / book value per share. Needs total_equity,
+    which only exists on records merge_periods() successfully matched
+    with a balance-sheet instant context — most likely just your
+    annual/half-yearly filing(s), not every quarter."""
+    price, price_date = get_latest_close_price(company)
+
+    files = find_canonical_files(company, filing_type)
+    all_records = []
+    for f in files:
+        all_records.extend(json.loads(f.read_text()))
+
+    # Most recent record that actually has total_equity populated
+    with_equity = [r for r in all_records if r.get("total_equity") is not None]
+    with_equity.sort(key=lambda r: r.get("period_end") or r.get("instant") or "", reverse=True)
+
+    result = {
+        "company": company, "filing_type": filing_type,
+        "latest_close": price, "price_date": price_date,
+        "total_equity": None, "shares_outstanding": None,
+        "book_value_per_share": None, "pb_ratio": None,
+        "balance_sheet_as_of": None, "note": None,
+    }
+
+    if not with_equity:
+        result["note"] = "No record with total_equity found — need an annual/half-yearly filing extracted first."
+        return result
+    if price is None:
+        result["note"] = "No price data found."
+        return result
+
+    latest = with_equity[0]
+    equity = latest["total_equity"]
+    shares = _safe_div(latest.get("paid_up_equity_capital"), latest.get("face_value_per_share"), as_pct=False)
+    result["balance_sheet_as_of"] = latest.get("period_end") or latest.get("instant")
+    result["total_equity"] = equity
+    result["shares_outstanding"] = shares
+
+    if not shares:
+        result["note"] = "Could not derive shares outstanding (missing paid_up_equity_capital/face_value_per_share on this record)."
+        return result
+
+    book_value_per_share = equity / shares
+    result["book_value_per_share"] = book_value_per_share
+    result["pb_ratio"] = price / book_value_per_share if book_value_per_share else None
+    return result
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python -m src.analysis.valuation <company_symbol> [consolidated|standalone]")
@@ -91,4 +139,15 @@ if __name__ == "__main__":
         print(f"P/E ratio:            {result['pe_ratio']:.2f}x")
     else:
         print(f"P/E ratio:            N/A — {result['note']}")
-    print(f"\nSaved to {out_path}")
+
+    pb_result = compute_pb(company, filing_type)
+    pb_out_path = ANALYSIS_OUTPUT_DIR / f"{company}_{filing_type}_pb.json"
+    pb_out_path.write_text(json.dumps(pb_result, indent=2, default=str))
+    print()
+    if pb_result["pb_ratio"] is not None:
+        print(f"Book value/share:     {pb_result['book_value_per_share']:.2f} (as of {pb_result['balance_sheet_as_of']})")
+        print(f"P/B ratio:            {pb_result['pb_ratio']:.2f}x")
+    else:
+        print(f"P/B ratio:            N/A — {pb_result['note']}")
+
+    print(f"\nSaved to {out_path} and {pb_out_path}")

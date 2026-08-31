@@ -16,6 +16,7 @@ from src.extract.schema import map_and_save
 def run_for_company(company: str, raw_dir: str | None = None) -> None:
     raw_path = Path(raw_dir) if raw_dir else Path("data/raw") / company
     xbrl_files = sorted(raw_path.glob("*.xbrl")) + sorted(raw_path.glob("*.xml"))
+    xbrl_files.sort(key=lambda f: 1 if "revis" in f.name.lower() else 0)
     if not xbrl_files:
         print(f"[run_extraction] No .xbrl/.xml files found under {raw_path}/ "
               f"— check the company symbol matches your data/raw/ folder name.")
