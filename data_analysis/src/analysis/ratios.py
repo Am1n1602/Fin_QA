@@ -31,6 +31,15 @@ def _is_annual(record: dict, tolerance: int = 20) -> bool:
 
 
 def compute_ebit(record: dict):
+    """EBIT = Profit Before Tax (before exceptional items) + Finance
+    Costs added back. This is a real accounting identity (PBT = EBIT -
+    Interest, given Ind AS Finance Costs is the interest-expense line),
+    not an approximation — both inputs are tagged canonical fields.
+    Exceptional items are deliberately excluded (using
+    pbt_before_exceptional rather than pbt) to keep EBIT reflecting
+    ongoing operations rather than one-off gains/losses — a modeling
+    choice, documented here rather than silently baked in.
+    """
     pbt_before_exceptional = record.get("pbt_before_exceptional")
     if pbt_before_exceptional is None:
         return None
@@ -38,6 +47,18 @@ def compute_ebit(record: dict):
 
 
 def operating_ebit(record: dict):
+    """EBIT with Other Income excluded, unlike compute_ebit() above.
+    Same exact-identity logic: Revenue - Employee Expense - Depreciation
+    - Other Expenses (no Finance Costs, no Other Income). This matters
+    because compute_ebit()/roce_pct's Other-Income-inclusive figure can
+    be inflated by one-off items — confirmed this session with
+    HCLTECH's standalone npm_pct hitting ~49% from a one-off Other
+    Income line (likely a subsidiary dividend upstream). A ranking
+    formula built on that inflated number would reward a company for
+    something unrelated to ongoing business quality, so this version
+    exists specifically for that use case (see operating_roce_pct and
+    net_debt_to_operating_ebit below).
+    """
     revenue = record.get("revenue")
     employee_expense = record.get("employee_expense")
     depreciation = record.get("depreciation")
@@ -48,11 +69,39 @@ def operating_ebit(record: dict):
 
 
 def compute_total_debt(record: dict):
+    """Total Debt = Current Borrowings + Non-current Borrowings. Absent
+    borrowings tags default to 0 — genuinely debt-free companies
+    (common among large IT services firms) simply have no borrowings
+    tag at all, the same convention debt_to_equity has always used.
+
+    Shared by debt_to_equity, total_debt_to_assets_pct, and
+    compute_net_debt below, plus valuation.py's
+    compute_enterprise_value — this was independently re-derived in
+    four places before consolidating here into one definition.
+    """
     return (record.get("borrowings_current") or 0) + (record.get("borrowings_noncurrent") or 0)
 
 
-def compute_net_debt(record: dict):
+def compute_capex(record: dict):
+    """Combined Capex = Purchase of PP&E + Purchase of Intangible Assets
+    (both from the cash flow statement's investing activities section).
+    """
+    ppe = record.get("capex_ppe")
+    intangibles = record.get("capex_intangibles")
+    if ppe is None and intangibles is None:
+        return None
+    return (ppe or 0) + (intangibles or 0)
 
+
+def compute_net_debt(record: dict):
+    """Net Debt = Total Debt - Cash and Cash Equivalents. Borrowings
+    absent on a record defaults to 0 (matches debt_to_equity's existing
+    convention — genuinely debt-free IT companies have no borrowings tag
+    at all). Cash absent returns None, NOT 0 — a missing cash figure is
+    a data gap, not evidence of zero cash, and defaulting it would
+    silently overstate net debt.
+
+    """
     if record.get("cash_and_equivalents") is None:
         return None
     return compute_total_debt(record) - record["cash_and_equivalents"]
@@ -111,7 +160,6 @@ def compute_period_ratios(record: dict) -> dict:
         "ebit": compute_ebit(r),  # currency amount, not a % — see _RATIO_UNIT_OVERRIDES
     }
 
-
     op_ebit = operating_ebit(r)
     net_debt = compute_net_debt(r)
 
@@ -140,7 +188,9 @@ def compute_period_ratios(record: dict) -> dict:
         _safe_div(compute_ebit(r), r["total_assets"])
     )
     ratios["cfo_pct"] = _safe_div(r.get("operating_cash_flow"), r.get("total_assets"))
+
     ratios["payout_ratio_pct"] = _safe_div(r.get("dividends"), r.get("net_profit"))
+    ratios["capex"] = compute_capex(r)  # currency amount — see compute_capex()'s docstring for the None-vs-0 handling
 
     if None not in (r.get("pbt_before_exceptional"), depreciation, other_income) and revenue:
         ebitda_approx = r["pbt_before_exceptional"] + depreciation + finance_costs - other_income
@@ -149,6 +199,35 @@ def compute_period_ratios(record: dict) -> dict:
         ratios["ebitda_margin_pct_approx"] = None
 
     return ratios
+
+
+def _compute_period_growth(prev: dict, curr: dict, fields: tuple) -> dict:
+    """Growth from `prev` to `curr` for each field in `fields`. Shared by
+    compute_trends() (quarter-over-quarter) and compute_annual_yoy()
+    (year-over-year) below — same negative/zero-base handling either
+    way: percentage growth from a non-positive prior value isn't
+    meaningful (e.g. -880% when the prior period itself was a loss), so
+    it's reported as None + the raw absolute change + an explanatory
+    note instead of a misleading percentage."""
+    entry = {
+        "from_period": f"{prev.get('period_start')} to {prev.get('period_end')}",
+        "to_period": f"{curr.get('period_start')} to {curr.get('period_end')}",
+    }
+    for field in fields:
+        prev_val = prev.get(field)
+        curr_val = curr.get(field)
+        if prev_val is not None and prev_val <= 0:
+            entry[f"{field}_growth_pct"] = None
+            entry[f"{field}_change_absolute"] = (
+                curr_val - prev_val if curr_val is not None else None
+            )
+            entry[f"{field}_growth_note"] = "prior period was zero/negative — % not meaningful, see absolute change"
+        else:
+            entry[f"{field}_growth_pct"] = _safe_div(
+                (curr_val - prev_val) if None not in (curr_val, prev_val) else None,
+                prev_val,
+            )
+    return entry
 
 
 def compute_trends(records: list[dict]) -> list[dict]:
@@ -162,28 +241,7 @@ def compute_trends(records: list[dict]) -> list[dict]:
 
     trends = []
     for prev, curr in zip(quarterly, quarterly[1:]):
-        entry = {
-            "from_period": f"{prev.get('period_start')} to {prev.get('period_end')}",
-            "to_period": f"{curr.get('period_start')} to {curr.get('period_end')}",
-        }
-        for field in ("revenue", "net_profit", "pbt", "total_expenses"):
-            prev_val = prev.get(field)
-            curr_val = curr.get(field)
-            if prev_val is not None and prev_val <= 0:
-                # Growth % from a zero/negative base is mathematically
-                # correct but not meaningful (e.g. -880% when the prior
-                # quarter itself was a loss) — report the raw change
-                # instead of a misleading percentage.
-                entry[f"{field}_growth_pct"] = None 
-                entry[f"{field}_change_absolute"] = (
-                    curr_val - prev_val if curr_val is not None else None
-                )
-                entry[f"{field}_growth_note"] = "prior period was zero/negative — % not meaningful, see absolute change"
-            else:
-                entry[f"{field}_growth_pct"] = _safe_div(
-                    (curr_val - prev_val) if None not in (curr_val, prev_val) else None,
-                    prev_val,
-                )
+        entry = _compute_period_growth(prev, curr, ("revenue", "net_profit", "pbt", "total_expenses"))
 
         # Operating leverage signal: is revenue growing faster than costs?
         # Positive = margin tailwind (revenue outpacing expense growth),
@@ -198,9 +256,29 @@ def compute_trends(records: list[dict]) -> list[dict]:
     return trends
 
 
+def compute_annual_yoy(records: list[dict]) -> dict | None:
+    """Real single-year year-over-year growth, using the 2 most recent.
+
+    Returns None if fewer than 2 real annual periods exist yet.
+    """
+    annual = [r for r in records if _is_annual(r)]
+    annual.sort(key=lambda r: r.get("period_end") or "", reverse=True)
+    if len(annual) < 2:
+        return None
+
+    latest, prior = annual[0], annual[1]
+    entry = _compute_period_growth(
+        prior, latest, ("revenue", "net_profit", "pbt", "total_expenses", "eps_basic")
+    )
+    entry["latest_period_end"] = latest.get("period_end")
+    entry["prior_period_end"] = prior.get("period_end")
+    return entry
+
+
 def analyze(canonical_records: list[dict]) -> dict:
     """Full analysis output for one company/filing-type: ratios per
-    period plus trends across periods (if applicable)."""
+    period, quarter-over-quarter trends, and (once 2 annual periods
+    exist) real year-over-year growth."""
     enriched = []
     for record in canonical_records:
         ratios = compute_period_ratios(record)
@@ -212,12 +290,10 @@ def analyze(canonical_records: list[dict]) -> dict:
     return {
         "periods": enriched,
         "trends": compute_trends(canonical_records),
+        "annual_yoy": compute_annual_yoy(canonical_records),
     }
 
 
-# Fields that are NOT plain percentages — used by both this file's __main__
-# and combine_and_analyze.py's __main__ so display formatting stays
-# consistent everywhere this data gets printed.
 _RATIO_UNIT_OVERRIDES = {
     "interest_coverage_ratio": "x",       # e.g. "45.2x" — a multiple, not a %
     "shares_outstanding": "count",
@@ -230,6 +306,7 @@ _RATIO_UNIT_OVERRIDES = {
     "net_debt": "currency",
     "operating_ebit": "currency",
     "net_debt_to_operating_ebit": "x",
+    "capex": "currency",
 }
 
 

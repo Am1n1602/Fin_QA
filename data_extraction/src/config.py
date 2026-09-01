@@ -10,6 +10,10 @@ COMPANIES = [
     {"name": "Tata Consultancy Services", "nse_symbol": "TCS", "bse_scrip": "532540"},
     {"name": "Infosys", "nse_symbol": "INFY", "bse_scrip": "500209"},
     {"name": "HCL Technologies", "nse_symbol": "HCLTECH", "bse_scrip": "532281"},
+    {"name": "Wipro", "nse_symbol": "WIPRO", "bse_scrip": "507685"},
+    {"name": "Tech Mahindra", "nse_symbol": "TECHM", "bse_scrip": "532755"},
+    {"name": "LTIMindtree", "nse_symbol": "LTM", "bse_scrip": "540005"},
+
 ]
 
 # Storage Paths

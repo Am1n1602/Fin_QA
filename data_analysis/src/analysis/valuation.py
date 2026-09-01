@@ -8,6 +8,47 @@ from src.analysis.ratios import _is_single_quarter, _safe_div, compute_ebit, com
 from src.analysis.combine_and_analyze import find_canonical_files
 from src.config import EXTRACTION_PROJECT_DIR, ANALYSIS_OUTPUT_DIR
 
+_DURATION_RANK = {"Six": 6, "Five": 5, "Four": 4, "Three": 3, "Two": 2, "One": 1}
+
+
+def _duration_rank(record: dict) -> int:
+    ctx = record.get("context_id", "")
+    for prefix, rank in _DURATION_RANK.items():
+        if ctx.startswith(prefix):
+            return rank
+    return 0
+
+
+def _pick_latest_reliable_record(records: list[dict], required_field: str) -> tuple[dict | None, str | None]:
+    """Among records where `required_field` is present, pick the most
+    recent by period_end. Returns (chosen_record, warning).
+    """
+    candidates = [r for r in records if r.get(required_field) is not None]
+    if not candidates:
+        return None, None
+
+    latest_period_end = max((r.get("period_end") or r.get("instant") or "") for r in candidates)
+    tied = [r for r in candidates if (r.get("period_end") or r.get("instant") or "") == latest_period_end]
+
+    if len(tied) == 1:
+        return tied[0], None
+
+    values = {r.get("context_id"): r[required_field] for r in tied}
+    warning = None
+    if len(set(values.values())) > 1:
+        warning = (
+            f"Multiple records share period_end={latest_period_end} but disagree on "
+            f"{required_field}: {values}. Preferring the longest-duration context "
+            f"(e.g. FourD over OneD) since standalone quarterly figures are typically "
+            f"a management-computed plug, not independently re-verified — but this "
+            f"disagreement likely indicates a real error in the source filing, not "
+            f"just a rounding difference. Worth checking the raw filing directly."
+        )
+
+    tied.sort(key=_duration_rank, reverse=True)
+    return tied[0], warning
+
+
 def get_latest_close_price(symbol: str) -> tuple[float, str] | tuple[None, None]:
     """Reads {symbol}_prices.csv from data_extraction. Sorts explicitly by
     DATE rather than assuming row order, since jugaad-data's CSV order
@@ -106,10 +147,9 @@ def compute_pb(company: str, filing_type: str = "consolidated") -> dict:
     all_records = []
     for f in files:
         all_records.extend(json.loads(f.read_text()))
-
-    # Most recent record that actually has total_equity populated
-    with_equity = [r for r in all_records if r.get("total_equity") is not None]
-    with_equity.sort(key=lambda r: r.get("period_end") or r.get("instant") or "", reverse=True)
+        
+    with_equity = [r for r in all_records if r.get("total_equity") is not None and r.get("paid_up_equity_capital") is not None]
+    latest, warning = _pick_latest_reliable_record(with_equity, "paid_up_equity_capital")
 
     result = {
         "company": company, "filing_type": filing_type,
@@ -117,16 +157,16 @@ def compute_pb(company: str, filing_type: str = "consolidated") -> dict:
         "total_equity": None, "shares_outstanding": None,
         "book_value_per_share": None, "pb_ratio": None,
         "balance_sheet_as_of": None, "note": None,
+        "data_quality_warning": warning,
     }
 
-    if not with_equity:
+    if latest is None:
         result["note"] = "No record with total_equity found — need an annual/half-yearly filing extracted first."
         return result
     if price is None:
         result["note"] = "No price data found."
         return result
 
-    latest = with_equity[0]
     equity = latest["total_equity"]
     shares = _safe_div(latest.get("paid_up_equity_capital"), latest.get("face_value_per_share"), as_pct=False)
     result["balance_sheet_as_of"] = latest.get("period_end") or latest.get("instant")
@@ -169,8 +209,8 @@ def compute_dividend_yield(company: str, filing_type: str = "consolidated") -> d
     for f in files:
         all_records.extend(json.loads(f.read_text()))
 
-    with_dividends = [r for r in all_records if r.get("dividends") is not None]
-    with_dividends.sort(key=lambda r: r.get("period_end") or "", reverse=True)
+    with_dividends = [r for r in all_records if r.get("dividends") is not None and r.get("paid_up_equity_capital") is not None]
+    latest, warning = _pick_latest_reliable_record(with_dividends, "paid_up_equity_capital")
 
     result = {
         "company": company, "filing_type": filing_type,
@@ -178,16 +218,16 @@ def compute_dividend_yield(company: str, filing_type: str = "consolidated") -> d
         "period": None, "total_dividends_paid": None,
         "shares_outstanding": None, "dividend_per_share": None,
         "dividend_yield_pct": None, "note": None,
+        "data_quality_warning": warning,
     }
 
-    if not with_dividends:
+    if latest is None:
         result["note"] = "No record with dividends data found — needs an annual filing with the cash flow statement extracted."
         return result
     if price is None:
         result["note"] = "No price data found."
         return result
 
-    latest = with_dividends[0]
     shares = _safe_div(latest.get("paid_up_equity_capital"), latest.get("face_value_per_share"), as_pct=False)
     result["period"] = latest.get("period_end")
     result["total_dividends_paid"] = latest["dividends"]
@@ -223,8 +263,8 @@ def compute_enterprise_value(company: str, filing_type: str = "consolidated") ->
     for f in files:
         all_records.extend(json.loads(f.read_text()))
 
-    with_equity = [r for r in all_records if r.get("total_equity") is not None]
-    with_equity.sort(key=lambda r: r.get("period_end") or r.get("instant") or "", reverse=True)
+    with_equity = [r for r in all_records if r.get("total_equity") is not None and r.get("paid_up_equity_capital") is not None]
+    latest, warning = _pick_latest_reliable_record(with_equity, "paid_up_equity_capital")
 
     result = {
         "company": company, "filing_type": filing_type,
@@ -233,16 +273,16 @@ def compute_enterprise_value(company: str, filing_type: str = "consolidated") ->
         "shares_outstanding": None, "market_cap": None,
         "total_debt": None, "cash_and_equivalents": None,
         "enterprise_value": None, "note": None,
+        "data_quality_warning": warning,
     }
 
-    if not with_equity:
+    if latest is None:
         result["note"] = "No record with balance-sheet data found — need an annual/half-yearly filing extracted first."
         return result
     if price is None:
         result["note"] = "No price data found."
         return result
 
-    latest = with_equity[0]
     shares = _safe_div(latest.get("paid_up_equity_capital"), latest.get("face_value_per_share"), as_pct=False)
     result["balance_sheet_as_of"] = latest.get("period_end") or latest.get("instant")
     result["shares_outstanding"] = shares
@@ -287,6 +327,7 @@ def compute_earnings_yield(company: str, filing_type: str = "consolidated") -> d
         "quarters_used_for_ttm_ebit": n_quarters,
         "earnings_yield_pct": None,
         "note": None,
+        "data_quality_warning": ev_result.get("data_quality_warning"),
     }
 
     if n_quarters < 4:
@@ -325,6 +366,7 @@ def compute_ev_to_sales(company: str, filing_type: str = "consolidated") -> dict
         "quarters_used_for_ttm_revenue": n_quarters,
         "ev_to_sales": None,
         "note": None,
+        "data_quality_warning": ev_result.get("data_quality_warning"),
     }
 
     if n_quarters < 4:
@@ -365,6 +407,8 @@ if __name__ == "__main__":
     pb_out_path = ANALYSIS_OUTPUT_DIR / f"{company}_{filing_type}_pb.json"
     pb_out_path.write_text(json.dumps(pb_result, indent=2, default=str))
     print()
+    if pb_result.get("data_quality_warning"):
+        print(f"  ⚠ DATA QUALITY WARNING: {pb_result['data_quality_warning']}")
     if pb_result["pb_ratio"] is not None:
         print(f"Book value/share:     {pb_result['book_value_per_share']:.2f} (as of {pb_result['balance_sheet_as_of']})")
         print(f"P/B ratio:            {pb_result['pb_ratio']:.2f}x")
@@ -375,6 +419,8 @@ if __name__ == "__main__":
     ey_out_path = ANALYSIS_OUTPUT_DIR / f"{company}_{filing_type}_earnings_yield.json"
     ey_out_path.write_text(json.dumps(ey_result, indent=2, default=str))
     print()
+    if ey_result.get("data_quality_warning"):
+        print(f"  ⚠ DATA QUALITY WARNING: {ey_result['data_quality_warning']}")
     if ey_result["earnings_yield_pct"] is not None:
         print(f"Enterprise Value:     {ey_result['enterprise_value']:,.0f}")
         print(f"TTM EBIT:             {ey_result['ttm_ebit']:,.0f} ({ey_result['quarters_used_for_ttm_ebit']}/4 quarters)")
@@ -396,6 +442,8 @@ if __name__ == "__main__":
     dy_out_path = ANALYSIS_OUTPUT_DIR / f"{company}_{filing_type}_dividend_yield.json"
     dy_out_path.write_text(json.dumps(dy_result, indent=2, default=str))
     print()
+    if dy_result.get("data_quality_warning"):
+        print(f"  ⚠ DATA QUALITY WARNING: {dy_result['data_quality_warning']}")
     if dy_result["dividend_yield_pct"] is not None:
         print(f"Total dividends paid: {dy_result['total_dividends_paid']:,.0f} (as of {dy_result['period']})")
         print(f"Dividend/share:       {dy_result['dividend_per_share']:.2f}")

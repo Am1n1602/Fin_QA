@@ -121,6 +121,67 @@ def validate_canonical_record(record: dict, tolerance: float = 1.0) -> dict:
     record["_needs_review"] = len(checks) > 0 and not all(checks.values())
     return record
 
+BALANCE_SHEET_SNAPSHOT_FIELDS = [
+    "total_assets", "total_liabilities", "total_equity",
+    "current_assets", "noncurrent_assets",
+    "current_liabilities", "noncurrent_liabilities",
+    "borrowings_current", "borrowings_noncurrent",
+    "cash_and_equivalents",
+    "paid_up_equity_capital", "face_value_per_share",
+]
+
+# Fields where a discrepancy is especially consequential — these feed
+# shares_outstanding, book value, and Enterprise Value directly, so an
+# error here silently corrupts every valuation metric downstream rather
+# than just one balance-sheet ratio.
+_HIGH_SEVERITY_FIELDS = {"paid_up_equity_capital", "face_value_per_share", "total_assets", "total_equity"}
+
+
+def check_cross_record_consistency(records: list[dict], tolerance: float = 1.0) -> list[dict]:
+    """
+    Scans a set of canonical records (from one filing, or a whole
+    company's combined history — this makes no assumption about scope)
+    for records that share the same period_end but disagree on a field
+    from BALANCE_SHEET_SNAPSHOT_FIELDS above.
+
+    Returns a list of issue dicts (empty list = no issues found):
+        {
+          "period_end": "2026-03-31",
+          "field": "paid_up_equity_capital",
+          "values": {"OneD+OneI": 29000000.0, "FourD+OneI": 296000000.0},
+          "severity": "high" | "low",
+        }
+    """
+    from collections import defaultdict
+
+    by_date = defaultdict(list)
+    for r in records:
+        date_key = r.get("period_end") or r.get("instant")
+        if date_key:
+            by_date[date_key].append(r)
+
+    issues = []
+    for date_key, group in by_date.items():
+        if len(group) < 2:
+            continue
+        for field in BALANCE_SHEET_SNAPSHOT_FIELDS:
+            values = {r.get("context_id"): r.get(field) for r in group if r.get(field) is not None}
+            distinct = set(values.values())
+            if len(distinct) <= 1:
+                continue
+            if max(distinct) - min(distinct) <= tolerance:
+                continue  # float rounding noise, not a real disagreement
+            smallest = min(v for v in distinct if v != 0) if any(v != 0 for v in distinct) else 1
+            magnitude_pct = round((max(distinct) - min(distinct)) / abs(smallest) * 100, 2)
+            issues.append({
+                "period_end": date_key,
+                "field": field,
+                "values": values,
+                "severity": "high" if field in _HIGH_SEVERITY_FIELDS else "low",
+                "magnitude_pct": magnitude_pct,
+            })
+    return issues
+
 
 def map_facts_to_canonical(facts: list[dict]) -> list[dict]:
     """
@@ -218,15 +279,22 @@ def merge_periods(records: list[dict]) -> list[dict]:
 
 
 def map_and_save(raw_json_path) -> tuple[Path, int]:
-    """Load a *_facts_raw.json, map it to canonical schema, save
-    *_canonical.json alongside it. Returns (output_path, period_count) —
-    used by both the CLI below and run_extraction.py's batch runner."""
     raw_json_path = Path(raw_json_path)
     facts = json.loads(raw_json_path.read_text())
     canonical = map_facts_to_canonical(facts)
     canonical = merge_periods(canonical)
     out_path = raw_json_path.parent / raw_json_path.name.replace("_facts_raw.json", "_canonical.json")
     out_path.write_text(json.dumps(canonical, indent=2, default=str))
+
+    issues = check_cross_record_consistency(canonical)
+    if issues:
+        print(f"[schema] ⚠ {len(issues)} cross-record consistency issue(s) found in {raw_json_path.name}:")
+        for issue in issues:
+            marker = "‼" if issue["severity"] == "high" else "!"
+            print(f"  {marker} period_end={issue['period_end']} field={issue['field']} "
+                  f"values={issue['values']} (severity={issue['severity']}, "
+                  f"magnitude={issue['magnitude_pct']}%)")
+
     return out_path, len(canonical)
 
 

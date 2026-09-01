@@ -8,11 +8,11 @@ Data Acquistion/Extraction pipeline: [*]
     - Parsering XBRL to JSON: [*]
     - Using a pdf to JSON parser: [-]
 
-Data Analysis: [~]
+Data Analysis: [*]
     - Create Generalized Ratios: [*]
     - Create Valuation Ratios: [*]
     - Create Peers Comparison: [*]
-    - Rank companies using fundamental factors [~]
+    - Rank companies using fundamental factors [*]
 
 
 Evaluate financial health and accounting risk: [-]
