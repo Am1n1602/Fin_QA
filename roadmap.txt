@@ -15,11 +15,11 @@ Data Analysis: [*]
     - Rank companies using fundamental factors [*]
 
 
-Evaluate financial health and accounting risk: [-]
+Evaluate financial health and accounting risk: [*]
 
 Automatically generate investment research reports: [-]
 
-Answer financial questions using structured data and RAG: [-]
+Answer financial questions using structured data and RAG: [~]
 
 Use a hybrid local/cloud LLM architecture: [-]
     -Provide source-grounded answers.
