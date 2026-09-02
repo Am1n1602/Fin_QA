@@ -32,6 +32,16 @@ def already_downloaded(nse_symbol: str, source_url: str) -> bool:
                 return True
     return False
 
+def find_existing_record_by_hash(nse_symbol: str, sha256: str) -> dict | None:
+    path = meta_index_path(nse_symbol)
+    if not path.exists():
+        return None
+    with open(path, "r") as f:
+        for line in f:
+            record = json.loads(line)
+            if record.get("sha256") == sha256:
+                return record
+    return None
 
 def append_meta_record(nse_symbol: str, record: dict):
     """Append one filing's metadata as a JSON line (append-only audit trail)."""

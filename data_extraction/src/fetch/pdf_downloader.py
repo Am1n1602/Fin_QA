@@ -10,6 +10,7 @@ from src.config import USER_AGENT, REQUEST_DELAY_SECONDS
 from src.fetch.data_storage import (
     company_raw_dir,
     already_downloaded,
+    find_existing_record_by_hash,
     append_meta_record,
     safe_filename,
     file_hash,
@@ -36,14 +37,31 @@ def download_filing(
     resp = None
     for url in [source_url] + (fallback_urls or []):
         try:
-            resp = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=30)
-            resp.raise_for_status()
-            source_url = url  # record whichever URL actually worked
-            break
+            candidate = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=30)
+            candidate.raise_for_status()
         except requests.RequestException as e:
             print(f"[pdf_downloader] failed to fetch {url}: {e}")
-            resp = None
+            continue
 
+        # A 200 status doesn't guarantee real content -- BSE/NSE sometimes serve
+        # an HTML error/rate-limit/session page with status 200. Validate actual
+        # bytes match what the URL/headers claim before trusting this response.
+        is_xbrl_url = url.lower().endswith((".xml", ".xbrl"))
+        looks_like_pdf = "pdf" in candidate.headers.get("Content-Type", "").lower() or url.lower().endswith(".pdf")
+
+        if is_xbrl_url and not candidate.content.strip().startswith(b"<"):
+            print(f"[pdf_downloader] {url}: expected XML/XBRL, got non-XML content "
+                f"(first bytes: {candidate.content[:30]!r}) -- skipping, trying next URL if any")
+            continue
+        if looks_like_pdf and not candidate.content.startswith(b"%PDF-"):
+            print(f"[pdf_downloader] {url}: expected a PDF, got non-PDF content "
+                f"(first bytes: {candidate.content[:30]!r}) -- likely an HTML "
+                f"error/rate-limit page served with status 200; skipping, trying next URL if any")
+            continue
+
+        resp = candidate
+        source_url = url
+        break
     if resp is None:
         return None
 
@@ -68,6 +86,15 @@ def download_filing(
     }
     if extra_meta:
         record.update(extra_meta)
+    existing = find_existing_record_by_hash(nse_symbol, record["sha256"])
+    if existing is not None:
+        print(f"[pdf_downloader] content already recorded as '{existing.get('title')}' "
+              f"(sha256={record['sha256'][:16]}...) -- same file, different URL/title. "
+              f"Recording as a duplicate reference, not re-storing.")
+        out_path.unlink(missing_ok=True)  # remove the redundant just-written copy
+        record["local_path"] = existing.get("local_path")  # point at the kept original
+        record["duplicate_content_of"] = existing.get("title")
+
 
     append_meta_record(nse_symbol, record)
     time.sleep(REQUEST_DELAY_SECONDS)
