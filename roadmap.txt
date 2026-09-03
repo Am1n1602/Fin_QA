@@ -6,7 +6,7 @@ TODO:
 Data Acquistion/Extraction pipeline: [*]
     - Create fetching data from NSE/BSE: [*]
     - Parsering XBRL to JSON: [*]
-    - Using a pdf to JSON parser: [-]
+    - Using a pdf to JSON parser: [*]
 
 Data Analysis: [*]
     - Create Generalized Ratios: [*]
@@ -17,11 +17,11 @@ Data Analysis: [*]
 
 Evaluate financial health and accounting risk: [*]
 
-Automatically generate investment research reports: [-]
+Automatically generate investment research reports: [*]
 
-Answer financial questions using structured data and RAG: [~]
+Answer financial questions using structured data and RAG: [*]
 
-Use a hybrid local/cloud LLM architecture: [-]
+Use a hybrid local/cloud LLM architecture: [~]
     -Provide source-grounded answers.
 
 Expose the system through APIs. (Optional) [-]
