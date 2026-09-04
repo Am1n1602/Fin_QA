@@ -1,0 +1,66 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Virtual environment ---
+venv/
+.venv/
+env/
+ENV/
+
+# --- Secrets / local config ---
+.env
+.env.*
+!.env.example
+llm_router/config/llm_config.yaml
+
+# --- Generated data (fetched filings, DB, indices — large + user-specific, never committed) ---
+data/
+data_extraction/data/
+data_analysis/data/
+database/data/
+rag/data/
+*.db
+*.sqlite3
+*.sqlite3-journal
+
+# --- RAG artifacts ---
+rag/data/indices/
+*.faiss
+*.index
+
+# --- Orchestrator / scheduler runtime output ---
+orchestrator/logs/
+orchestrator/schedule_state.json
+
+# --- QA router validation output ---
+qa_router/stage12d_validation_outputs/
+
+# --- NIFTY 50 universe cache (regenerated at runtime) ---
+data_extraction/data/universe/
+data/universe/
+
+# --- Model/package caches ---
+.cache/
+*.pt
+*.bin
+
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# --- Jupyter, if used during development ---
+.ipynb_checkpoints/
