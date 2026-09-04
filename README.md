@@ -55,7 +55,6 @@ The project is seven sibling folders plus one thin packaging layer, sharing a si
 | `orchestrator/` | Chains fetch → extract → analyze → load → RAG-ingest into one unattended, resumable pipeline run |
 | `fin_llm_platform/` | Thin packaging shell installed by `pip install -e .` — wires the above into three console commands, nothing reimplemented |
 
-> The `data_extraction/` and `data_analysis/` folders are the original, pre-existing project this platform was built around; every later stage was added around them without rewriting their internals, per the project's own ground rule.
 
 ---
 
