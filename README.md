@@ -106,7 +106,7 @@ The project is seven sibling folders plus one thin packaging layer, sharing a si
 ### Install
 
 ```bash
-git clone <this-repo-url>
+git clone https://github.com/Am1n1602/Fin_QA
 cd Fin_QA
 
 python -m venv venv
