@@ -1,0 +1,3 @@
+requests>=2.31        # Ollama's REST API -- plain HTTP, no official Ollama client needed
+pyyaml>=6.0            # llm_config.yaml loading
+anthropic>=0.39

@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "financial-statement-llm"
+version = "0.1.0"
+description = "AI-powered financial intelligence platform for NIFTY 50 equities -- natural-language QA over NSE/BSE filings, backed by a deterministic calculation engine and a RAG-grounded LLM narrative layer."
+requires-python = ">=3.11"
+readme = "MANUAL.md"
+
+dependencies = [
+    "jugaad-data>=0.35",
+    "bse>=3.3",
+    "requests>=2.31",
+    "pandas>=2.0",
+    "lxml",
+    "pyyaml>=6.0",
+    "torch",
+    "sentence-transformers",
+    "faiss-cpu",
+    "pypdf",
+    "rank-bm25",
+    "numpy",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.39"]
+
+[project.scripts]
+finqa = "fin_llm_platform.cli:main"
+finqa-pipeline = "fin_llm_platform.pipeline:main"
+finqa-setup = "fin_llm_platform.setup_scheduler:main"
+
+[tool.setuptools.packages.find]
+include = ["fin_llm_platform*"]

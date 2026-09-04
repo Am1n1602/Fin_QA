@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from src import database_ro
+from src import llm_integration
 from src import metrics as metrics_mod
 from src import query_expansion
 from src.bridges.analysis_bridge import AnalysisBridge
@@ -19,12 +20,6 @@ from src.classify import (
     classify_question,
 )
 from src.config import DB_PATH
-
-_LLM_PENDING_NOTE = (
-    "(Hybrid LLM router) is not built yet, so this is NOT an LLM-written answer -- "
-    "it's assembled directly from the underlying engines below, with full source citations. "
-    "Treat 'answer' as a grounded summary, not prose synthesis."
-)
 
 
 def _fmt_value(value, unit_hint: str | None) -> str:
@@ -242,6 +237,23 @@ def _handle_report(q: Classification, bridge: AnalysisBridge, db_path: str) -> d
     }
 
 
+def _llm_unavailable_reason(llm_status: str, no_chunks: bool = False) -> str:
+    if llm_status == "rejected_numeric":
+        return (
+            "an LLM-written answer was generated but rejected: it used a number that does not "
+            "appear in any cited source passage -- a possible digit hallucination"
+        )
+    if llm_status == "rejected_unit":
+        return (
+            "an LLM-written answer was generated but rejected: it used a currency unit (e.g. "
+            "million/crore/lakh) that does not appear anywhere in the cited source passages -- "
+            "a possible unit hallucination"
+        )
+    if no_chunks:
+        return "no relevant source passages were retrieved for the LLM to synthesize from"
+    return "Stage 11's LLM router is unreachable, has no configured API key, or its call budget is exhausted"
+
+
 def _handle_narrative(q: Classification, question: str, rag: RagBridge, k: int = 5) -> dict:
     company = q.companies[0] if len(q.companies) == 1 else None
 
@@ -257,7 +269,10 @@ def _handle_narrative(q: Classification, question: str, rag: RagBridge, k: int =
                 "No relevant passages were found in the ingested filings for this question"
                 + (f" (scoped to {company})" if company else "") + "."
             ),
-            "data": {"chunks": [], "query_variants_used": expansions},
+            "data": {
+                "chunks": [], "query_variants_used": expansions,
+                "llm_synthesis_used": False, "llm_synthesis_status": "unavailable",
+            },
             "sources": [],
             "warnings": [
                 "This means either nothing relevant has been ingested yet, or the query needs "
@@ -276,16 +291,38 @@ def _handle_narrative(q: Classification, question: str, rag: RagBridge, k: int =
         f"section={r.get('section')}):\n{r['text'][:500]}"
         for i, r in enumerate(results)
     )
-    answer = (
-        f"No LLM synthesis is available yet (Stage 11 pending) -- below are the {len(results)} most "
-        f"relevant source passages, ranked by relevance, for a human (or a future LLM step) to read "
-        f"and answer from directly:\n\n{passages}"
-    )
+
+
+    llm_answer, llm_status = llm_integration.synthesize_narrative_answer(question, results)
+    caveats: list[str] = []
+    if llm_answer:
+        answer = llm_answer
+        llm_used = True
+        caveats.append(
+            "This answer was written by an LLM (Stage 11) strictly from the numbered source "
+            "passages in data['chunks'] -- it is an interpretation layer over already-verified "
+            "retrieval, not a new source of truth. Verify any specific claim against the cited "
+            "passage before relying on it."
+        )
+    else:
+ 
+        reason = _llm_unavailable_reason(llm_status)
+        answer = (
+            f"No LLM synthesis is available for this run ({reason}) -- below are the {len(results)} "
+            f"most relevant source passages, ranked by relevance, for a human (or a retried LLM call) "
+            f"to read and answer from directly:\n\n{passages}"
+        )
+        llm_used = False
+
     return {
         "answer": answer,
-        "data": {"chunks": results, "query_variants_used": expansions},
+        "data": {
+            "chunks": results, "query_variants_used": expansions,
+            "llm_synthesis_used": llm_used, "llm_synthesis_status": llm_status,
+        },
         "sources": sources,
         "warnings": [],
+        "caveats": caveats,
     }
 
 
@@ -316,13 +353,37 @@ def _handle_complex(q: Classification, question: str, analysis_bridge: AnalysisB
     warnings += narrative["warnings"]
 
     numeric_summary = " ".join(p["answer"] for key, p in parts.items() if key != "narrative" and p.get("answer"))
-    answer = (
-        (numeric_summary + "\n\n" if numeric_summary else "")
-        + "No LLM synthesis is available yet (Stage 11 pending), so the qualitative 'why' part of "
-          "this question is answered by the retrieved source passages below rather than a written "
-          f"explanation:\n\n{parts['narrative']['answer']}"
-    )
-    return {"answer": answer, "data": parts, "sources": sources, "warnings": warnings}
+    chunks = narrative["data"].get("chunks") or []
+
+
+    if chunks:
+        llm_answer, llm_status = llm_integration.synthesize_complex_answer(question, numeric_summary, chunks)
+    else:
+        llm_answer, llm_status = None, "unavailable"
+    if llm_answer:
+        answer = (numeric_summary + "\n\n" if numeric_summary else "") + llm_answer
+        caveats = [
+            "The qualitative portion of this answer was written by an LLM (Stage 11) from the "
+            "numbered source passages in data['narrative']['chunks'] and the verified numeric "
+            "findings above -- verify any specific claim against the cited passage before relying "
+            "on it."
+        ]
+    else:
+
+        reason = _llm_unavailable_reason(llm_status, no_chunks=not chunks)
+        answer = (
+            (numeric_summary + "\n\n" if numeric_summary else "")
+            + f"No LLM synthesis is available for this run ({reason}), so the qualitative 'why' part "
+              "of this question is answered by the retrieved source passages below rather than a "
+              f"written explanation:\n\n{parts['narrative']['answer']}"
+        )
+        caveats = [
+            "LLM synthesis was not available for this answer -- see data['narrative']['chunks'] for "
+            "the raw retrieved passages a human (or a retried LLM call) can read directly."
+        ]
+
+    parts["llm_synthesis_status"] = llm_status
+    return {"answer": answer, "data": parts, "sources": sources, "warnings": warnings, "caveats": caveats}
 
 
 def _handle_unknown(q: Classification) -> dict:
@@ -387,8 +448,6 @@ def answer_question(
             rag_bridge.close()
 
     caveats = handled.get("caveats", [])
-    if q.intent != INTENT_UNKNOWN:
-        caveats = caveats + [_LLM_PENDING_NOTE]
 
     return {
         "question": question,

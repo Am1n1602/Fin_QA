@@ -1,14 +1,6 @@
 """
 qa_router/src/bridges/rag_bridge.py
 
-Client-side handle to a long-lived rag/ worker subprocess. See
-worker_protocol.py's module docstring for the full reasoning.
-
-The worker process is expensive to start (loads a ~420MB sentence-
-transformer model on first use, more if reranking is used) -- this bridge
-is deliberately lazy: nothing is spawned until the first
-retrieve()/hybrid_retrieve()/reranked_retrieve() call, so a QA session
-that never needs RAG never pays that cost.
 """
 
 from __future__ import annotations
@@ -110,6 +102,12 @@ class RagBridge:
             "query": query, "expansions": expansions, "k": k, "company": company,
             "candidate_pool_per_variant": candidate_pool_per_variant, "final_pool_size": final_pool_size,
         })
+
+    def warm_up(self) -> None:
+        try:
+            self.reranked_retrieve("warmup", k=1, company=None)
+        except Exception:  # noqa: BLE001 -- best-effort warm-up, never a new hard failure point
+            pass
 
     def close(self) -> None:
         if self._proc is not None and self._proc.poll() is None:

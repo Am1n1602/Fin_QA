@@ -1,0 +1,40 @@
+llm:
+
+  router: local
+
+  local:
+    provider: ollama
+    model: llama3.2:3b
+    base_url: http://localhost:11434
+    timeout_s: 60
+    fallback_to_cloud_on_error: true
+
+  cloud:
+    # Killswitch: set false to run 100% local/free with no code change.
+    enabled: true
+    # "groq" is the default -- genuinely free (no credit card), doesn't
+    # train on submitted data, workable free daily rate limit. Get a key
+    # at https://console.groq.com/keys.
+    #
+    # To use Anthropic Claude instead, change ONLY this one line:
+    #   provider: anthropic
+    # `model`/`api_key_env` below switch automatically to the right
+    # values for whichever provider you pick (see config.py's
+    # _CLOUD_PROVIDER_DEFAULTS) UNLESS you also override them explicitly
+    # here -- so you don't need to touch the two lines below at all
+    # unless you want a non-default model.
+    provider: groq
+    model: openai/gpt-oss-120b
+    api_key_env: GROQ_API_KEY
+    timeout_s: 60
+    max_tokens: 1024
+    max_calls_per_process: 200
+    fallback_to_local_on_error: false
+  tasks:
+    classification: local
+    extraction: local
+    simple_summary: local
+    formatting: local
+    narrative_synthesis: cloud
+    complex_qa: cloud
+    research_report: cloud

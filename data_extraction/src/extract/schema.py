@@ -57,6 +57,17 @@ TAG_MAP = {
     "capex_intangibles": "in-capmkt:PurchaseOfIntangibleAssetsClassifiedAsInvestingActivities",
 }
 
+_BANK_EQUITY_AUX_TAGS = {
+    "_bank_capital": "in-capmkt:Capital",
+    "_bank_reserves_and_surplus": "in-capmkt:ReservesAndSurplus",
+}
+
+_SECTOR_ALT_TAGS = {
+    "in-capmkt:ShareholdersFunds": "total_equity",
+    "in-capmkt:ProfitLossForThePeriod": "net_profit",
+    "in-capmkt:ProfitLossAfterTaxAndExtraordinaryItems": "net_profit",
+}
+
 # Matches "OneD", "TwoD", "ThreeD", "OneI", "TwoI", etc. — the primary
 # whole-company contexts. Also matches "PY_D"/"PY_I" (prior-year contexts
 # seen in annual filings — e.g. "PY_I" for the prior year-end balance
@@ -130,10 +141,6 @@ BALANCE_SHEET_SNAPSHOT_FIELDS = [
     "paid_up_equity_capital", "face_value_per_share",
 ]
 
-# Fields where a discrepancy is especially consequential — these feed
-# shares_outstanding, book value, and Enterprise Value directly, so an
-# error here silently corrupts every valuation metric downstream rather
-# than just one balance-sheet ratio.
 _HIGH_SEVERITY_FIELDS = {"paid_up_equity_capital", "face_value_per_share", "total_assets", "total_equity"}
 
 
@@ -184,16 +191,10 @@ def check_cross_record_consistency(records: list[dict], tolerance: float = 1.0) 
 
 
 def map_facts_to_canonical(facts: list[dict]) -> list[dict]:
-    """
-    Takes the raw fact list (as produced by xbrl_lite_parser) and returns
-    one canonical record PER PRIMARY CONTEXT (i.e. per reporting period —
-    current quarter, comparative quarter, YTD, etc., however many the
-    filing includes). Facts under non-primary (segment/note) contexts are
-    dropped here — reintroduce them separately later if you specifically
-    want segment-level analysis.
-    """
-    # Reverse lookup: raw tag -> canonical name (skip unmapped/None entries)
+
     tag_to_canonical = {v: k for k, v in TAG_MAP.items() if v is not None}
+    tag_to_canonical.update({v: k for k, v in _BANK_EQUITY_AUX_TAGS.items()})
+    tag_to_canonical.update(_SECTOR_ALT_TAGS)
 
     by_context = defaultdict(dict)
     context_period_info = {}
@@ -223,16 +224,21 @@ def map_facts_to_canonical(facts: list[dict]) -> list[dict]:
     for ctx_id, fields in by_context.items():
         record = dict(context_period_info[ctx_id])
         record.update(fields)
-        # Note which canonical fields were expected but not found in this
-        # context — makes gaps visible instead of silently missing.
+        if record.get("total_equity") is None:
+            bank_capital = record.pop("_bank_capital", None)
+            bank_reserves = record.pop("_bank_reserves_and_surplus", None)
+            if bank_capital is not None and bank_reserves is not None:
+                record["total_equity"] = bank_capital + bank_reserves
+        else:
+            record.pop("_bank_capital", None)
+            record.pop("_bank_reserves_and_surplus", None)
+
         record["_missing_fields"] = [
             k for k in TAG_MAP if TAG_MAP[k] is not None and k not in fields
         ]
         record = validate_canonical_record(record)
         records.append(record)
 
-    # Sort by period_end (or instant) so the current quarter is first —
-    # makes the output easier to scan.
     records.sort(key=lambda r: r.get("period_end") or r.get("instant") or "", reverse=True)
     return records
 

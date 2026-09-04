@@ -106,7 +106,13 @@ def load_metrics_for_filing(conn, filing_id: int, ratios: dict):
 
 def load_canonical_facts(conn, company_filter: str | None = None):
     """data_extraction's canonical JSONs -> companies + filings + financial_facts."""
-    pattern = re.compile(r"^([A-Z]+)_(consolidated|standalone)_.+_canonical\.json$")
+    # NOT [A-Z]+ -- real NSE symbols include "-" (BAJAJ-AUTO) and "&"
+    # (M&M); the old [A-Z]-only pattern silently skipped both companies
+    # entirely (zero facts loaded, no error) on every run. Found live
+    # once the pipeline actually covered all 50 companies instead of the
+    # original 6, none of which needed the wider character class -- see
+    # SESSION_ADDENDUM_6.md.
+    pattern = re.compile(r"^(.+)_(consolidated|standalone)_.+_canonical\.json$")
     count_filings = 0
     for path in sorted(EXTRACTED_DIR.glob("*_canonical.json")):
         m = pattern.match(path.name)
@@ -128,7 +134,8 @@ def load_ratios(conn, company_filter: str | None = None):
     """data_analysis's *_combined_ratios.json -> financial_metrics, matched
     to the SAME filing rows created by load_canonical_facts (by company +
     filing_type + context_id + period_end + instant)."""
-    pattern = re.compile(r"^([A-Z]+)_(consolidated|standalone)_combined_ratios\.json$")
+    # See load_canonical_facts()'s comment above -- same [A-Z]-only bug.
+    pattern = re.compile(r"^(.+)_(consolidated|standalone)_combined_ratios\.json$")
     count_metrics = 0
     for path in sorted(ANALYSIS_DIR.glob("*_combined_ratios.json")):
         m = pattern.match(path.name)
@@ -160,7 +167,8 @@ def load_valuation(conn, company_filter: str | None = None):
     figures, not tied to one specific quarter's context)."""
     count = 0
     for path in sorted(ANALYSIS_DIR.glob("*_valuation.json")):
-        m = re.match(r"^([A-Z]+)_(consolidated|standalone)_valuation\.json$", path.name)
+        # See load_canonical_facts()'s comment above -- same [A-Z]-only bug.
+        m = re.match(r"^(.+)_(consolidated|standalone)_valuation\.json$", path.name)
         if not m:
             continue
         symbol, filing_type = m.group(1), m.group(2)

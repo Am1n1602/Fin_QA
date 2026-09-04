@@ -21,7 +21,7 @@ Automatically generate investment research reports: [*]
 
 Answer financial questions using structured data and RAG: [*]
 
-Use a hybrid local/cloud LLM architecture: [~]
+Use a hybrid local/cloud LLM architecture: [*]
     -Provide source-grounded answers.
 
 Expose the system through APIs. (Optional) [-]

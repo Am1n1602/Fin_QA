@@ -85,6 +85,12 @@ class AnalysisBridge:
     def analyze_trends(self, company: str, filing_type: str = "consolidated") -> dict:
         return self._call("analyze_trends", {"company": company, "filing_type": filing_type})
 
+    def warm_up(self) -> None:
+        try:
+            self._call("__warmup__", {})
+        except Exception:  # noqa: BLE001 -- best-effort warm-up, never a new hard failure point
+            pass
+
     def close(self) -> None:
         if self._proc is not None and self._proc.poll() is None:
             try:

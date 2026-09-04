@@ -1,10 +1,6 @@
 """
 qa_router/src/bridges/analysis_worker.py
 
-Long-lived worker subprocess: imports data_analysis/'s REAL src package
-and answers JSON requests over stdin/stdout. See worker_protocol.py's
-module docstring for the full "why a subprocess" reasoning.
-
 Run standalone only for debugging:
     python analysis_worker.py --project-dir /path/to/data_analysis
     (then type a request line, e.g.)
@@ -30,9 +26,6 @@ def main() -> None:
                          help="Path to the data_analysis/ directory (the one containing its own src/ package).")
     args = parser.parse_args()
 
-    # This worker process's sys.path is otherwise empty of any other
-    # project's `src` package, so registering data_analysis's `src` here
-    # is safe -- see worker_protocol.py's module docstring.
     sys.path.insert(0, args.project_dir)
 
     from src.analysis.combine_and_analyze import find_canonical_files
