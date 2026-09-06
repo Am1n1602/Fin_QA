@@ -39,6 +39,13 @@ _NAME_COLS = ("company name", "companyname")
 _SYMBOL_COLS = ("symbol",)
 _ISIN_COLS = ("isin code", "isin")
 
+_INDUSTRY_COLS = ("industry",)
+
+ # TEMPORARY FIX -> NEED TO FIX IT PROPERLY
+_LIVE_SYMBOL_ALIASES: dict[str, str] = {
+    "LTIM": "LTM",
+}
+
 
 def _normalize_header(h: str) -> str:
     return h.strip().lower()
@@ -99,14 +106,23 @@ def fetch_nifty50_index_csv(timeout: int = 20) -> list[dict] | None:
 
     companies = []
     skipped = 0
+    missing_industry = 0
     for row in rows:
         name = _pick(row, _NAME_COLS)
         symbol = _pick(row, _SYMBOL_COLS)
         isin = _pick(row, _ISIN_COLS)
+        sector = _pick(row, _INDUSTRY_COLS) or None
+        if not sector:
+            missing_industry += 1
         if not name or not symbol:
             skipped += 1
             continue
-        companies.append({"name": name, "nse_symbol": symbol, "isin": isin})
+        companies.append({"name": name, "nse_symbol": symbol, "isin": isin, "sector": sector})
+
+    if missing_industry:
+        print(f"[universe] {missing_industry} row(s) had no recognizable Industry/sector column "
+              f"(check the column-name mapping above -- see _INDUSTRY_COLS) -- those companies will "
+              f"fall back to whole-universe peer comparison instead of sector peers until this is fixed.")
 
     if skipped:
         print(f"[universe] {skipped} row(s) skipped -- missing a name or symbol "
@@ -162,21 +178,37 @@ def refresh(resolve_scrip_codes: bool = True) -> dict[str, dict]:
               f"({len(cache)} companies, last updated per {CACHE_PATH}).")
         return cache
 
-    live_symbols = {c["nse_symbol"] for c in live}
+    # Canonical (post-alias) symbols -- see _LIVE_SYMBOL_ALIASES above.
+    live_symbols = {_LIVE_SYMBOL_ALIASES.get(c["nse_symbol"], c["nse_symbol"]) for c in live}
 
     for c in live:
-        symbol = c["nse_symbol"]
+        live_symbol = c["nse_symbol"]
+        symbol = _LIVE_SYMBOL_ALIASES.get(live_symbol, live_symbol)
         existing = cache.get(symbol)
         if existing:
-            existing.update(name=c["name"], isin=c["isin"], active=True)
+            existing.update(name=c["name"], isin=c["isin"], active=True, live_symbol=live_symbol)
+            # Only overwrite a previously-known sector if this refresh actually
+            # found one -- a transient parsing hiccup on one field shouldn't
+            # blow away a sector value a prior successful refresh already
+            # resolved (same "never silently lose a known-good value" spirit
+            # as the rest of this cache).
+            if c.get("sector"):
+                existing["sector"] = c["sector"]
+            else:
+                existing.setdefault("sector", None)
         else:
             cache[symbol] = {
                 "name": c["name"],
                 "nse_symbol": symbol,
+                "live_symbol": live_symbol,
                 "isin": c["isin"],
+                "sector": c.get("sector"),
                 "bse_scrip": None,
                 "active": True,
             }
+
+    for live_symbol in _LIVE_SYMBOL_ALIASES:
+        cache.pop(live_symbol, None)
 
     for symbol, entry in cache.items():
         if symbol not in live_symbols and entry.get("active", True):
@@ -239,6 +271,7 @@ def get_companies() -> list[dict]:
             "name": entry["name"],
             "nse_symbol": entry["nse_symbol"],
             "bse_scrip": entry["bse_scrip"],
+            "sector": entry.get("sector"),
         })
     if excluded:
         print(f"[universe] {excluded} active compan{'y is' if excluded == 1 else 'ies are'} "
@@ -270,7 +303,8 @@ def main():
         companies = get_companies()
         print(f"\n[universe] {len(companies)} companies ready for use:")
         for c in companies:
-            print(f"  {c['nse_symbol']:12s} bse_scrip={c['bse_scrip']:8s} {c['name']}")
+            print(f"  {c['nse_symbol']:12s} bse_scrip={c['bse_scrip']:8s} "
+                  f"sector={c.get('sector') or 'UNKNOWN':30s} {c['name']}")
 
 
 if __name__ == "__main__":

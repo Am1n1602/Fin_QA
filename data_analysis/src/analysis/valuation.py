@@ -383,72 +383,87 @@ def compute_ev_to_sales(company: str, filing_type: str = "consolidated") -> dict
     return result
 
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python -m src.analysis.valuation <company_symbol> [consolidated|standalone]")
-        sys.exit(1)
-    company = sys.argv[1]
-    filing_type = sys.argv[2] if len(sys.argv) > 2 else "consolidated"
-
+def run_and_save(company: str, filing_type: str = "consolidated", verbose: bool = True) -> dict:
     result = compute_pe(company, filing_type)
 
     out_path = ANALYSIS_OUTPUT_DIR / f"{company}_{filing_type}_valuation.json"
     out_path.write_text(json.dumps(result, indent=2, default=str))
 
-    print(f"Company:              {result['company']} ({result['filing_type']})")
-    print(f"Latest close:         {result['latest_close']} (as of {result['price_date']})")
-    print(f"TTM EPS ({result['eps_field']}):  {result['ttm_eps']} ({result['quarters_used_for_ttm']}/4 quarters)")
-    if result["pe_ratio"] is not None:
-        print(f"P/E ratio:            {result['pe_ratio']:.2f}x")
-    else:
-        print(f"P/E ratio:            N/A — {result['note']}")
+    if verbose:
+        print(f"Company:              {result['company']} ({result['filing_type']})")
+        print(f"Latest close:         {result['latest_close']} (as of {result['price_date']})")
+        print(f"TTM EPS ({result['eps_field']}):  {result['ttm_eps']} ({result['quarters_used_for_ttm']}/4 quarters)")
+        if result["pe_ratio"] is not None:
+            print(f"P/E ratio:            {result['pe_ratio']:.2f}x")
+        else:
+            print(f"P/E ratio:            N/A — {result['note']}")
 
     pb_result = compute_pb(company, filing_type)
     pb_out_path = ANALYSIS_OUTPUT_DIR / f"{company}_{filing_type}_pb.json"
     pb_out_path.write_text(json.dumps(pb_result, indent=2, default=str))
-    print()
-    if pb_result.get("data_quality_warning"):
-        print(f"  ⚠ DATA QUALITY WARNING: {pb_result['data_quality_warning']}")
-    if pb_result["pb_ratio"] is not None:
-        print(f"Book value/share:     {pb_result['book_value_per_share']:.2f} (as of {pb_result['balance_sheet_as_of']})")
-        print(f"P/B ratio:            {pb_result['pb_ratio']:.2f}x")
-    else:
-        print(f"P/B ratio:            N/A — {pb_result['note']}")
+    if verbose:
+        print()
+        if pb_result.get("data_quality_warning"):
+            print(f"  ⚠ DATA QUALITY WARNING: {pb_result['data_quality_warning']}")
+        if pb_result["pb_ratio"] is not None:
+            print(f"Book value/share:     {pb_result['book_value_per_share']:.2f} (as of {pb_result['balance_sheet_as_of']})")
+            print(f"P/B ratio:            {pb_result['pb_ratio']:.2f}x")
+        else:
+            print(f"P/B ratio:            N/A — {pb_result['note']}")
 
     ey_result = compute_earnings_yield(company, filing_type)
     ey_out_path = ANALYSIS_OUTPUT_DIR / f"{company}_{filing_type}_earnings_yield.json"
     ey_out_path.write_text(json.dumps(ey_result, indent=2, default=str))
-    print()
-    if ey_result.get("data_quality_warning"):
-        print(f"  ⚠ DATA QUALITY WARNING: {ey_result['data_quality_warning']}")
-    if ey_result["earnings_yield_pct"] is not None:
-        print(f"Enterprise Value:     {ey_result['enterprise_value']:,.0f}")
-        print(f"TTM EBIT:             {ey_result['ttm_ebit']:,.0f} ({ey_result['quarters_used_for_ttm_ebit']}/4 quarters)")
-        print(f"Earnings Yield:       {ey_result['earnings_yield_pct']:.2f}%")
-    else:
-        print(f"Earnings Yield:       N/A — {ey_result['note']}")
+    if verbose:
+        print()
+        if ey_result.get("data_quality_warning"):
+            print(f"  ⚠ DATA QUALITY WARNING: {ey_result['data_quality_warning']}")
+        if ey_result["earnings_yield_pct"] is not None:
+            print(f"Enterprise Value:     {ey_result['enterprise_value']:,.0f}")
+            print(f"TTM EBIT:             {ey_result['ttm_ebit']:,.0f} ({ey_result['quarters_used_for_ttm_ebit']}/4 quarters)")
+            print(f"Earnings Yield:       {ey_result['earnings_yield_pct']:.2f}%")
+        else:
+            print(f"Earnings Yield:       N/A — {ey_result['note']}")
 
     evs_result = compute_ev_to_sales(company, filing_type)
     evs_out_path = ANALYSIS_OUTPUT_DIR / f"{company}_{filing_type}_ev_to_sales.json"
     evs_out_path.write_text(json.dumps(evs_result, indent=2, default=str))
-    print()
-    if evs_result["ev_to_sales"] is not None:
-        print(f"TTM Revenue:          {evs_result['ttm_revenue']:,.0f} ({evs_result['quarters_used_for_ttm_revenue']}/4 quarters)")
-        print(f"EV/Sales:             {evs_result['ev_to_sales']:.2f}x")
-    else:
-        print(f"EV/Sales:             N/A — {evs_result['note']}")
+    if verbose:
+        print()
+        if evs_result["ev_to_sales"] is not None:
+            print(f"TTM Revenue:          {evs_result['ttm_revenue']:,.0f} ({evs_result['quarters_used_for_ttm_revenue']}/4 quarters)")
+            print(f"EV/Sales:             {evs_result['ev_to_sales']:.2f}x")
+        else:
+            print(f"EV/Sales:             N/A — {evs_result['note']}")
 
     dy_result = compute_dividend_yield(company, filing_type)
     dy_out_path = ANALYSIS_OUTPUT_DIR / f"{company}_{filing_type}_dividend_yield.json"
     dy_out_path.write_text(json.dumps(dy_result, indent=2, default=str))
-    print()
-    if dy_result.get("data_quality_warning"):
-        print(f"  ⚠ DATA QUALITY WARNING: {dy_result['data_quality_warning']}")
-    if dy_result["dividend_yield_pct"] is not None:
-        print(f"Total dividends paid: {dy_result['total_dividends_paid']:,.0f} (as of {dy_result['period']})")
-        print(f"Dividend/share:       {dy_result['dividend_per_share']:.2f}")
-        print(f"Dividend Yield:       {dy_result['dividend_yield_pct']:.2f}%")
-    else:
-        print(f"Dividend Yield:       N/A — {dy_result['note']}")
+    if verbose:
+        print()
+        if dy_result.get("data_quality_warning"):
+            print(f"  ⚠ DATA QUALITY WARNING: {dy_result['data_quality_warning']}")
+        if dy_result["dividend_yield_pct"] is not None:
+            print(f"Total dividends paid: {dy_result['total_dividends_paid']:,.0f} (as of {dy_result['period']})")
+            print(f"Dividend/share:       {dy_result['dividend_per_share']:.2f}")
+            print(f"Dividend Yield:       {dy_result['dividend_yield_pct']:.2f}%")
+        else:
+            print(f"Dividend Yield:       N/A — {dy_result['note']}")
+        print(f"\nSaved to {out_path}, {pb_out_path}, {ey_out_path}, {evs_out_path}, and {dy_out_path}")
 
-    print(f"\nSaved to {out_path}, {pb_out_path}, {ey_out_path}, {evs_out_path}, and {dy_out_path}")
+    return {
+        "pe": result,
+        "pb": pb_result,
+        "earnings_yield": ey_result,
+        "ev_to_sales": evs_result,
+        "dividend_yield": dy_result,
+    }
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python -m src.analysis.valuation <company_symbol> [consolidated|standalone]")
+        sys.exit(1)
+    _company = sys.argv[1]
+    _filing_type = sys.argv[2] if len(sys.argv) > 2 else "consolidated"
+    run_and_save(_company, _filing_type)

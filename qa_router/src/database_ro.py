@@ -12,8 +12,17 @@ def _connect(db_path: str | Path) -> sqlite3.Connection:
 
 def list_companies(db_path: str | Path) -> list[dict]:
     with _connect(db_path) as conn:
-        rows = conn.execute("SELECT symbol, name, bse_scrip FROM companies ORDER BY symbol").fetchall()
+        rows = conn.execute("SELECT symbol, name, bse_scrip, sector FROM companies ORDER BY symbol").fetchall()
         return [dict(r) for r in rows]
+
+
+def sector_peers(db_path: str | Path, symbol: str) -> tuple[list[str], str | None]:
+    companies = list_companies(db_path)
+    by_symbol = {c["symbol"]: c for c in companies}
+    sector = (by_symbol.get(symbol) or {}).get("sector")
+    if not sector:
+        return [], None
+    return [c["symbol"] for c in companies if c["symbol"] != symbol and c.get("sector") == sector], sector
 
 
 def metric_history(

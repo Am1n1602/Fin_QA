@@ -1,4 +1,3 @@
-
 import json,time
 
 from src.config import COMPANIES, REQUEST_DELAY_SECONDS, META_DIR
@@ -21,17 +20,22 @@ def extract_attachment_url(record: dict, source: str) -> str | None:
 
 def run_for_company(company: dict):
     nse_symbol = company["nse_symbol"]
+    live_symbol = company.get("live_symbol", nse_symbol)
     bse_scrip = company["bse_scrip"]
-    print(f"\n=== {company['name']} ({nse_symbol} / {bse_scrip}) ===")
-
-    # 1. Price history
+    suffix = f"  [NSE trades this as {live_symbol}]" if live_symbol != nse_symbol else ""
+    print(f"\n=== {company['name']} ({nse_symbol} / {bse_scrip}) ==={suffix}")
     print("Fetching price history...")
-    prices = nse_source.fetch_price_history(nse_symbol)
-    print(f"  -> {len(prices)} rows saved to data/prices/{nse_symbol}_prices.csv")
+    try:
+        prices = nse_source.fetch_price_history(live_symbol, output_symbol=nse_symbol)
+        print(f"  -> {len(prices)} rows saved to data/prices/{nse_symbol}_prices.csv")
+    except Exception as e:
+        print(f"  -> PRICE FETCH FAILED for {nse_symbol} (queried as {live_symbol}): {e}")
+        print(f"     PE/PB/latest-close will be unavailable for this company until this succeeds -- "
+              f"re-run the fetch stage later (NSE rate-limiting a bulk run is the most common cause).")
 
     # 2. NSE financial filings
     print("Fetching NSE integrated filings (financials)...")
-    nse_filings = nse_source.fetch_corporate_filings(nse_symbol)
+    nse_filings = nse_source.fetch_corporate_filings(live_symbol)
     # Uncomment on first live run to inspect the real response shape:
     print(json.dumps(nse_filings[:1], indent=2))
     downloaded = 0

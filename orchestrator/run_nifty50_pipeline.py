@@ -36,6 +36,7 @@ STAGES: list[tuple[str, str, list[str]]] = [
     ("fetch", "data_extraction", ["-m", "src.fetch.run_pipeline"]),
     ("extract", "data_extraction", ["-m", "src.extract.run_extraction_all"]),
     ("analyze", "data_analysis", ["-m", "src.analysis.combine_and_analyze_all"]),
+    ("valuation", "data_analysis", ["-m", "src.analysis.run_valuation_all"]), # -> fixed this
     ("load", "database", ["-m", "src.load_data"]),
     ("rag_ingest", "rag", ["-m", "src.pipeline.run_ingest",
                             "--meta-dir", "../data_extraction/data/meta",

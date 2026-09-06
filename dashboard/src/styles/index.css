@@ -1,0 +1,478 @@
+:root {
+  --paper: #f1ece0;
+  --paper-raised: #faf7ef;
+  --paper-inset: #e9e2d1;
+  --ink: #201d17;
+  --ink-soft: #5a5347;
+  --ink-faint: #6b6457;
+  --rule: #d6cbb0;
+  --rule-strong: #b7a97e;
+  --rule-ui: #988755;
+  --brand: #1f3d3a;
+  --brand-strong: #14312e;
+  --gain: #2f5d3f;
+  --loss: #7c3626;
+  --pending: #8a6a1f;
+
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+  --font-sans: Charter, "Source Sans Pro", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+body {
+  position: relative;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  background-image: radial-gradient(circle, var(--rule-strong) 1px, transparent 1px);
+  background-size: 5px 5px;
+}
+
+a {
+  color: var(--brand);
+}
+a:hover {
+  color: var(--brand-strong);
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: -3rem;
+  z-index: 10;
+  background: var(--brand-strong);
+  color: var(--paper-raised);
+  padding: 0.6rem 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 3px;
+  transition: top 0.15s ease;
+}
+.skip-link:focus {
+  top: 0.75rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Masthead -------------------------------------------------------- */
+
+.app-header {
+  padding: 1.1rem 2rem 0;
+  background: var(--paper-raised);
+  border-bottom: 4px double var(--rule-strong);
+}
+
+.masthead-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.5rem;
+  padding-bottom: 0.9rem;
+}
+
+.brand-block {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+}
+
+.brand {
+  font-family: var(--font-serif);
+  font-size: 1.55rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--brand-strong);
+}
+
+.brand-tagline {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+}
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 0.7rem;
+}
+
+.nav-divider {
+  color: var(--rule-strong);
+  font-size: 0.8rem;
+}
+
+.nav-link {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--ink-soft);
+  padding-bottom: 0.2rem;
+  border-bottom: 2px solid transparent;
+}
+
+.nav-link:hover {
+  color: var(--brand-strong);
+  text-decoration: none;
+}
+
+.nav-link-active {
+  color: var(--brand-strong);
+  border-bottom-color: var(--brand);
+}
+
+/* --- Layout ------------------------------------------------------------ */
+
+.app-main {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+h1 {
+  font-family: var(--font-serif);
+  font-size: 1.55rem;
+  font-weight: 600;
+  color: var(--brand-strong);
+  margin: 0;
+}
+
+h2 {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--brand-strong);
+  margin: 0 0 0.2rem;
+}
+
+/* h3/h4 share h2's family/color/weight -- callers set their own
+   font-size inline for a sub-heading's exact visual weight. Added for
+   WCAG 2.1 SC 1.3.1/2.4.6 (Info and Relationships / Headings and
+   Labels): several sub-sections (e.g. Health's Piotroski/Altman/
+   Balance-Sheet/Earnings-Consistency cards, Report's Flags/Strengths/
+   Risks) were previously rendered as more <h2> elements nested under a
+   section's own <h2> -- visually fine, but a screen-reader user
+   navigating by heading level would see a flat list of same-level
+   headings with no indication which ones are subsections of which. */
+h3,
+h4 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  color: var(--brand-strong);
+  margin: 0 0 0.2rem;
+}
+
+.byline {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.88rem;
+  color: var(--ink-faint);
+  margin: 0.1rem 0 1.1rem;
+}
+
+.muted {
+  color: var(--ink-faint);
+  font-size: 0.88rem;
+}
+
+select {
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  border: none;
+  border-bottom: 1px solid var(--rule-ui);
+  border-radius: 0;
+  padding: 0.15rem 0.1rem;
+}
+/* The :focus-visible rule above already supplies a full outline; this
+   border-color swap is a secondary, always-on-brand cue that doesn't
+   depend on outline support. */
+select:focus {
+  border-bottom-color: var(--brand);
+}
+
+.card {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 1.4rem 1.5rem;
+  margin-top: 1.1rem;
+}
+
+/* --- Company page section tabs ----------------------------------------
+   Same masthead-nav vocabulary as .nav-link/.nav-link-active (uppercase
+   small-caps, bottom-border active state) but scoped to a page's own
+   sub-navigation rather than the app-wide header. */
+
+.section-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem;
+  margin-top: 1.3rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.section-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-soft);
+  padding: 0 0 0.5rem;
+}
+
+.section-tab:hover {
+  color: var(--brand-strong);
+}
+
+.section-tab-active {
+  color: var(--brand-strong);
+  border-bottom-color: var(--brand);
+}
+
+/* --- Ledger-style status tag ------------------------------------------ */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  padding: 0.28rem 0.6rem;
+  border: 1px solid currentColor;
+  background: var(--paper-raised);
+}
+
+.pill::before {
+  content: "\25CF";
+  margin-right: 0.45rem;
+  font-size: 0.6rem;
+}
+
+.pill-up {
+  color: var(--gain);
+}
+.pill-down {
+  color: var(--loss);
+}
+.pill-pending {
+  color: var(--pending);
+}
+
+/* --- Statement-style data table ---------------------------------------- */
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.1rem;
+  font-size: 0.9rem;
+}
+
+.data-table th {
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-soft);
+  padding: 0.5rem 0.7rem 0.6rem;
+  border-bottom: 3px double var(--rule-strong);
+}
+
+.data-table td {
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.data-table tbody tr:nth-child(even) td {
+  background: var(--paper-inset);
+}
+
+.data-table tbody tr:hover td {
+  background: #e1d9c2;
+}
+
+.data-table td.num,
+.data-table th.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* A sortable column header's actual clickable control. WCAG 2.1 SC 2.1.1
+   (Keyboard, A): the header cell itself is not natively focusable or
+   operable by keyboard, so the click target has to be a real <button>,
+   not an onClick on the <th> -- this makes it a proper button in the
+   accessibility tree (reachable by Tab, activated by Enter/Space) that
+   inherits the header's own typography rather than looking like a
+   default browser button. */
+.sort-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+.sort-button:hover {
+  color: var(--brand-strong);
+}
+
+.tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border: 1px solid var(--rule-ui);
+  padding: 0.1rem 0.4rem;
+}
+
+/* --- Status banners ------------------------------------------------------ */
+
+.status-banner {
+  margin-top: 1.1rem;
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+}
+
+.status-loading {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--ink-faint);
+}
+
+.status-error {
+  background: var(--paper-raised);
+  border-left: 3px solid var(--loss);
+  color: var(--ink);
+}
+.status-error strong {
+  color: var(--loss);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+}
+
+/* --- Financial QA chat form --------------------------------------------- */
+
+.qa-input {
+  flex: 1;
+  font: inherit;
+  font-size: 0.9rem;
+  background: var(--paper-raised);
+  color: var(--ink);
+  border: 1px solid var(--rule-ui);
+  border-radius: 3px;
+  padding: 0.55rem 0.7rem;
+}
+.qa-input:disabled {
+  opacity: 0.6;
+}
+
+.qa-ask-button {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--brand);
+  color: var(--paper-raised);
+  border: none;
+  border-radius: 3px;
+  padding: 0 1.2rem;
+  cursor: pointer;
+}
+.qa-ask-button:hover:not(:disabled) {
+  background: var(--brand-strong);
+}
+.qa-ask-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* An example-question chip -- same visual language as .tag, but a real
+   clickable <button> (not just decoration) so it needs its own hover/
+   cursor affordance. */
+.example-chip {
+  cursor: pointer;
+  background: none;
+}
+.example-chip:hover {
+  color: var(--brand-strong);
+  border-color: var(--brand);
+}

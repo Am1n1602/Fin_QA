@@ -6,27 +6,46 @@ NSE data acquistion:
 2. Corporate filings / integrated filings (jugaad_data.nse.NSELive).
 
 """
+import os
 import time
 from datetime import date, timedelta
+from pathlib import Path
+
 import pandas as pd
-from jugaad_data.nse import NSELive, stock_df
 
 from src.config import REQUEST_DELAY_SECONDS, PRICE_DIR
 
+os.environ.setdefault("J_CACHE_DIR", str(PRICE_DIR.parent / ".nse_cache"))
+
+from jugaad_data.nse import NSELive, stock_df
+from jugaad_data.util import break_dates, kw_to_fname
+
+
+def _bust_current_month_price_cache(symbol: str, from_date: date, to_date: date, series: str = "EQ") -> None:
+    try:
+        chunks = break_dates(from_date, to_date)
+        if not chunks:
+            return
+        last_from, last_to = chunks[-1]
+        cache_dir = Path(os.environ["J_CACHE_DIR"]) / "nsehistory-stock"
+        stale_path = cache_dir / kw_to_fname(symbol=symbol, from_date=last_from, to_date=last_to, series=series)
+        stale_path.unlink(missing_ok=True)
+    except Exception as e:
+        print(f"[nse_source] Couldn't clear the current-month price cache entry for {symbol} "
+              f"(continuing anyway, but today's close may come back stale again): {e}")
+
 
 # fetch the Open, High, Low, Close values for given days.
-def fetch_price_history(nse_symbol: str, days_back: int = 365) -> pd.DataFrame:
-    """Pull daily OHLCV history for one company and cache it to CSV."""
+def fetch_price_history(nse_symbol: str, days_back: int = 365, output_symbol: str | None = None) -> pd.DataFrame:
     to_date = date.today()
     from_date = to_date - timedelta(days=days_back)
+    _bust_current_month_price_cache(nse_symbol, from_date, to_date, series="EQ")
     df = stock_df(symbol=nse_symbol, from_date=from_date, to_date=to_date, series="EQ")
-    out_path = PRICE_DIR / f"{nse_symbol}_prices.csv"
+    out_path = PRICE_DIR / f"{output_symbol or nse_symbol}_prices.csv"
     df.to_csv(out_path, index=False)
     time.sleep(REQUEST_DELAY_SECONDS)
     return df
 
-# Inspect one response with print() the first time you run this to see
-# the exact keys NSE returns (field names have shifted over API versions).
 
 def fetch_corporate_filings(nse_symbol: str, days_back: int = 1095) -> list[dict]:
     """
@@ -74,5 +93,3 @@ def fetch_corporate_announcements(nse_symbol: str, days_back: int = 1095) -> lis
         result = []
     time.sleep(REQUEST_DELAY_SECONDS)
     return result or []
-
-

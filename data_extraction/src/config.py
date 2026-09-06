@@ -5,15 +5,15 @@ Main Database of Companies, storage path.
 import json
 from pathlib import Path
 
-
-# FILL THIS 
+# fix this
 _FALLBACK_COMPANIES = [
-    {"name": "Tata Consultancy Services", "nse_symbol": "TCS", "bse_scrip": "532540"},
-    {"name": "Infosys", "nse_symbol": "INFY", "bse_scrip": "500209"},
-    {"name": "HCL Technologies", "nse_symbol": "HCLTECH", "bse_scrip": "532281"},
-    {"name": "Wipro", "nse_symbol": "WIPRO", "bse_scrip": "507685"},
-    {"name": "Tech Mahindra", "nse_symbol": "TECHM", "bse_scrip": "532755"},
-    {"name": "LTIMindtree", "nse_symbol": "LTM", "bse_scrip": "540005"},
+    {"name": "Tata Consultancy Services", "nse_symbol": "TCS", "bse_scrip": "532540", "sector": "INFORMATION TECHNOLOGY"},
+    {"name": "Infosys", "nse_symbol": "INFY", "bse_scrip": "500209", "sector": "INFORMATION TECHNOLOGY"},
+    {"name": "HCL Technologies", "nse_symbol": "HCLTECH", "bse_scrip": "532281", "sector": "INFORMATION TECHNOLOGY"},
+    {"name": "Wipro", "nse_symbol": "WIPRO", "bse_scrip": "507685", "sector": "INFORMATION TECHNOLOGY"},
+    {"name": "Tech Mahindra", "nse_symbol": "TECHM", "bse_scrip": "532755", "sector": "INFORMATION TECHNOLOGY"},
+    {"name": "LTIMindtree", "nse_symbol": "LTM", "bse_scrip": "540005", "sector": "INFORMATION TECHNOLOGY",
+     "live_symbol": "LTIM"},  # NSE trades this one as "LTIM" today -- see universe.py's _LIVE_SYMBOL_ALIASES.
 ]
 
 
@@ -28,7 +28,13 @@ def _load_companies() -> list[dict]:
         return _FALLBACK_COMPANIES
 
     companies = [
-        {"name": e["name"], "nse_symbol": e["nse_symbol"], "bse_scrip": e["bse_scrip"]}
+        {
+            "name": e["name"],
+            "nse_symbol": e["nse_symbol"],
+            "bse_scrip": e["bse_scrip"],
+            "sector": e.get("sector"),
+            "live_symbol": e.get("live_symbol", e["nse_symbol"]),
+        }
         for e in payload.get("companies", [])
         if e.get("active", True) and e.get("bse_scrip")
     ]
@@ -41,8 +47,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 RAW_DIR = BASE_DIR / "data" / "raw"          # raw downloaded PDFs
 META_DIR = BASE_DIR / "data" / "meta"        # metadata json/csv index
 PRICE_DIR = BASE_DIR / "data" / "prices"     # price history csv per company
+EXTRACTED_DIR = BASE_DIR / "data" / "extracted"
 
-for d in (RAW_DIR, META_DIR, PRICE_DIR):
+for d in (RAW_DIR, META_DIR, PRICE_DIR,EXTRACTED_DIR):
     d.mkdir(parents=True, exist_ok=True)
 
 REQUEST_DELAY_SECONDS = 2.0

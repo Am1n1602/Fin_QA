@@ -16,7 +16,6 @@ INTENT_NARRATIVE = "narrative"
 INTENT_COMPLEX = "complex"
 INTENT_UNKNOWN = "unknown"
 
-
 @dataclass
 class Classification:
     intent: str
@@ -31,6 +30,7 @@ class Classification:
 def _contains_any(text: str, phrases: tuple) -> list[str]:
     return [p for p in phrases if p in text]
 
+# NEED TO MAKE IT MORE FLEXIBLE INSTEAD OF JUST GIVEN KEYWORDS - IMPORTANT  
 
 _REPORT_KEYWORDS = ("research report", "full report", "investment report", "generate a report",
                      "write a report", "company report", "detailed report")
@@ -70,11 +70,11 @@ def _detect_filing_type(text: str) -> str:
     return "standalone" if any(k in text for k in _STANDALONE_KEYWORDS) else "consolidated"
 
 
-def classify_question(question: str, db_path: str) -> Classification:
+def classify_question(question: str, db_path: str, companies_override: list | None = None) -> Classification:
     text = " " + question.lower().strip() + " "  # padded so " vs " etc. match at the edges too
     text = re.sub(r"\s+", " ", text)
 
-    resolved_companies = companies_mod.resolve_companies(question, db_path)
+    resolved_companies = companies_override if companies_override is not None else companies_mod.resolve_companies(question, db_path)
     resolved_metrics = metrics_mod.resolve_metrics(question)
     filing_type = _detect_filing_type(text)
 

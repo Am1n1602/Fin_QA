@@ -31,15 +31,6 @@ def _is_annual(record: dict, tolerance: int = 20) -> bool:
 
 
 def compute_ebit(record: dict):
-    """EBIT = Profit Before Tax (before exceptional items) + Finance
-    Costs added back. This is a real accounting identity (PBT = EBIT -
-    Interest, given Ind AS Finance Costs is the interest-expense line),
-    not an approximation — both inputs are tagged canonical fields.
-    Exceptional items are deliberately excluded (using
-    pbt_before_exceptional rather than pbt) to keep EBIT reflecting
-    ongoing operations rather than one-off gains/losses — a modeling
-    choice, documented here rather than silently baked in.
-    """
     pbt_before_exceptional = record.get("pbt_before_exceptional")
     if pbt_before_exceptional is None:
         return None
@@ -47,18 +38,6 @@ def compute_ebit(record: dict):
 
 
 def operating_ebit(record: dict):
-    """EBIT with Other Income excluded, unlike compute_ebit() above.
-    Same exact-identity logic: Revenue - Employee Expense - Depreciation
-    - Other Expenses (no Finance Costs, no Other Income). This matters
-    because compute_ebit()/roce_pct's Other-Income-inclusive figure can
-    be inflated by one-off items — confirmed this session with
-    HCLTECH's standalone npm_pct hitting ~49% from a one-off Other
-    Income line (likely a subsidiary dividend upstream). A ranking
-    formula built on that inflated number would reward a company for
-    something unrelated to ongoing business quality, so this version
-    exists specifically for that use case (see operating_roce_pct and
-    net_debt_to_operating_ebit below).
-    """
     revenue = record.get("revenue")
     employee_expense = record.get("employee_expense")
     depreciation = record.get("depreciation")
@@ -69,17 +48,12 @@ def operating_ebit(record: dict):
 
 
 def compute_total_debt(record: dict):
-    """Total Debt = Current Borrowings + Non-current Borrowings. Absent
-    borrowings tags default to 0 — genuinely debt-free companies
-    (common among large IT services firms) simply have no borrowings
-    tag at all, the same convention debt_to_equity has always used.
-
-    Shared by debt_to_equity, total_debt_to_assets_pct, and
-    compute_net_debt below, plus valuation.py's
-    compute_enterprise_value — this was independently re-derived in
-    four places before consolidating here into one definition.
-    """
-    return (record.get("borrowings_current") or 0) + (record.get("borrowings_noncurrent") or 0)
+    return (
+        (record.get("borrowings_current") or 0)
+        + (record.get("borrowings_noncurrent") or 0)
+        + (record.get("debt_securities") or 0)
+        + (record.get("deposits_debt") or 0)
+    )
 
 
 def compute_capex(record: dict):

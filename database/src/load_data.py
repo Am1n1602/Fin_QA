@@ -8,7 +8,7 @@ import re
 import sys
 from datetime import date, datetime
 from pathlib import Path
-from src.config import EXTRACTED_DIR, ANALYSIS_DIR, PRICES_DIR, COMPANY_NAMES
+from src.config import EXTRACTED_DIR, ANALYSIS_DIR, PRICES_DIR, COMPANY_METADATA
 from src.db import get_connection, init_db
 
 
@@ -27,10 +27,17 @@ def _classify_duration(period_start, period_end) -> tuple[bool, bool]:
     return abs(days - 91) <= 20, abs(days - 365) <= 20
 
 def upsert_company(conn, symbol: str):
+    meta = COMPANY_METADATA.get(symbol, {})
     conn.execute(
-        "INSERT INTO companies (symbol, name) VALUES (?, ?) "
-        "ON CONFLICT(symbol) DO UPDATE SET name=excluded.name",
-        (symbol, COMPANY_NAMES.get(symbol, symbol)),
+        "INSERT INTO companies (symbol, name, sector, bse_scrip) VALUES (?, ?, ?, ?) "
+        "ON CONFLICT(symbol) DO UPDATE SET name=excluded.name, "
+        # Never overwrite an already-known sector/bse_scrip with NULL -- a
+        # company missing from COMPANY_METADATA on a later, partial run
+        # (e.g. load_data.py invoked for a single symbol before a universe
+        # refresh) shouldn't blank out values a prior full load resolved.
+        "sector=COALESCE(excluded.sector, companies.sector), "
+        "bse_scrip=COALESCE(excluded.bse_scrip, companies.bse_scrip)",
+        (symbol, meta.get("name", symbol), meta.get("sector"), meta.get("bse_scrip")),
     )
 
 def upsert_filing(conn, symbol: str, filing_type: str, record: dict, source_file: str) -> int:
@@ -106,12 +113,6 @@ def load_metrics_for_filing(conn, filing_id: int, ratios: dict):
 
 def load_canonical_facts(conn, company_filter: str | None = None):
     """data_extraction's canonical JSONs -> companies + filings + financial_facts."""
-    # NOT [A-Z]+ -- real NSE symbols include "-" (BAJAJ-AUTO) and "&"
-    # (M&M); the old [A-Z]-only pattern silently skipped both companies
-    # entirely (zero facts loaded, no error) on every run. Found live
-    # once the pipeline actually covered all 50 companies instead of the
-    # original 6, none of which needed the wider character class -- see
-    # SESSION_ADDENDUM_6.md.
     pattern = re.compile(r"^(.+)_(consolidated|standalone)_.+_canonical\.json$")
     count_filings = 0
     for path in sorted(EXTRACTED_DIR.glob("*_canonical.json")):

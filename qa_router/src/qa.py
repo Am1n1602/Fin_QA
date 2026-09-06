@@ -38,6 +38,14 @@ def _default_universe(db_path: str) -> list[str]:
     return [c["symbol"] for c in database_ro.list_companies(db_path)]
 
 
+def _peer_universe(db_path: str, anchor_symbol: str | None) -> tuple[list[str], str | None]:
+    if anchor_symbol:
+        peers, sector = database_ro.sector_peers(db_path, anchor_symbol)
+        if sector:
+            return peers, sector
+    return [s for s in _default_universe(db_path) if s != anchor_symbol], None
+
+
 def _handle_numeric_fact(q: Classification, db_path: str) -> dict:
     symbol = q.companies[0]
     lines: list[str] = []
@@ -120,7 +128,13 @@ def _handle_trend(q: Classification, bridge: AnalysisBridge) -> dict:
 
 
 def _handle_comparison(q: Classification, bridge: AnalysisBridge, db_path: str) -> dict:
-    symbols = q.companies if len(q.companies) >= 2 else list(dict.fromkeys(q.companies + _default_universe(db_path)))
+    sector_used: str | None = None
+    if len(q.companies) >= 2:
+        symbols = q.companies
+    else:
+        anchor = q.companies[0] if q.companies else None
+        default_peers, sector_used = _peer_universe(db_path, anchor)
+        symbols = list(dict.fromkeys(q.companies + default_peers))
     metric_keys = q.metrics or metrics_mod.DEFAULT_COMPARISON_METRICS
     metric_defs = [metrics_mod.get(k) for k in metric_keys]
     usable = [(k, m) for k, m in zip(metric_keys, metric_defs) if m.table == "financial_metrics"]
@@ -146,6 +160,18 @@ def _handle_comparison(q: Classification, bridge: AnalysisBridge, db_path: str) 
             lines.append(f"{m.label}: no peer in this group had data.")
 
     warnings: list[str] = []
+    if len(q.companies) < 2:
+        if sector_used:
+            warnings.append(
+                f"No peer companies were named, so this compares against {sector_used} sector peers "
+                f"by default (not the entire NIFTY 50 universe)."
+            )
+        else:
+            warnings.append(
+                "No peer companies were named and sector classification isn't available yet for this "
+                "company (run data_extraction's universe refresh + reload the database) -- comparing "
+                "against the entire NIFTY 50 universe across all sectors as a fallback."
+            )
     if skipped:
         warnings.append(
             "Skipped raw-fact metric(s) not supported by peer comparison (financial_metrics only): "
@@ -167,13 +193,32 @@ def _handle_comparison(q: Classification, bridge: AnalysisBridge, db_path: str) 
 
 
 def _handle_ranking(q: Classification, bridge: AnalysisBridge, db_path: str) -> dict:
-    symbols = q.companies if len(q.companies) >= 2 else list(dict.fromkeys(q.companies + _default_universe(db_path)))
+    sector_used: str | None = None
+    if len(q.companies) >= 2:
+        symbols = q.companies
+    else:
+        anchor = q.companies[0] if q.companies else None
+        default_peers, sector_used = _peer_universe(db_path, anchor)
+        symbols = list(dict.fromkeys(q.companies + default_peers))
     result = bridge.compute_rankings(symbols, q.filing_type)
     ordered = sorted(
         (s for s in symbols if result.get(s, {}).get("rank") is not None),
         key=lambda s: result[s]["rank"],
     )
     lines = [f"#{result[s]['rank']} {s} (composite {result[s]['composite_score']})" for s in ordered]
+
+    warnings: list[str] = []
+    if len(q.companies) < 2:
+        if sector_used:
+            warnings.append(f"No peer companies were named, so this ranks {sector_used} sector peers by default.")
+        elif q.companies:
+            warnings.append(
+                "Sector classification isn't available yet for this company -- ranking against the "
+                "entire NIFTY 50 universe across all sectors as a fallback."
+            )
+        # else: genuinely no anchor company at all (e.g. "rank all companies") -- whole-universe
+        # ranking is the correct behavior here, not a fallback, so no warning.
+
     return {
         "answer": f"Ranking ({q.filing_type}): " + "; ".join(lines) if lines else
                   "No company in this group had enough data to compute a composite score.",
@@ -181,7 +226,7 @@ def _handle_ranking(q: Classification, bridge: AnalysisBridge, db_path: str) -> 
         "sources": [{"type": "financial_metrics", "symbols": symbols, "filing_type": q.filing_type,
                       "note": "composite = equal-weighted percentile average across 4 categories, "
                               "see data_analysis/src/analysis/ranking.py"}],
-        "warnings": [],
+        "warnings": warnings,
     }
 
 
@@ -216,7 +261,11 @@ def _handle_financial_health(q: Classification, bridge: AnalysisBridge) -> dict:
 
 def _handle_report(q: Classification, bridge: AnalysisBridge, db_path: str) -> dict:
     symbol = q.companies[0]
-    peers = q.companies[1:] or [s for s in _default_universe(db_path) if s != symbol]
+    sector_used: str | None = None
+    if q.companies[1:]:
+        peers = q.companies[1:]
+    else:
+        peers, sector_used = _peer_universe(db_path, symbol)
     result = bridge.compute_company_report(symbol, peers, q.filing_type)
     ranking = result.get("ranking") or {}
     lines = [f"Full report generated for {result['company']['name']} ({symbol}, {q.filing_type})."]
@@ -226,13 +275,24 @@ def _handle_report(q: Classification, bridge: AnalysisBridge, db_path: str) -> d
             f"(score {ranking.get('composite_score')})."
         )
     lines.append(f"{len(result.get('flags', []))} flag(s) raised -- see data['flags'].")
+
+    warnings: list[str] = []
+    if not q.companies[1:]:
+        if sector_used:
+            warnings.append(f"No peers were named, so this report benchmarks against {sector_used} sector peers.")
+        else:
+            warnings.append(
+                "No peers were named and sector classification isn't available yet for this company "
+                "-- benchmarking against the entire NIFTY 50 universe across all sectors as a fallback."
+            )
+
     return {
         "answer": " ".join(lines),
         "data": result,
         "sources": [{"type": "data_analysis.compute_company_report", "company": symbol,
                       "filing_type": q.filing_type,
                       "canonical_files": result.get("data_sources", {}).get("canonical_files")}],
-        "warnings": [],
+        "warnings": warnings,
         "caveats": result.get("caveats", []),
     }
 
@@ -409,11 +469,9 @@ def answer_question(
     companies_override: list | None = None,
     metrics_override: list | None = None,
 ) -> dict:
-    q = classify_question(question, db_path)
+    q = classify_question(question, db_path, companies_override=companies_override)
     if intent_override:
         q.intent = intent_override
-    if companies_override is not None:
-        q.companies = companies_override
     if metrics_override is not None:
         q.metrics = metrics_override
 

@@ -23,7 +23,11 @@ BSE / NSE filings (XBRL + PDF)
         └── narrative / complex synthesis            →  RAG + Hybrid LLM (Ollama local / Groq or Anthropic cloud)
         │
         ▼
-  `finqa` CLI  →  grounded, source-checked answer
+  grounded, source-checked answer
+        │
+        ├──────────────► `finqa` CLI (interactive or one-off questions)
+        ├──────────────► `finqa-api` — FastAPI REST layer (thin transport only, computes nothing itself)
+        └──────────────► Dashboard — React/Vite SPA over the API (Home, Company page, Rankings, Financial QA)
 ```
 
 ---
@@ -36,13 +40,14 @@ BSE / NSE filings (XBRL + PDF)
 - **Document intelligence**: filing PDFs are chunked, embedded, indexed (FAISS), and retrieved with a hybrid search (semantic + BM25 + phrase overlap) and cross-encoder reranker, for the qualitative content XBRL can't capture (management commentary, litigation, deal narratives).
 - **QA Router**: classifies each question and decides whether it needs a structured DB lookup, a RAG retrieval, or both plus an LLM to synthesize the final answer.
 - **Hybrid LLM**: local Ollama handles cheap/simple tasks; a cloud model (Groq by default — free tier; Anthropic optional) handles complex reasoning and narrative writing. Every cloud-written numeric claim is automatically checked against the source figures/units before being returned.
-- **Ships as a real CLI**: `pip install -e .` gives you `finqa` (ask questions), `finqa-pipeline` (refresh data), and `finqa-setup` (schedule automatic refreshes) as console commands, usable from anywhere.
+- **Ships as a real CLI**: `pip install -e .` gives you `finqa` (ask questions), `finqa-pipeline` (refresh data), `finqa-setup` (schedule automatic refreshes), and `finqa-api` (serve the REST API) as console commands, usable from anywhere.
+- **REST API + web dashboard**: a FastAPI layer (`api/`) exposes every read path above — financials, ratios, trends, peer comparison, ranking, financial health, research reports, sector comparison, and QA — as a thin, computation-free transport over the same deterministic engine the CLI uses. A React/Vite dashboard (`dashboard/`) sits on top of it for local, no-code use of the whole platform.
 
 ---
 
 ## Project layout
 
-The project is seven sibling folders plus one thin packaging layer, sharing a single Python virtual environment (**no per-folder venvs**):
+The project is nine sibling folders plus one thin packaging layer, sharing a single Python virtual environment (**no per-folder venvs**) — `api/` and `dashboard/` are purely additive: neither modifies any of the folders below it:
 
 | Folder | Responsibility |
 |---|---|
@@ -53,7 +58,9 @@ The project is seven sibling folders plus one thin packaging layer, sharing a si
 | `qa_router/` | Classifies incoming questions and routes them to the right combination of structured query / RAG / LLM |
 | `llm_router/` | The hybrid LLM layer — local Ollama client, cloud client (Groq / Anthropic), routing logic, prompt templates, verification checks |
 | `orchestrator/` | Chains fetch → extract → analyze → load → RAG-ingest into one unattended, resumable pipeline run |
-| `fin_llm_platform/` | Thin packaging shell installed by `pip install -e .` — wires the above into three console commands, nothing reimplemented |
+| `fin_llm_platform/` | Thin packaging shell installed by `pip install -e .` — wires the above into console commands, nothing reimplemented |
+| `api/` | FastAPI REST layer over the whole engine — one router per resource (companies, financials, ratios, trends, peers, ranking, health, reports, sectors, QA); computes nothing itself, only reads already-verified data |
+| `dashboard/` | React (Vite) single-page app calling the API — Home/market overview, a per-company page, a rankings leaderboard, and a chat-style Financial QA page |
 
 ---
 
@@ -73,8 +80,8 @@ The project is seven sibling folders plus one thin packaging layer, sharing a si
 | 10. QA Router | Question classification → structured / RAG / LLM routing | ✅ |
 | 11. Hybrid LLM | Ollama (local) + Groq/Anthropic (cloud) router, numeric & unit verification guardrails | ✅ |
 | 12. Scale to NIFTY 50 + production CLI | Live universe sourcing, full pipeline orchestration, rate-limit sizing, performance validation at scale, CLI robustness, `pip install`-able package with scheduler | ✅ |
-| 13. Dashboard | Web frontend | ⏳ not started — next up |
-| 14. API | REST API over financials/ratios/trends/ranking/health/QA | ⏳ not started (after Dashboard) |
+| 13. API | REST API over financials/ratios/trends/peers/ranking/health/reports/sectors/QA, thin transport only | ✅ |
+| 14. Dashboard | React/Vite web frontend over the API | 🚧 in progress — Home, Company page, Rankings, and Financial QA are built and live-tested; a final polish pass (loading/error consistency, responsive layout) is what's left |
 
 
 ---
@@ -106,7 +113,7 @@ The project is seven sibling folders plus one thin packaging layer, sharing a si
 ### Install
 
 ```bash
-git clone <this-repo-url>
+git clone https://github.com/Am1n1602/Fin_QA
 cd Fin_QA
 
 python -m venv venv
@@ -192,6 +199,35 @@ Registers a real OS-level job (crontab on Linux/macOS, Task Scheduler on Windows
 
 ---
 
+## Web API
+
+```bash
+finqa-api
+```
+
+Starts the FastAPI server (default `http://0.0.0.0:8000`) with interactive docs at `/docs`. It's a thin transport layer only — every number still comes from the same deterministic engine and database the CLI uses; the API computes nothing itself.
+
+Key endpoints:
+
+- `GET /companies`, `GET /companies/{symbol}`
+- `GET /companies/{symbol}/financials`, `/ratios`, `/trends`, `/peers`, `/ranking`, `/health`, `/report`
+- `GET /rankings` (optional `sector=` filter), `GET /sectors`, `GET /sectors/{sector}/comparison`
+- `POST /qa`, `POST /companies/{symbol}/qa` — same grounded QA the CLI uses, over HTTP
+
+Configuration is environment-driven (`FINQA_API_HOST`, `FINQA_API_PORT`, `FINQA_API_CORS_ORIGINS`, `FINQA_API_KEY` — unset by default, fine for local use; set it before exposing the API beyond localhost). See `api/config.py` for the full list.
+
+## Dashboard
+
+```bash
+cd dashboard
+npm install
+npm run dev
+```
+
+A React (Vite) single-page app calling the API above (`VITE_API_BASE_URL`, defaults to `http://localhost:8000`) — run `finqa-api` first. Currently ships four pages: a market overview (Home), a per-company page (overview/financials/ratios/trends/peers/ranking/health/research report, tabbed), a sortable Rankings leaderboard, and a chat-style Financial QA page that renders each answer's cited sources alongside it. Local dev only for now — no build/deploy step yet.
+
+---
+
 ## Data & validation
 
 Originally built and cross-validated against six IT-services companies — **TCS, INFY, HCLTECH, WIPRO, TECHM, LTM** (LTIMindtree; NSE symbol changed from `LTIM` to `LTM` in Feb 2026) — then scaled to the full, live-refreshed **NIFTY 50** universe. Companies that drop out of the index on reconstitution are marked inactive, not deleted; their historical data stays queryable.
@@ -202,12 +238,12 @@ Every layer has been checked against independent sources, not just internal cons
 
 ## Roadmap — what's next
 
-API and a dashboard are both optional, later-stage additions — the CLI (`finqa`) is a fully working product on its own. Current plan is to build the **Dashboard first**, then the API:
+The CLI (`finqa`), the API, and now most of the Dashboard are all real and working — this isn't a plan anymore for those three, just remaining polish and later-stage extensions:
 
-- **Dashboard**: a web frontend over the existing engine/QA router.
-- **API**: REST endpoints over financials, ratios, trends, ranking, peer comparison, health, and QA, once the Dashboard's needs have shaped what the API should actually expose.
-- Open, non-blocking items: a Banks/NBFC-appropriate health framework, deeper multi-year history (blocked on filing availability, not on this codebase), and root-causing occasional cloud-LLM latency variance on complex questions.
+- **Dashboard polish pass**: consistent loading/error states, a responsive layout pass, and (optionally) charts for trend lines and ranking score breakdowns.
+- **Cloud deployment**: the Dashboard and API are local-only today (dev server + `localhost:8000`); hosting either of them anywhere else is a separate, not-yet-designed stage.
+- Open, non-blocking items: a Banks/NBFC-appropriate health framework (the current ranking/valuation/health model is built for non-financial companies), deeper multi-year history (blocked on what NSE/BSE actually expose for older periods, not on this codebase), and root-causing occasional cloud-LLM latency variance on complex questions.
 
 ---
-s
+
 Licensed under MIT — see [`LICENSE`](./LICENSE).

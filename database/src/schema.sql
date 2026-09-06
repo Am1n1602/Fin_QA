@@ -1,8 +1,10 @@
 CREATE TABLE IF NOT EXISTS companies (
     symbol TEXT PRIMARY KEY,          -- NSE symbol, e.g. "TCS"
     name TEXT,
-    bse_scrip TEXT
+    bse_scrip TEXT,
+    sector TEXT                       
 );
+
 
 CREATE TABLE IF NOT EXISTS filings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,8 +24,7 @@ CREATE TABLE IF NOT EXISTS filings (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_filings_unique
     ON filings (company_symbol, filing_type, context_id, COALESCE(period_end, ''), COALESCE(instant, ''));
 
--- Raw normalized facts from data_extraction's canonical schema (revenue,
--- net_profit, total_assets, ...) — the single source of truth for inputs.
+
 CREATE TABLE IF NOT EXISTS financial_facts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     filing_id INTEGER NOT NULL REFERENCES filings(id),
@@ -31,10 +32,7 @@ CREATE TABLE IF NOT EXISTS financial_facts (
     value REAL,
     UNIQUE (filing_id, field_name)
 );
--- pe_ratio, ...) — loaded as-is from data_analysis's output, NEVER
--- recomputed here. Per roadmap Section 6: "Financial Engine is the
--- single source of truth" — this table is a read-through cache of that
--- engine's output, not an independent calculation.
+
 CREATE TABLE IF NOT EXISTS financial_metrics (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     filing_id INTEGER NOT NULL REFERENCES filings(id),

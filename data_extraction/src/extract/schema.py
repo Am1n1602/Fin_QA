@@ -68,6 +68,15 @@ _SECTOR_ALT_TAGS = {
     "in-capmkt:ProfitLossAfterTaxAndExtraordinaryItems": "net_profit",
 }
 
+_DEBT_ALT_TAGS = {
+    "in-capmkt:Borrowings": "borrowings_noncurrent",
+    "in-capmkt:LongTermBorrowings": "borrowings_noncurrent",
+    "in-capmkt:ShortTermBorrowings": "borrowings_current",
+    "in-capmkt:DebtSecurities": "debt_securities",
+    "in-capmkt:Deposits": "deposits_debt",
+}
+
+
 # Matches "OneD", "TwoD", "ThreeD", "OneI", "TwoI", etc. — the primary
 # whole-company contexts. Also matches "PY_D"/"PY_I" (prior-year contexts
 # seen in annual filings — e.g. "PY_I" for the prior year-end balance
@@ -137,6 +146,7 @@ BALANCE_SHEET_SNAPSHOT_FIELDS = [
     "current_assets", "noncurrent_assets",
     "current_liabilities", "noncurrent_liabilities",
     "borrowings_current", "borrowings_noncurrent",
+    "debt_securities", "deposits_debt",  # see _DEBT_ALT_TAGS above
     "cash_and_equivalents",
     "paid_up_equity_capital", "face_value_per_share",
 ]
@@ -195,6 +205,7 @@ def map_facts_to_canonical(facts: list[dict]) -> list[dict]:
     tag_to_canonical = {v: k for k, v in TAG_MAP.items() if v is not None}
     tag_to_canonical.update({v: k for k, v in _BANK_EQUITY_AUX_TAGS.items()})
     tag_to_canonical.update(_SECTOR_ALT_TAGS)
+    tag_to_canonical.update(_DEBT_ALT_TAGS)
 
     by_context = defaultdict(dict)
     context_period_info = {}
