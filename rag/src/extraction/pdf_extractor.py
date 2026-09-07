@@ -1,35 +1,3 @@
-"""
-pdf_extractor.py — Stage 9 (RAG), Phase 1: PDF text extraction.
-
-STATUS: Built but NOT YET validated against real downloaded PDFs (the 118
-BSE/NSE filings inventoried via pdf_downloader.py's data/meta/{symbol}_filings.jsonl
-live on the user's machine, not in this environment). Smoke-tested here only
-against a synthetic single-page PDF to confirm the code runs without crashing.
-Must be re-validated against real BSE-sourced filings before Phase 2 (chunking)
-begins, per this project's "validate on real output before scaling" convention.
-
-Uses pypdf (per Stage 9 plan — no OCR pipeline; all 118 inventoried PDFs were
-already confirmed genuinely text-based during the earlier inventory pass).
-
-Design notes:
-- Extraction is per-page, preserving page_number, because document_chunks.page_number
-  is part of the planned Stage 9 DB schema (SESSION_ADDENDUM.md) and chunks need to
-  trace back to a specific page.
-- Never silently drops a bad page or a bad file. A per-page failure is recorded in
-  that page's `error` field with an empty text string; a whole-file failure (corrupt
-  PDF, encrypted PDF, unreadable) is surfaced as a top-level `error` field with
-  `pages: []` rather than raising — this project's "missing data surfaces as null +
-  reason, never silently hidden" rule, applied to extraction rather than financial
-  data.
-- `low_text_page_numbers` flags pages whose extracted-char-count-per-page falls well
-  below the document's own average. This is a MISMATCH DETECTOR, not an OCR-need
-  detector — the inventory already confirmed these PDFs are text-based, so a low-text
-  page more likely means a mostly-image/table/signature page than a scan. Surfaced so
-  a human can glance at flagged pages, not auto-handled.
-- No chunking here. This module's only job is: PDF path -> per-page text + diagnostics.
-  Chunking is Phase 2, deliberately kept separate.
-"""
-
 from __future__ import annotations
 
 import hashlib
@@ -40,6 +8,8 @@ from typing import Optional
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 
+from src.extraction.ocr_backend import ocr_page
+
 
 @dataclass
 class PageResult:
@@ -47,6 +17,7 @@ class PageResult:
     text: str
     char_count: int
     error: Optional[str] = None
+    ocr_used: bool = False  # True if this page's text came from OCR, not the PDF's own text layer
 
 
 @dataclass
@@ -57,6 +28,9 @@ class ExtractionResult:
     pages: list[PageResult] = field(default_factory=list)
     total_chars: int = 0
     low_text_page_numbers: list[int] = field(default_factory=list)
+    ocr_used_page_numbers: list[int] = field(default_factory=list)
+    ocr_unavailable: bool = False  # True if a page needed OCR but it couldn't run
+    ocr_unavailable_reason: Optional[str] = None
     error: Optional[str] = None  # whole-file failure only
 
     @property
@@ -87,9 +61,13 @@ def extract_pdf_text(
     pdf_path: str | Path,
     known_sha256: Optional[str] = None,
     low_text_ratio_threshold: float = 0.15,
+    enable_ocr: bool = True,
+    ocr_char_threshold: int = 50,
+    ocr_dpi: int = 300,
 ) -> ExtractionResult:
     """
-    Extract per-page text from a single PDF.
+    Extract per-page text from a single PDF, falling back to OCR for pages
+    whose own text layer is missing or near-empty.
 
     Args:
         pdf_path: path to the PDF file.
@@ -98,6 +76,21 @@ def extract_pdf_text(
         low_text_ratio_threshold: a page is flagged in `low_text_page_numbers`
             if its char_count < threshold * (document's average char_count
             across non-empty pages). Purely diagnostic, not a decision.
+        enable_ocr: if True (default), pages at or below `ocr_char_threshold`
+            characters get a second pass through OCR (ocr_backend.ocr_page).
+            OCR's result replaces the page's text only when it actually
+            yields more text than pypdf found -- OCR is never allowed to
+            make a page worse. Set False to keep the old pypdf-only
+            behavior (e.g. for a fast mechanics-only test run).
+        ocr_char_threshold: a page with fewer than this many pypdf-extracted
+            characters is treated as a candidate scan and sent to OCR. This
+            is an ABSOLUTE floor, unlike low_text_ratio_threshold, because a
+            fully-scanned document has no non-empty pages to average
+            against (every page would be 0 vs. an average of 0).
+        ocr_dpi: render resolution passed to ocr_backend.ocr_page. 300 is a
+            reasonable default for Tesseract accuracy vs. speed on typical
+            filing-scan quality; raise it if OCR output looks garbled on a
+            specific document.
 
     Returns:
         ExtractionResult. Check `.ok` before using `.pages` — a whole-file
@@ -115,12 +108,6 @@ def extract_pdf_text(
 
     sha256 = known_sha256 or _sha256_of_file(path)
 
-    # Magic-byte check BEFORE handing off to pypdf. A file that doesn't even
-    # start with %PDF- almost always means the downloader saved something
-    # else entirely (an HTML error/rate-limit/redirect page, a login wall,
-    # etc.) rather than a genuinely corrupted PDF. These need different fixes
-    # (re-download vs. something wrong with the PDF itself), so distinguish
-    # them instead of letting both surface as the same generic pypdf error.
     with open(path, "rb") as f:
         head = f.read(16)
     if not head.startswith(b"%PDF-"):
@@ -146,9 +133,6 @@ def extract_pdf_text(
         )
 
     if reader.is_encrypted:
-        # Try an empty-password unlock (some filings are "encrypted" only to
-        # prevent editing, not to require a real password). If that fails,
-        # surface it rather than silently returning zero pages.
         try:
             reader.decrypt("")
         except Exception:
@@ -168,6 +152,25 @@ def extract_pdf_text(
             continue
         pages.append(PageResult(page_number=i, text=text, char_count=len(text)))
 
+    ocr_used_page_numbers: list[int] = []
+    ocr_unavailable = False
+    ocr_unavailable_reason: Optional[str] = None
+    if enable_ocr:
+        for p in pages:
+            if p.error is not None or p.char_count > ocr_char_threshold:
+                continue
+            result = ocr_page(path, p.page_number, dpi=ocr_dpi)
+            if not result.ok:
+                ocr_unavailable = True
+                ocr_unavailable_reason = result.error
+                continue
+            ocr_text = result.text or ""
+            if len(ocr_text) > p.char_count:
+                p.text = ocr_text
+                p.char_count = len(ocr_text)
+                p.ocr_used = True
+                ocr_used_page_numbers.append(p.page_number)
+
     total_chars = sum(p.char_count for p in pages)
 
     non_empty = [p.char_count for p in pages if p.error is None and p.char_count > 0]
@@ -186,4 +189,7 @@ def extract_pdf_text(
         pages=pages,
         total_chars=total_chars,
         low_text_page_numbers=low_text_pages,
+        ocr_used_page_numbers=ocr_used_page_numbers,
+        ocr_unavailable=ocr_unavailable,
+        ocr_unavailable_reason=ocr_unavailable_reason,
     )
