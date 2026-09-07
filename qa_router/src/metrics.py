@@ -50,6 +50,18 @@ METRICS: list[MetricDef] = [
     MetricDef("equity_to_liabilities_pct", "financial_metrics", "equity_to_liabilities_pct",
               "Equity / Total Liabilities", "pct", ("equity to liabilities",)),
 
+
+    MetricDef("net_interest_margin_pct", "financial_metrics", "net_interest_margin_pct",
+              "Net Interest Margin (NIM)", "pct", ("net interest margin", "nim")),
+    MetricDef("cost_to_income_pct", "financial_metrics", "cost_to_income_pct",
+              "Cost-to-Income Ratio", "pct", ("cost to income", "cost income ratio", "cost to income ratio")),
+    MetricDef("credit_cost_pct", "financial_metrics", "credit_cost_pct",
+              "Credit Cost (Provisions / Advances)", "pct", ("credit cost", "provisioning cost")),
+    MetricDef("equity_to_assets_pct", "financial_metrics", "equity_to_assets_pct",
+              "Equity / Total Assets", "pct", ("equity to assets", "equity to total assets")),
+    MetricDef("net_interest_income", "financial_metrics", "net_interest_income",
+              "Net Interest Income (NII)", "currency", ("net interest income", "nii")),
+
     # --- Valuation (financial_metrics, TTM synthetic filing) ---
     MetricDef("pe_ratio", "financial_metrics", "pe_ratio", "P/E Ratio", "x",
               ("pe ratio", "p e ratio", "price to earnings", "price-to-earnings")),
@@ -71,11 +83,7 @@ METRICS: list[MetricDef] = [
     MetricDef("latest_close", "financial_metrics", "latest_close", "Latest Close Price", "currency",
               ("share price", "stock price", "closing price", "latest price")),
 
-    # --- Raw facts (financial_facts) -- see module docstring re: why
-    # "dividend" resolves here and not to a computed metric: this is
-    # exactly the SESSION_ADDENDUM_2.md HCLTECH-dividend finding that
-    # numeric dividend-fact queries should route to financial_facts, not
-    # RAG or a ratio. ---
+
     MetricDef("revenue", "financial_facts", "revenue", "Revenue", None,
               ("revenue", "total revenue", "sales", "turnover", "revenue from operations")),
     MetricDef("net_profit", "financial_facts", "net_profit", "Net Profit", None,

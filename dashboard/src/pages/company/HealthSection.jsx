@@ -33,26 +33,28 @@ function PiotroskiCard({ p }) {
       </h3>
       {p.note && <p className="muted">{p.note}</p>}
       {Object.keys(p.criteria).length > 0 && (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th scope="col">Criterion</th>
-              <th scope="col">Status</th>
-              <th scope="col" className="num">Latest</th>
-              <th scope="col" className="num">Prior</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(p.criteria).map(([name, c]) => (
-              <tr key={name}>
-                <td>{CRITERION_LABEL[name] || name}</td>
-                <td><MetStatus met={c.met} /></td>
-                <td className="num">{name === "accruals" ? numOrDash(c.cfo_pct, "pct") : numOrDash(c.latest)}</td>
-                <td className="num">{name === "accruals" ? numOrDash(c.roa_pct, "pct") : numOrDash(c.prior)}</td>
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th scope="col">Criterion</th>
+                <th scope="col">Status</th>
+                <th scope="col" className="num">Latest</th>
+                <th scope="col" className="num">Prior</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {Object.entries(p.criteria).map(([name, c]) => (
+                <tr key={name}>
+                  <td>{CRITERION_LABEL[name] || name}</td>
+                  <td><MetStatus met={c.met} /></td>
+                  <td className="num">{name === "accruals" ? numOrDash(c.cfo_pct, "pct") : numOrDash(c.latest)}</td>
+                  <td className="num">{name === "accruals" ? numOrDash(c.roa_pct, "pct") : numOrDash(c.prior)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
       {Object.keys(p.excluded_criteria).length > 0 && (
         <p className="muted" style={{ marginTop: "0.5rem" }}>
@@ -63,31 +65,59 @@ function PiotroskiCard({ p }) {
   );
 }
 
+function ExcludedSectorBanner({ note }) {
+  return (
+    <div
+      role="note"
+      style={{
+        marginTop: "0.6rem",
+        marginBottom: "0.6rem",
+        padding: "0.6rem 0.8rem",
+        border: "1px solid var(--border, #444)",
+        borderLeft: "3px solid var(--warn, #d9a441)",
+        borderRadius: "4px",
+      }}
+    >
+      <strong>Not applicable for this company's filing format.</strong>{" "}
+      <span className="muted">{note}</span>{" "}
+      <span className="muted">
+        See the Capital Adequacy / Asset Quality proxies (Equity/Assets, Credit Cost) in
+        Balance-Sheet Strength below instead.
+      </span>
+    </div>
+  );
+}
+
 function AltmanCard({ a }) {
   return (
     <div style={{ marginTop: "1.3rem" }}>
       <h3 style={{ fontSize: "0.95rem" }}>Altman Z&Prime;-Score (partial)</h3>
-      <table className="data-table">
-        <tbody>
-          <tr>
-            <td>X1 -- Working Capital / Assets</td>
-            <td className="num">{a.x1_working_capital_to_assets !== null ? formatValue(a.x1_working_capital_to_assets, "pct") : <span className="muted">n/a</span>}</td>
-          </tr>
-          <tr>
-            <td>X3 -- EBIT / Assets</td>
-            <td className="num">{a.x3_ebit_to_assets !== null ? formatValue(a.x3_ebit_to_assets, "pct") : <span className="muted">n/a</span>}</td>
-          </tr>
-          <tr>
-            <td>X4 -- Equity / Liabilities</td>
-            <td className="num">{a.x4_equity_to_liabilities !== null ? formatValue(a.x4_equity_to_liabilities, "pct") : <span className="muted">n/a</span>}</td>
-          </tr>
-          <tr>
-            <td>partial_z</td>
-            <td className="num">{a.partial_z !== null ? a.partial_z : <span className="muted">n/a</span>}</td>
-          </tr>
-        </tbody>
-      </table>
-      <p className="muted" style={{ marginTop: "0.5rem" }}>{a.note}</p>
+      {a.excluded_sector && <ExcludedSectorBanner note={a.note} />}
+      <div className="table-scroll">
+        <table className="data-table">
+          <tbody>
+            <tr>
+              <td>X1 -- Working Capital / Assets</td>
+              <td className="num">{a.x1_working_capital_to_assets !== null ? formatValue(a.x1_working_capital_to_assets, "pct") : <span className="muted">n/a</span>}</td>
+            </tr>
+            <tr>
+              <td>X3 -- EBIT / Assets</td>
+              <td className="num">{a.x3_ebit_to_assets !== null ? formatValue(a.x3_ebit_to_assets, "pct") : <span className="muted">n/a</span>}</td>
+            </tr>
+            <tr>
+              <td>X4 -- Equity / Liabilities</td>
+              <td className="num">{a.x4_equity_to_liabilities !== null ? formatValue(a.x4_equity_to_liabilities, "pct") : <span className="muted">n/a</span>}</td>
+            </tr>
+            <tr>
+              <td>partial_z</td>
+              <td className="num">{a.partial_z !== null ? a.partial_z : <span className="muted">n/a</span>}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      {/* excluded_sector's note is already shown in the banner above --
+          avoid printing the same text twice. */}
+      {!a.excluded_sector && <p className="muted" style={{ marginTop: "0.5rem" }}>{a.note}</p>}
     </div>
   );
 }
@@ -98,16 +128,18 @@ function BalanceSheetCard({ b }) {
       <h3 style={{ fontSize: "0.95rem" }}>Balance-Sheet Strength{b.period ? ` (as of ${b.period})` : ""}</h3>
       {b.note && <p className="muted">{b.note}</p>}
       {Object.keys(b.metrics).length > 0 && (
-        <table className="data-table">
-          <tbody>
-            {Object.entries(b.metrics).map(([key, value]) => (
-              <tr key={key}>
-                <td>{RATIO_METRICS[key]?.label || key}</td>
-                <td className="num">{value !== null ? formatValue(value, RATIO_METRICS[key]?.unit) : <span className="muted">no data</span>}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="table-scroll">
+          <table className="data-table">
+            <tbody>
+              {Object.entries(b.metrics).map(([key, value]) => (
+                <tr key={key}>
+                  <td>{RATIO_METRICS[key]?.label || key}</td>
+                  <td className="num">{value !== null ? formatValue(value, RATIO_METRICS[key]?.unit) : <span className="muted">no data</span>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
       {b.warnings.length > 0 && (
         <p style={{ color: "var(--loss)", marginTop: "0.5rem" }}>{b.warnings.join("; ")}</p>

@@ -56,9 +56,7 @@ function SourceItem({ source }) {
       </li>
     );
   }
-  // Generic fallback for the data_analysis.* structured-engine sources
-  // (trend/financial_health/report) -- these cite a computation, not a
-  // page, so there's no title/page/section to show.
+  
   return (
     <li>
       {source.type}
@@ -203,7 +201,7 @@ export default function QaPage() {
         </>
       )}
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", gap: "0.6rem", marginTop: "1.1rem" }}>
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem", marginTop: "1.1rem" }}>
         <label htmlFor="qa-input" className="visually-hidden">
           Your question
         </label>

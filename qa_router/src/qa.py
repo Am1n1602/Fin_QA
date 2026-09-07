@@ -13,6 +13,7 @@ from src.classify import (
     INTENT_NARRATIVE,
     INTENT_NUMERIC_FACT,
     INTENT_RANKING,
+    INTENT_REGULATORY_DISCLOSURE,
     INTENT_REPORT,
     INTENT_TREND,
     INTENT_UNKNOWN,
@@ -386,6 +387,81 @@ def _handle_narrative(q: Classification, question: str, rag: RagBridge, k: int =
     }
 
 
+_REGULATORY_STRUCTURED_DATA_CAVEAT = (
+    "Stage 15 (STAGE_15_SCOPE.md) confirmed this project's structured XBRL pipeline cannot reliably "
+    "answer this: the CET1/Tier-1/NPA%-style regulatory tags exist in the taxonomy but came back "
+    "literally 0 on a real filing where the true value definitely wasn't zero -- these disclosures "
+    "evidently live in unstructured filing text (a separate Pillar 3 disclosure, or notes to "
+    "accounts), not the structured quarterly-results XBRL this project ingests. The answer below was "
+    "extracted from that unstructured text via RAG instead, and has NOT been cross-checked against "
+    "any structured figure -- verify it against the cited page before relying on it."
+)
+
+
+def _handle_regulatory_disclosure(q: Classification, question: str, rag: RagBridge, k: int = 5) -> dict:
+    company = q.companies[0] if len(q.companies) == 1 else None
+
+    results = rag.reranked_retrieve(question, k=k, company=company)
+
+    if not results:
+        return {
+            "answer": (
+                "No relevant passages were found in the ingested filings for this question"
+                + (f" (scoped to {company})" if company else "") + ". "
+                + _REGULATORY_STRUCTURED_DATA_CAVEAT
+            ),
+            "data": {"chunks": [], "llm_synthesis_used": False, "llm_synthesis_status": "unavailable"},
+            "sources": [],
+            "warnings": [
+                "This means either the relevant disclosure hasn't been ingested (e.g. a separate "
+                "Pillar 3/Basel III filing distinct from the quarterly results PDF this project has "
+                "ingested), or the query needs rephrasing -- this never fabricates a number when "
+                "retrieval comes back empty."
+            ],
+            "caveats": [_REGULATORY_STRUCTURED_DATA_CAVEAT],
+        }
+
+    sources = [
+        {"type": "document_chunk", "company": r["company"], "title": r["title"], "source": r["source"],
+         "period": r["period"], "page_start": r["page_start"], "page_end": r["page_end"],
+         "section": r["section"], "local_path": r["local_path"]}
+        for r in results
+    ]
+    passages = "\n\n".join(
+        f"[{i + 1}] ({r['company']}, {r.get('title', '')}, p{r.get('page_start')}-{r.get('page_end')}, "
+        f"section={r.get('section')}):\n{r['text'][:500]}"
+        for i, r in enumerate(results)
+    )
+
+    llm_answer, llm_status = llm_integration.synthesize_narrative_answer(question, results)
+    caveats = [_REGULATORY_STRUCTURED_DATA_CAVEAT]
+    if llm_answer:
+        answer = llm_answer
+        llm_used = True
+        caveats.append(
+            "This answer was written by an LLM strictly from the numbered source passages in "
+            "data['chunks'] -- it is an interpretation layer over already-verified retrieval, not a "
+            "new source of truth. Verify any specific figure against the cited passage before relying "
+            "on it."
+        )
+    else:
+        reason = _llm_unavailable_reason(llm_status)
+        answer = (
+            f"No LLM synthesis is available for this run ({reason}) -- below are the {len(results)} "
+            f"most relevant source passages, ranked by relevance, for a human (or a retried LLM call) "
+            f"to read and answer from directly:\n\n{passages}\n\n{_REGULATORY_STRUCTURED_DATA_CAVEAT}"
+        )
+        llm_used = False
+
+    return {
+        "answer": answer,
+        "data": {"chunks": results, "llm_synthesis_used": llm_used, "llm_synthesis_status": llm_status},
+        "sources": sources,
+        "warnings": [],
+        "caveats": caveats,
+    }
+
+
 def _handle_complex(q: Classification, question: str, analysis_bridge: AnalysisBridge,
                      rag: RagBridge, db_path: str) -> dict:
     parts: dict = {}
@@ -491,6 +567,8 @@ def answer_question(
             handled = _handle_ranking(q, analysis_bridge, db_path)
         elif q.intent == INTENT_FINANCIAL_HEALTH:
             handled = _handle_financial_health(q, analysis_bridge)
+        elif q.intent == INTENT_REGULATORY_DISCLOSURE:
+            handled = _handle_regulatory_disclosure(q, question, rag_bridge)
         elif q.intent == INTENT_REPORT:
             handled = _handle_report(q, analysis_bridge, db_path)
         elif q.intent == INTENT_NARRATIVE:

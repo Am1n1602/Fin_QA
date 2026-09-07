@@ -55,6 +55,14 @@ TAG_MAP = {
 
     "capex_ppe": "in-capmkt:PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
     "capex_intangibles": "in-capmkt:PurchaseOfIntangibleAssetsClassifiedAsInvestingActivities",
+    
+    "bank_interest_earned": "in-capmkt:InterestEarned",
+    "bank_interest_expended": "in-capmkt:InterestExpended",
+    "bank_operating_profit": "in-capmkt:OperatingProfitBeforeProvisionAndContingencies",
+    "bank_provisions": "in-capmkt:ProvisionsOtherThanTaxAndContingencies",
+    "bank_employee_cost": "in-capmkt:EmployeesCost",
+    "bank_other_operating_expenses": "in-capmkt:OtherOperatingExpenses",
+    "advances": "in-capmkt:Advances",
 }
 
 _BANK_EQUITY_AUX_TAGS = {
@@ -62,10 +70,17 @@ _BANK_EQUITY_AUX_TAGS = {
     "_bank_reserves_and_surplus": "in-capmkt:ReservesAndSurplus",
 }
 
+_BANK_BALANCE_SHEET_AUX_TAGS = {
+    "_bank_cash_with_rbi": "in-capmkt:CashAndBalancesWithReserveBankOfIndia",
+    "_bank_balances_with_banks": "in-capmkt:BalancesWithBanksAndMoneyAtCallAndShortNotice",
+    "_bank_other_liabilities_and_provisions": "in-capmkt:OtherLiabilitiesAndProvisions",
+}
+
 _SECTOR_ALT_TAGS = {
     "in-capmkt:ShareholdersFunds": "total_equity",
     "in-capmkt:ProfitLossForThePeriod": "net_profit",
     "in-capmkt:ProfitLossAfterTaxAndExtraordinaryItems": "net_profit",
+    "in-capmkt:ProfitLossFromOrdinaryActivitiesBeforeTax": "pbt",
 }
 
 _DEBT_ALT_TAGS = {
@@ -110,10 +125,15 @@ def validate_canonical_record(record: dict, tolerance: float = 1.0) -> dict:
             abs((record["current_tax"] + record["deferred_tax"]) - record["tax_expense"]) <= tolerance
         )
 
-    if all(record.get(k) is not None for k in ("pbt", "tax_expense", "net_profit")):
-        checks["pbt_minus_tax_eq_net_profit"] = (
-            abs((record["pbt"] - record["tax_expense"]) - record["net_profit"]) <= tolerance
-        )
+    if record.get("pbt") is not None and record.get("tax_expense") is not None:
+        if record.get("pat_continuing_ops") is not None:
+            checks["pbt_minus_tax_eq_pat_continuing_ops"] = (
+                abs((record["pbt"] - record["tax_expense"]) - record["pat_continuing_ops"]) <= tolerance
+            )
+        elif record.get("net_profit") is not None:
+            checks["pbt_minus_tax_eq_net_profit"] = (
+                abs((record["pbt"] - record["tax_expense"]) - record["net_profit"]) <= tolerance
+            )
 
     if all(record.get(k) is not None for k in ("net_profit", "oci", "total_comprehensive_income")):
         checks["net_profit_plus_oci_eq_total_comprehensive_income"] = (
@@ -204,6 +224,7 @@ def map_facts_to_canonical(facts: list[dict]) -> list[dict]:
 
     tag_to_canonical = {v: k for k, v in TAG_MAP.items() if v is not None}
     tag_to_canonical.update({v: k for k, v in _BANK_EQUITY_AUX_TAGS.items()})
+    tag_to_canonical.update({v: k for k, v in _BANK_BALANCE_SHEET_AUX_TAGS.items()})
     tag_to_canonical.update(_SECTOR_ALT_TAGS)
     tag_to_canonical.update(_DEBT_ALT_TAGS)
 
@@ -244,8 +265,22 @@ def map_facts_to_canonical(facts: list[dict]) -> list[dict]:
             record.pop("_bank_capital", None)
             record.pop("_bank_reserves_and_surplus", None)
 
+
+        cash_with_rbi = record.pop("_bank_cash_with_rbi", None)
+        balances_with_banks = record.pop("_bank_balances_with_banks", None)
+        if record.get("cash_and_equivalents") is None \
+                and cash_with_rbi is not None and balances_with_banks is not None:
+            record["cash_and_equivalents"] = cash_with_rbi + balances_with_banks
+
+        other_liabilities = record.pop("_bank_other_liabilities_and_provisions", None)
+        if record.get("total_liabilities") is None and other_liabilities is not None \
+                and record.get("deposits_debt") is not None and record.get("borrowings_noncurrent") is not None:
+            record["total_liabilities"] = (
+                record["deposits_debt"] + record["borrowings_noncurrent"] + other_liabilities
+            )
+
         record["_missing_fields"] = [
-            k for k in TAG_MAP if TAG_MAP[k] is not None and k not in fields
+            k for k in TAG_MAP if TAG_MAP[k] is not None and record.get(k) is None
         ]
         record = validate_canonical_record(record)
         records.append(record)

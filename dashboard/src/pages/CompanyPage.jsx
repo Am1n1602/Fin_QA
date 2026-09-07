@@ -45,31 +45,33 @@ function OverviewTab({ symbol, filingType }) {
             {data.sector ? <span className="tag">{data.sector}</span> : "Unclassified sector"} &middot; BSE{" "}
             {data.bse_scrip || "n/a"}
           </p>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th scope="col">Metric</th>
-                <th scope="col" className="num">Latest Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(data.snapshot).map(([metric, point]) => (
-                <tr key={metric}>
-                  <td>{formatMetricLabel(metric)}</td>
-                  <td className="num">
-                    {point ? (
-                      <>
-                        {point.value}
-                        <span className="muted"> ({point.period})</span>
-                      </>
-                    ) : (
-                      <span className="muted">no data</span>
-                    )}
-                  </td>
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Metric</th>
+                  <th scope="col" className="num">Latest Value</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {Object.entries(data.snapshot).map(([metric, point]) => (
+                  <tr key={metric}>
+                    <td>{formatMetricLabel(metric)}</td>
+                    <td className="num">
+                      {point ? (
+                        <>
+                          {point.value}
+                          <span className="muted"> ({point.period})</span>
+                        </>
+                      ) : (
+                        <span className="muted">no data</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <p className="byline" style={{ marginTop: "1.1rem", marginBottom: 0 }}>
             Use the tabs above for the full financials, ratios, trends, peer comparison, ranking, financial
             health and research report.
@@ -79,7 +81,6 @@ function OverviewTab({ symbol, filingType }) {
     </StatusBanner>
   );
 }
-
 
 export default function CompanyPage() {
   const { symbol } = useParams();

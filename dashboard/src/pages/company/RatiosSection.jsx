@@ -18,30 +18,32 @@ export default function RatiosSection({ symbol, filingType }) {
       </p>
       <StatusBanner loading={loading} error={error} loadingText={`Retrieving ${symbol} ratios...`}>
         {data && (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th scope="col">Metric</th>
-                <th scope="col" className="num">Value</th>
-                <th scope="col" className="num">Period</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(data.ratios).map(([metric, point]) => {
-                const meta = RATIO_METRICS[metric];
-                const formatted = point ? formatValue(point.value, meta?.unit) : null;
-                return (
-                  <tr key={metric}>
-                    <td>{meta?.label || metric}</td>
-                    <td className="num">
-                      {formatted !== null ? formatted : <span className="muted">no data</span>}
-                    </td>
-                    <td className="num">{point ? point.period : <span className="muted">&mdash;</span>}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Metric</th>
+                  <th scope="col" className="num">Value</th>
+                  <th scope="col" className="num">Period</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(data.ratios).map(([metric, point]) => {
+                  const meta = RATIO_METRICS[metric];
+                  const formatted = point ? formatValue(point.value, meta?.unit) : null;
+                  return (
+                    <tr key={metric}>
+                      <td>{meta?.label || metric}</td>
+                      <td className="num">
+                        {formatted !== null ? formatted : <span className="muted">no data</span>}
+                      </td>
+                      <td className="num">{point ? point.period : <span className="muted">&mdash;</span>}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </StatusBanner>
     </div>

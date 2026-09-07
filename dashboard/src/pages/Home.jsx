@@ -65,30 +65,32 @@ export default function Home() {
       </p>
 
       <StatusBanner loading={companiesLoading} error={companiesError} loadingText="Retrieving company register...">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th scope="col">Symbol</th>
-              <th scope="col">Company</th>
-              <th scope="col">Sector</th>
-              <th scope="col" className="num">BSE Scrip</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleCompanies.map((c) => (
-              <tr key={c.symbol}>
-                <td>
-                  <Link to={`/companies/${c.symbol}`}>{c.symbol}</Link>
-                </td>
-                <td>{c.name}</td>
-                <td>
-                  {c.sector ? <span className="tag">{c.sector}</span> : <span className="muted">unclassified</span>}
-                </td>
-                <td className="num">{c.bse_scrip || <span className="muted">&mdash;</span>}</td>
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th scope="col">Symbol</th>
+                <th scope="col">Company</th>
+                <th scope="col">Sector</th>
+                <th scope="col" className="num">BSE Scrip</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {visibleCompanies.map((c) => (
+                <tr key={c.symbol}>
+                  <td>
+                    <Link to={`/companies/${c.symbol}`}>{c.symbol}</Link>
+                  </td>
+                  <td>{c.name}</td>
+                  <td>
+                    {c.sector ? <span className="tag">{c.sector}</span> : <span className="muted">unclassified</span>}
+                  </td>
+                  <td className="num">{c.bse_scrip || <span className="muted">&mdash;</span>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </StatusBanner>
     </div>
   );

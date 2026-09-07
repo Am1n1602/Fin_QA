@@ -72,10 +72,6 @@ export default function RankingsPage() {
     return <span aria-hidden="true">{sort.dir === "asc" ? " ▲" : " ▼"}</span>;
   }
 
-  // WCAG 2.1 SC 4.1.2 (Name, Role, Value): aria-sort tells assistive tech
-  // which column a table is currently sorted by and in which direction --
-  // there's no way to infer that from DOM order alone once a table is
-  // client-side sortable.
   function ariaSortFor(key) {
     if (sort.key !== key) return "none";
     return sort.dir === "asc" ? "ascending" : "descending";
@@ -122,44 +118,46 @@ export default function RankingsPage() {
       <StatusBanner loading={loading} error={error} loadingText="Computing rankings...">
         {data && (
           <>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  {COLUMNS.map((col) => (
-                    <th key={col.key} scope="col" className={col.align} aria-sort={ariaSortFor(col.key)}>
-                      <button type="button" className="sort-button" onClick={() => toggleSort(col.key)}>
-                        {col.label}
-                        {sortIndicator(col.key)}
-                      </button>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sortedSymbols.map((symbol) => {
-                  const r = data.ranking[symbol];
-                  return (
-                    <tr key={symbol}>
-                      <td className="num">{r.rank ?? <span className="muted">&mdash;</span>}</td>
-                      <td>
-                        <Link to={`/companies/${symbol}`}>{symbol}</Link>
-                      </td>
-                      <td className="num">
-                        {r.composite_score !== null ? r.composite_score.toFixed(1) : <span className="muted">n/a</span>}
-                      </td>
-                      {RANKING_CATEGORIES.map((c) => {
-                        const score = r.category_scores?.[c.key];
-                        return (
-                          <td key={c.key} className="num" title={missingTitle(r, c.key)}>
-                            {score !== null && score !== undefined ? score.toFixed(1) : <span className="muted">n/a</span>}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="table-scroll">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    {COLUMNS.map((col) => (
+                      <th key={col.key} scope="col" className={col.align} aria-sort={ariaSortFor(col.key)}>
+                        <button type="button" className="sort-button" onClick={() => toggleSort(col.key)}>
+                          {col.label}
+                          {sortIndicator(col.key)}
+                        </button>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedSymbols.map((symbol) => {
+                    const r = data.ranking[symbol];
+                    return (
+                      <tr key={symbol}>
+                        <td className="num">{r.rank ?? <span className="muted">&mdash;</span>}</td>
+                        <td>
+                          <Link to={`/companies/${symbol}`}>{symbol}</Link>
+                        </td>
+                        <td className="num">
+                          {r.composite_score !== null ? r.composite_score.toFixed(1) : <span className="muted">n/a</span>}
+                        </td>
+                        {RANKING_CATEGORIES.map((c) => {
+                          const score = r.category_scores?.[c.key];
+                          return (
+                            <td key={c.key} className="num" title={missingTitle(r, c.key)}>
+                              {score !== null && score !== undefined ? score.toFixed(1) : <span className="muted">n/a</span>}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
             <p className="muted" style={{ marginTop: "0.8rem" }}>{data.note}</p>
           </>
         )}

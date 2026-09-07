@@ -68,20 +68,22 @@ export default function ReportSection({ symbol, filingType }) {
             {data.peer_selection_warning && <p className="muted">{data.peer_selection_warning}</p>}
 
             <h3 style={{ fontSize: "0.95rem", marginTop: "0.9rem" }}>Valuation Snapshot</h3>
-            <table className="data-table">
-              <tbody>
-                {VALUATION_FIELDS.map((f) => (
-                  <tr key={f.key}>
-                    <td>{f.label}</td>
-                    <td className="num">
-                      {data.valuation[f.key] !== null && data.valuation[f.key] !== undefined
-                        ? formatValue(data.valuation[f.key], f.unit)
-                        : <span className="muted">no data</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="table-scroll">
+              <table className="data-table">
+                <tbody>
+                  {VALUATION_FIELDS.map((f) => (
+                    <tr key={f.key}>
+                      <td>{f.label}</td>
+                      <td className="num">
+                        {data.valuation[f.key] !== null && data.valuation[f.key] !== undefined
+                          ? formatValue(data.valuation[f.key], f.unit)
+                          : <span className="muted">no data</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             {data.valuation.data_quality_warnings.length > 0 && (
               <p style={{ color: "var(--loss)", marginTop: "0.5rem" }}>
                 {data.valuation.data_quality_warnings.join(" ")}

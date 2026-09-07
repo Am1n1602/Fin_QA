@@ -93,7 +93,8 @@ def _infer_unit(metric_name: str) -> str | None:
                         "cash_ratio", "net_debt_to_operating_ebit", "pe_ratio", "pb_ratio", "ev_to_sales"):
         return "x"
     if metric_name in ("ebit", "operating_ebit", "net_debt", "enterprise_value", "ttm_ebit", "ttm_revenue",
-                        "total_dividends_paid", "dividend_per_share", "book_value_per_share", "ttm_eps", "latest_close"):
+                        "total_dividends_paid", "dividend_per_share", "book_value_per_share", "ttm_eps", "latest_close",
+                        "net_interest_income"):
         return "currency"
     if metric_name == "shares_outstanding":
         return "count"

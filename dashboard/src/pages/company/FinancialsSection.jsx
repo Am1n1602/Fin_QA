@@ -19,28 +19,30 @@ export default function FinancialsSection({ symbol, filingType }) {
       <StatusBanner loading={loading} error={error} loadingText={`Retrieving ${symbol} financials...`}>
         {data && (
           <>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th scope="col">Field</th>
-                  <th scope="col" className="num">Value</th>
-                  <th scope="col" className="num">Period</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(data.facts).map(([field, point]) => (
-                  <tr key={field}>
-                    <td>{FACT_FIELDS[field] || field}</td>
-                    <td className="num">
-                      {point ? point.value.toLocaleString("en-IN", { maximumFractionDigits: 2 }) : (
-                        <span className="muted">no data</span>
-                      )}
-                    </td>
-                    <td className="num">{point ? point.period : <span className="muted">&mdash;</span>}</td>
+            <div className="table-scroll">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Field</th>
+                    <th scope="col" className="num">Value</th>
+                    <th scope="col" className="num">Period</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {Object.entries(data.facts).map(([field, point]) => (
+                    <tr key={field}>
+                      <td>{FACT_FIELDS[field] || field}</td>
+                      <td className="num">
+                        {point ? point.value.toLocaleString("en-IN", { maximumFractionDigits: 2 }) : (
+                          <span className="muted">no data</span>
+                        )}
+                      </td>
+                      <td className="num">{point ? point.period : <span className="muted">&mdash;</span>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             {data.warning && <p className="muted" style={{ marginTop: "0.9rem" }}>{data.warning}</p>}
           </>
         )}

@@ -37,51 +37,53 @@ export default function RankingSection({ symbol, filingType }) {
               </p>
             )}
 
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th scope="col" className="num">Rank</th>
-                  <th scope="col">Company</th>
-                  <th scope="col" className="num">Composite</th>
-                  {RANKING_CATEGORIES.map((c) => (
-                    <th key={c.key} scope="col" className="num">{c.label}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {data.ordered_symbols.map((sym) => {
-                  const r = data.ranking[sym];
-                  return (
-                    <tr key={sym} style={sym === symbol ? { fontWeight: 600 } : undefined}>
-                      <td className="num">{r.rank ?? <span className="muted">&mdash;</span>}</td>
-                      <td>
-                        <Link to={`/companies/${sym}`}>{sym}</Link>
-                        {sym === symbol && <span className="visually-hidden"> (this company)</span>}
-                      </td>
-                      <td className="num">{r.composite_score !== null ? r.composite_score.toFixed(1) : <span className="muted">n/a</span>}</td>
-                      {RANKING_CATEGORIES.map((c) => (
-                        <td key={c.key} className="num">
-                          <ScoreCell score={r.category_scores?.[c.key]} />
+            <div className="table-scroll">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th scope="col" className="num">Rank</th>
+                    <th scope="col">Company</th>
+                    <th scope="col" className="num">Composite</th>
+                    {RANKING_CATEGORIES.map((c) => (
+                      <th key={c.key} scope="col" className="num">{c.label}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.ordered_symbols.map((sym) => {
+                    const r = data.ranking[sym];
+                    return (
+                      <tr key={sym} style={sym === symbol ? { fontWeight: 600 } : undefined}>
+                        <td className="num">{r.rank ?? <span className="muted">&mdash;</span>}</td>
+                        <td>
+                          <Link to={`/companies/${sym}`}>{sym}</Link>
+                          {sym === symbol && <span className="visually-hidden"> (this company)</span>}
                         </td>
-                      ))}
-                    </tr>
-                  );
-                })}
-                {data.symbols
-                  .filter((sym) => !data.ordered_symbols.includes(sym))
-                  .map((sym) => (
-                    <tr key={sym} className="muted">
-                      <td className="num">&mdash;</td>
-                      <td>
-                        <Link to={`/companies/${sym}`}>{sym}</Link>
-                      </td>
-                      <td className="num" colSpan={1 + RANKING_CATEGORIES.length}>
-                        no scoreable data
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+                        <td className="num">{r.composite_score !== null ? r.composite_score.toFixed(1) : <span className="muted">n/a</span>}</td>
+                        {RANKING_CATEGORIES.map((c) => (
+                          <td key={c.key} className="num">
+                            <ScoreCell score={r.category_scores?.[c.key]} />
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                  {data.symbols
+                    .filter((sym) => !data.ordered_symbols.includes(sym))
+                    .map((sym) => (
+                      <tr key={sym} className="muted">
+                        <td className="num">&mdash;</td>
+                        <td>
+                          <Link to={`/companies/${sym}`}>{sym}</Link>
+                        </td>
+                        <td className="num" colSpan={1 + RANKING_CATEGORIES.length}>
+                          no scoreable data
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
             <p className="muted" style={{ marginTop: "0.8rem" }}>{data.note}</p>
           </>
         )}

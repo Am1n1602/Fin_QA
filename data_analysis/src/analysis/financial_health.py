@@ -6,10 +6,6 @@ from src.analysis.ratios import _is_single_quarter, _is_annual, compute_period_r
 from src.analysis.combine_and_analyze import find_canonical_files
 from src.config import ANALYSIS_OUTPUT_DIR
 
-# The 1 Piotroski criterion permanently excluded here, and why —
-# referenced by compute_piotroski() so the reason lives in exactly one
-# place. cfo_positive and accruals used to be here too, before
-# operating_cash_flow was confirmed mapped this session.
 PIOTROSKI_EXCLUDED = {
     "delta_gross_margin": "Ind AS IT-services filings have no clean COGS-equivalent tag to compute gross margin.",
 }
@@ -89,10 +85,6 @@ def compute_piotroski(company: str, filing_type: str = "consolidated") -> dict:
         ),
     }
 
-    # Accruals: CFO/Assets > ROA, both from the SAME period — not a
-    # year-over-year comparison like every other criterion above, so
-    # built directly rather than through _criterion(), whose "latest vs
-    # prior" field names would misleadingly suggest a YoY check here.
     cfo_pct, roa_pct = latest_r.get("cfo_pct"), latest_r.get("roa_pct")
     if cfo_pct is None or roa_pct is None:
         criteria["accruals"] = {"met": None, "cfo_pct": cfo_pct, "roa_pct": roa_pct, "reason": "insufficient_data"}
@@ -107,6 +99,10 @@ def compute_piotroski(company: str, filing_type: str = "consolidated") -> dict:
     if len(computed) < 8:
         result["note"] = f"Only {len(computed)}/8 intended criteria had enough data this run — see individual 'reason' fields."
     return result
+
+
+def _looks_like_bank_or_nbfc(record: dict) -> bool:
+    return record.get("bank_interest_earned") is not None or record.get("deposits_debt") is not None
 
 
 def compute_altman_z_partial(company: str, filing_type: str = "consolidated") -> dict:
@@ -127,6 +123,7 @@ def compute_altman_z_partial(company: str, filing_type: str = "consolidated") ->
     result = {
         "company": company, "filing_type": filing_type,
         "period": None,
+        "excluded_sector": False,  # set True for banks/NBFCs — see below
         "x1_working_capital_to_assets": None,
         "x3_ebit_to_assets": None,
         "x4_equity_to_liabilities": None,
@@ -166,6 +163,16 @@ def compute_altman_z_partial(company: str, filing_type: str = "consolidated") ->
         # percentages — divide by 100 before applying them.
         result["partial_z"] = round(3.25 + 6.56 * (x1 / 100) + 6.72 * (x3 / 100) + 1.05 * (x4 / 100), 3)
 
+    if _looks_like_bank_or_nbfc(latest):
+        result["excluded_sector"] = True
+        result["note"] = (
+            "Altman Z-Score is standard practice to exclude financial companies from "
+            "entirely — this filer's bank/NBFC balance-sheet format has no current/"
+            "non-current split and no industrial EBIT concept, so X1/X3 are structurally "
+            "unavailable here, not a temporary data gap. partial_z is not meaningful for "
+            "this company regardless of how many quarters get added."
+        )
+
     return result
 
 
@@ -193,15 +200,12 @@ def compute_balance_sheet_strength(company: str, filing_type: str = "consolidate
     fields = [
         "working_capital_to_assets_pct", "equity_to_liabilities_pct", "debt_to_equity",
         "current_ratio", "cash_ratio", "interest_coverage_ratio", "net_debt_to_operating_ebit",
+
+        "equity_to_assets_pct", "credit_cost_pct",
     ]
     result["metrics"] = {f: r.get(f) for f in fields}
 
-    # One deliberately conservative, well-established flag — current
-    # ratio below 1.0 is a textbook liquidity concern (current
-    # liabilities exceed current assets). Not adding more numeric
-    # thresholds here (e.g. "high" debt/equity) since acceptable
-    # leverage varies too much by context to assert a universal cutoff
-    # without misrepresenting confidence in a specific number.
+
     if result["metrics"]["current_ratio"] is not None and result["metrics"]["current_ratio"] < 1.0:
         result["warnings"].append("current_ratio below 1.0 — current liabilities exceed current assets")
 
@@ -281,6 +285,8 @@ def print_financial_health(result: dict) -> None:
 
     a = result["altman_z_partial"]
     print("\n--- Altman Z''-Score (PARTIAL — informational only, official thresholds do NOT apply) ---")
+    if a.get("excluded_sector"):
+        print(f"  EXCLUDED — bank/NBFC balance-sheet format: {a['note']}")
     print(f"  X1 (Working Capital/Assets): {a['x1_working_capital_to_assets']}")
     print(f"  X3 (EBIT/Assets):            {a['x3_ebit_to_assets']}")
     print(f"  X4 (Equity/Liabilities):     {a['x4_equity_to_liabilities']}")

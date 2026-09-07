@@ -36,10 +36,21 @@ def _load_company_metadata() -> dict[str, dict]:
         payload = json.loads(_UNIVERSE_CACHE_PATH.read_text())
     except (json.JSONDecodeError, OSError):
         return dict(_FALLBACK_COMPANY_METADATA)
+
     metadata = {
         e["nse_symbol"]: {"name": e["name"], "sector": e.get("sector"), "bse_scrip": e.get("bse_scrip")}
         for e in payload.get("companies", [])
     }
+
+    for symbol, fallback in _FALLBACK_COMPANY_METADATA.items():
+        entry = metadata.get(symbol)
+        if entry is None:
+            continue
+        for field, value in fallback.items():
+            if not entry.get(field):
+                entry[field] = value
+
     return metadata or dict(_FALLBACK_COMPANY_METADATA)
+
 
 COMPANY_METADATA = _load_company_metadata()

@@ -136,20 +136,32 @@ def compute_pe(company: str, filing_type: str = "consolidated", eps_field: str =
     return result
 
 
+def _pick_latest_shares_outstanding_record(records: list[dict]) -> tuple[dict | None, str | None]:
+    return _pick_latest_reliable_record(records, "paid_up_equity_capital")
+
+
+def _derive_shares_outstanding(all_records: list[dict]) -> tuple[float | None, str | None, str | None]:
+    candidates = [r for r in all_records
+                  if r.get("paid_up_equity_capital") is not None and r.get("face_value_per_share") is not None]
+    latest, warning = _pick_latest_shares_outstanding_record(candidates)
+    if latest is None:
+        return None, None, warning
+    shares = _safe_div(latest.get("paid_up_equity_capital"), latest.get("face_value_per_share"), as_pct=False)
+    return shares, (latest.get("period_end") or latest.get("instant")), warning
+
+
 def compute_pb(company: str, filing_type: str = "consolidated") -> dict:
-    """P/B = latest price / book value per share. Needs total_equity,
-    which only exists on records merge_periods() successfully matched
-    with a balance-sheet instant context — most likely just your
-    annual/half-yearly filing(s), not every quarter."""
     price, price_date = get_latest_close_price(company)
 
     files = find_canonical_files(company, filing_type)
     all_records = []
     for f in files:
         all_records.extend(json.loads(f.read_text()))
-        
-    with_equity = [r for r in all_records if r.get("total_equity") is not None and r.get("paid_up_equity_capital") is not None]
-    latest, warning = _pick_latest_reliable_record(with_equity, "paid_up_equity_capital")
+
+    with_equity = [r for r in all_records if r.get("total_equity") is not None]
+    equity_latest, equity_warning = _pick_latest_reliable_record(with_equity, "total_equity")
+    shares, shares_as_of, shares_warning = _derive_shares_outstanding(all_records)
+    warning = equity_warning or shares_warning
 
     result = {
         "company": company, "filing_type": filing_type,
@@ -160,21 +172,20 @@ def compute_pb(company: str, filing_type: str = "consolidated") -> dict:
         "data_quality_warning": warning,
     }
 
-    if latest is None:
+    if equity_latest is None:
         result["note"] = "No record with total_equity found — need an annual/half-yearly filing extracted first."
         return result
     if price is None:
         result["note"] = "No price data found."
         return result
 
-    equity = latest["total_equity"]
-    shares = _safe_div(latest.get("paid_up_equity_capital"), latest.get("face_value_per_share"), as_pct=False)
-    result["balance_sheet_as_of"] = latest.get("period_end") or latest.get("instant")
+    equity = equity_latest["total_equity"]
+    result["balance_sheet_as_of"] = equity_latest.get("period_end") or equity_latest.get("instant")
     result["total_equity"] = equity
     result["shares_outstanding"] = shares
 
     if not shares:
-        result["note"] = "Could not derive shares outstanding (missing paid_up_equity_capital/face_value_per_share on this record)."
+        result["note"] = "Could not derive shares outstanding (no filing has both paid_up_equity_capital and face_value_per_share)."
         return result
 
     book_value_per_share = equity / shares
@@ -184,24 +195,6 @@ def compute_pb(company: str, filing_type: str = "consolidated") -> dict:
 
 
 def compute_dividend_yield(company: str, filing_type: str = "consolidated") -> dict:
-    """Dividend Yield = Dividend Per Share / Latest Price, where DPS is
-    derived (total cash dividends paid / shares outstanding) rather than
-    directly tagged — Ind AS reports dividends as a single cumulative
-    financing-activity cash amount, not a per-share declared figure.
-
-    Same single-latest-snapshot pattern as compute_pb() above, NOT
-    TTM-summed like compute_ttm_eps()/compute_ttm_ebit() — 'dividends'
-    only populates on annual (FourD-context) records to begin with,
-    since Ind AS cash flow statements are cumulative-from-FY-start, so
-    the latest annual record's dividends figure already IS the full
-    year's total, the same way total_equity's latest snapshot already is
-    the point-in-time balance.
-
-    Caveat carried from ratios.py's payout_ratio_pct: 'dividends' is
-    cash PAID during the fiscal year, which typically includes the
-    PRIOR year's final dividend alongside the current year's interim —
-    a standard cash-vs-declaration-basis timing mismatch, not an error.
-    """
     price, price_date = get_latest_close_price(company)
 
     files = find_canonical_files(company, filing_type)
@@ -209,8 +202,10 @@ def compute_dividend_yield(company: str, filing_type: str = "consolidated") -> d
     for f in files:
         all_records.extend(json.loads(f.read_text()))
 
-    with_dividends = [r for r in all_records if r.get("dividends") is not None and r.get("paid_up_equity_capital") is not None]
-    latest, warning = _pick_latest_reliable_record(with_dividends, "paid_up_equity_capital")
+    with_dividends = [r for r in all_records if r.get("dividends") is not None]
+    latest, dividends_warning = _pick_latest_reliable_record(with_dividends, "dividends")
+    shares, shares_as_of, shares_warning = _derive_shares_outstanding(all_records)
+    warning = dividends_warning or shares_warning
 
     result = {
         "company": company, "filing_type": filing_type,
@@ -228,13 +223,12 @@ def compute_dividend_yield(company: str, filing_type: str = "consolidated") -> d
         result["note"] = "No price data found."
         return result
 
-    shares = _safe_div(latest.get("paid_up_equity_capital"), latest.get("face_value_per_share"), as_pct=False)
     result["period"] = latest.get("period_end")
     result["total_dividends_paid"] = latest["dividends"]
     result["shares_outstanding"] = shares
 
     if not shares:
-        result["note"] = "Could not derive shares outstanding (missing paid_up_equity_capital/face_value_per_share on this record)."
+        result["note"] = "Could not derive shares outstanding (no filing has both paid_up_equity_capital and face_value_per_share)."
         return result
 
     dividend_per_share = latest["dividends"] / shares
@@ -244,18 +238,6 @@ def compute_dividend_yield(company: str, filing_type: str = "consolidated") -> d
 
 
 def compute_enterprise_value(company: str, filing_type: str = "consolidated") -> dict:
-    """EV = Market Cap + Total Debt - Cash, using the same
-    most-recent-balance-sheet-record lookup compute_pb() already uses
-    (debt and cash are balance-sheet-only fields, same annual/half-yearly
-    availability constraint as total_equity).
-
-    Borrowings absent on a record is treated as 0, matching
-    ratios.py's existing debt_to_equity convention (debt-free IT
-    companies genuinely have no borrowings tag at all). Cash absent is
-    NOT defaulted to 0 — unlike "no debt", "no cash reported" almost
-    certainly means missing data, not an actual zero cash balance, and
-    defaulting it would silently understate Enterprise Value.
-    """
     price, price_date = get_latest_close_price(company)
 
     files = find_canonical_files(company, filing_type)
@@ -263,8 +245,10 @@ def compute_enterprise_value(company: str, filing_type: str = "consolidated") ->
     for f in files:
         all_records.extend(json.loads(f.read_text()))
 
-    with_equity = [r for r in all_records if r.get("total_equity") is not None and r.get("paid_up_equity_capital") is not None]
-    latest, warning = _pick_latest_reliable_record(with_equity, "paid_up_equity_capital")
+    with_equity = [r for r in all_records if r.get("total_equity") is not None]
+    latest, equity_warning = _pick_latest_reliable_record(with_equity, "total_equity")
+    shares, shares_as_of, shares_warning = _derive_shares_outstanding(all_records)
+    warning = equity_warning or shares_warning
 
     result = {
         "company": company, "filing_type": filing_type,
@@ -283,12 +267,11 @@ def compute_enterprise_value(company: str, filing_type: str = "consolidated") ->
         result["note"] = "No price data found."
         return result
 
-    shares = _safe_div(latest.get("paid_up_equity_capital"), latest.get("face_value_per_share"), as_pct=False)
     result["balance_sheet_as_of"] = latest.get("period_end") or latest.get("instant")
     result["shares_outstanding"] = shares
 
     if not shares:
-        result["note"] = "Could not derive shares outstanding (missing paid_up_equity_capital/face_value_per_share on this record)."
+        result["note"] = "Could not derive shares outstanding (no filing has both paid_up_equity_capital and face_value_per_share)."
         return result
 
     if latest.get("cash_and_equivalents") is None:
@@ -308,15 +291,6 @@ def compute_enterprise_value(company: str, filing_type: str = "consolidated") ->
 
 
 def compute_earnings_yield(company: str, filing_type: str = "consolidated") -> dict:
-    """Earnings Yield = TTM EBIT / Enterprise Value — Greenblatt's Magic
-    Formula valuation metric. Uses the Capital-Employed-style EBIT
-    already shared with roce_pct (see ratios.compute_ebit) rather than
-    Greenblatt's literal formula, which needs Net Fixed Assets excluding
-    goodwill — a field this pipeline doesn't have tagged and won't
-    approximate. Both operands here are exact: EBIT is a real accounting
-    identity, Enterprise Value is a real point-in-time balance-sheet +
-    market-price computation.
-    """
     ev_result = compute_enterprise_value(company, filing_type)
     ttm_ebit, n_quarters = compute_ttm_ebit(company, filing_type)
 
@@ -351,11 +325,6 @@ def compute_ttm_revenue(company: str, filing_type: str = "consolidated") -> tupl
 
 
 def compute_ev_to_sales(company: str, filing_type: str = "consolidated") -> dict:
-    """EV/Sales = Enterprise Value / TTM Revenue. Unlike P/E and Earnings
-    Yield, this stays meaningful for companies with negative or
-    near-zero earnings — worth having once ranking scales past IT
-    services into sectors/companies where that's a real possibility.
-    """
     ev_result = compute_enterprise_value(company, filing_type)
     ttm_revenue, n_quarters = compute_ttm_revenue(company, filing_type)
 

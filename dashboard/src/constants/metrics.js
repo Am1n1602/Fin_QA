@@ -16,6 +16,12 @@ export const RATIO_METRICS = {
   working_capital_to_assets_pct: { label: "Working Capital / Total Assets", unit: "pct" },
   equity_to_liabilities_pct: { label: "Equity / Total Liabilities", unit: "pct" },
 
+  net_interest_margin_pct: { label: "Net Interest Margin (NIM)", unit: "pct" },
+  cost_to_income_pct: { label: "Cost-to-Income Ratio", unit: "pct" },
+  credit_cost_pct: { label: "Credit Cost (Provisions / Advances)", unit: "pct" },
+  equity_to_assets_pct: { label: "Equity / Total Assets", unit: "pct" },
+  net_interest_income: { label: "Net Interest Income (NII)", unit: "currency" },
+
   pe_ratio: { label: "P/E Ratio", unit: "x" },
   pb_ratio: { label: "P/B Ratio", unit: "x" },
   ev_to_sales: { label: "EV / Sales", unit: "x" },

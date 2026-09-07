@@ -87,14 +87,17 @@ def download_filing(
     if extra_meta:
         record.update(extra_meta)
     existing = find_existing_record_by_hash(nse_symbol, record["sha256"])
-    if existing is not None:
+    if existing is not None and existing.get("local_path") != record["local_path"]:
         print(f"[pdf_downloader] content already recorded as '{existing.get('title')}' "
               f"(sha256={record['sha256'][:16]}...) -- same file, different URL/title. "
               f"Recording as a duplicate reference, not re-storing.")
         out_path.unlink(missing_ok=True)  # remove the redundant just-written copy
         record["local_path"] = existing.get("local_path")  # point at the kept original
         record["duplicate_content_of"] = existing.get("title")
-
+    elif existing is not None:
+        print(f"[pdf_downloader] re-downloaded '{title}' (sha256={record['sha256'][:16]}...) -- "
+              f"an earlier record for this exact file already exists, but its local file was "
+              f"missing on disk. Keeping this freshly (re-)written copy instead of deleting it.")
 
     append_meta_record(nse_symbol, record)
     time.sleep(REQUEST_DELAY_SECONDS)

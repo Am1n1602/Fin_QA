@@ -14,6 +14,7 @@ INTENT_FINANCIAL_HEALTH = "financial_health"
 INTENT_REPORT = "report"
 INTENT_NARRATIVE = "narrative"
 INTENT_COMPLEX = "complex"
+INTENT_REGULATORY_DISCLOSURE = "regulatory_disclosure"
 INTENT_UNKNOWN = "unknown"
 
 @dataclass
@@ -63,6 +64,15 @@ _TREND_KEYWORDS = ("trend", "over the years", "historically", "history of", "ove
                     "how has", "past 5 years", "past five years", "last few years",
                     "over the last", "over the past")
 
+_REGULATORY_DISCLOSURE_KEYWORDS = (
+    "cet1", "cet 1", "common equity tier", "tier 1 capital", "tier1 capital",
+    "tier i capital", "capital adequacy ratio", "capital adequacy", "crar",
+    "gross npa", "gnpa", "net npa", "nnpa", "non performing asset",
+    "non-performing asset", "npa%", "npa %", "npa ratio", "npa percentage",
+    " npa ", "provision coverage ratio", "casa ratio",
+    "credit deposit ratio", "credit-deposit ratio", "liquidity coverage ratio",
+)
+
 _STANDALONE_KEYWORDS = ("standalone",)
 
 
@@ -80,6 +90,7 @@ def classify_question(question: str, db_path: str, companies_override: list | No
 
     report_hits = _contains_any(text, _REPORT_KEYWORDS)
     health_hits = _contains_any(text, _HEALTH_KEYWORDS)
+    regulatory_hits = _contains_any(text, _REGULATORY_DISCLOSURE_KEYWORDS)
     ranking_hits = _contains_any(text, _RANKING_ONLY_KEYWORDS)
     comparison_hits = _contains_any(text, _COMPARISON_KEYWORDS)
     narrative_hits = _contains_any(text, _NARRATIVE_KEYWORDS)
@@ -95,6 +106,17 @@ def classify_question(question: str, db_path: str, companies_override: list | No
     if health_hits and resolved_companies:
         return Classification(INTENT_FINANCIAL_HEALTH, resolved_companies, resolved_metrics,
                                filing_type, health_hits, "high")
+
+    if regulatory_hits and resolved_companies:
+        return Classification(INTENT_REGULATORY_DISCLOSURE, resolved_companies, resolved_metrics,
+                               filing_type, regulatory_hits, "high")
+
+    if regulatory_hits and not resolved_companies:
+        return Classification(
+            INTENT_UNKNOWN, resolved_companies, resolved_metrics, filing_type, regulatory_hits, "low",
+            notes=[f"Recognized a regulatory-disclosure term ({', '.join(regulatory_hits)}) but no "
+                   f"company -- this needs a specific bank/NBFC name to search its filing text."],
+        )
 
     if narrative_signal and (numeric_signal or comparison_hits or trend_hits):
         return Classification(

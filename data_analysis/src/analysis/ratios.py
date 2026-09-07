@@ -81,6 +81,32 @@ def compute_net_debt(record: dict):
     return compute_total_debt(record) - record["cash_and_equivalents"]
 
 
+def compute_bank_ratios(r: dict) -> dict:
+    bank_interest_earned = r.get("bank_interest_earned")
+    bank_interest_expended = r.get("bank_interest_expended")
+    bank_employee_cost = r.get("bank_employee_cost")
+    bank_other_opex = r.get("bank_other_operating_expenses")
+    bank_provisions = r.get("bank_provisions")
+    advances = r.get("advances")
+    total_assets = r.get("total_assets")
+    other_income = r.get("other_income")
+
+    net_interest_income = (
+        None if None in (bank_interest_earned, bank_interest_expended)
+        else bank_interest_earned - bank_interest_expended
+    )
+
+    return {
+        "net_interest_income": net_interest_income,  # currency, see _RATIO_UNIT_OVERRIDES
+        "net_interest_margin_pct": _safe_div(net_interest_income, total_assets),
+        "cost_to_income_pct": (
+            None if None in (bank_employee_cost, bank_other_opex, other_income, net_interest_income) else
+            _safe_div(bank_employee_cost + bank_other_opex, net_interest_income + other_income)
+        ),
+        "credit_cost_pct": _safe_div(bank_provisions, advances),
+    }
+
+
 def compute_period_ratios(record: dict) -> dict:
     """Compute P&L ratios for one period record (one context/quarter)."""
     r = record  # short alias
@@ -131,6 +157,7 @@ def compute_period_ratios(record: dict) -> dict:
             _safe_div(r["current_assets"] - r["current_liabilities"], r["total_assets"])
         ),
         "equity_to_liabilities_pct": _safe_div(r.get("total_equity"), r.get("total_liabilities")),
+        "equity_to_assets_pct": _safe_div(r.get("total_equity"), r.get("total_assets")),
         "ebit": compute_ebit(r),  # currency amount, not a % — see _RATIO_UNIT_OVERRIDES
     }
 
@@ -166,6 +193,8 @@ def compute_period_ratios(record: dict) -> dict:
     ratios["payout_ratio_pct"] = _safe_div(r.get("dividends"), r.get("net_profit"))
     ratios["capex"] = compute_capex(r)  # currency amount — see compute_capex()'s docstring for the None-vs-0 handling
 
+    ratios.update(compute_bank_ratios(r))  # Stage 15b — see compute_bank_ratios()'s docstring; None for non-bank records
+
     if None not in (r.get("pbt_before_exceptional"), depreciation, other_income) and revenue:
         ebitda_approx = r["pbt_before_exceptional"] + depreciation + finance_costs - other_income
         ratios["ebitda_margin_pct_approx"] = (ebitda_approx / revenue) * 100
@@ -176,13 +205,6 @@ def compute_period_ratios(record: dict) -> dict:
 
 
 def _compute_period_growth(prev: dict, curr: dict, fields: tuple) -> dict:
-    """Growth from `prev` to `curr` for each field in `fields`. Shared by
-    compute_trends() (quarter-over-quarter) and compute_annual_yoy()
-    (year-over-year) below — same negative/zero-base handling either
-    way: percentage growth from a non-positive prior value isn't
-    meaningful (e.g. -880% when the prior period itself was a loss), so
-    it's reported as None + the raw absolute change + an explanatory
-    note instead of a misleading percentage."""
     entry = {
         "from_period": f"{prev.get('period_start')} to {prev.get('period_end')}",
         "to_period": f"{curr.get('period_start')} to {curr.get('period_end')}",
@@ -281,6 +303,7 @@ _RATIO_UNIT_OVERRIDES = {
     "operating_ebit": "currency",
     "net_debt_to_operating_ebit": "x",
     "capex": "currency",
+    "net_interest_income": "currency",
 }
 
 

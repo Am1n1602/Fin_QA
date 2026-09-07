@@ -1,12 +1,38 @@
+/* ---------------------------------------------------------------------
+   Fin_QA dashboard — "research terminal" aesthetic.
+
+   Deliberately not the default dark-SaaS/blue-gradient AI-app look:
+   warm paper background, ink/serif typography for headings, monospace
+   tabular figures for data (like a real financial statement), muted
+   emerald/oxblood/ochre instead of neon, and a faint paper-grain texture
+   for tactility. Nav reads as a masthead with a double hairline rule,
+   the way a research publication's nameplate is set, not a rounded-pill
+   SaaS tab bar.
+   --------------------------------------------------------------------- */
+
 :root {
   --paper: #f1ece0;
   --paper-raised: #faf7ef;
   --paper-inset: #e9e2d1;
   --ink: #201d17;
   --ink-soft: #5a5347;
+  /* WCAG 2.1 AA fix: the original #8c8372 measured 3.18:1 on --paper and
+     3.50:1 on --paper-raised for this project's own .muted/.byline text
+     (0.88rem, well under the "large text" threshold that would allow
+     3:1) -- both fail SC 1.4.3's 4.5:1 minimum for normal text. #6b6457
+     keeps the same muted brown-grey hue but measures 4.97:1 / 5.47:1 /
+     4.54:1 against --paper / --paper-raised / --paper-inset respectively
+     (verified with the WCAG relative-luminance formula, not eyeballed). */
   --ink-faint: #6b6457;
   --rule: #d6cbb0;
   --rule-strong: #b7a97e;
+  /* WCAG 2.1 AA fix (SC 1.4.11, Non-text Contrast): --rule-strong measures
+     only 2.18:1 against --paper-raised, below the 3:1 a UI component's
+     visual boundary needs -- used where a border IS that boundary (the
+     .tag chip, the custom-styled <select> underline), not for purely
+     decorative separators (the masthead's double rule, the nav dot),
+     which SC 1.4.11 doesn't apply to. #988755 measures 3.31:1 on
+     --paper-raised / 3.00:1 on --paper. */
   --rule-ui: #988755;
   --brand: #1f3d3a;
   --brand-strong: #14312e;
@@ -31,6 +57,18 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Faint paper-grain overlay -- a fixed, non-interactive texture layer so the
+   flat paper color doesn't read as a solid digital fill.
+
+   Deliberately NOT an SVG feTurbulence filter: that was the original
+   approach here, and it crashed real browsers on at least one Windows
+   machine ("not enough memory to open this page") -- a full-viewport,
+   fixed-position turbulence filter is expensive to rasterize, and some
+   GPU/driver combinations handle it very badly (this didn't show up in
+   this project's own headless/software-rendered testing, only on real
+   hardware). A tiled radial-gradient dot grid gives the same "not a flat
+   fill" tactility at effectively zero rendering cost -- no filter, no
+   rasterization, just repeated gradients. */
 body {
   position: relative;
 }
@@ -57,7 +95,12 @@ a:hover {
   z-index: 1;
 }
 
-
+/* --- Accessibility base: focus visibility + screen-reader-only text ----
+   WCAG 2.1 SC 2.4.7 (Focus Visible, AA): every interactive element needs
+   a visible focus indicator, not just whatever the browser default
+   happens to be once a component starts overriding borders/outlines. One
+   consistent ring, keyed off :focus-visible so it only shows for
+   keyboard/AT focus, not every mouse click. */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -67,6 +110,11 @@ select:focus-visible,
   outline-offset: 2px;
 }
 
+/* WCAG 2.1 SC 2.4.1 (Bypass Blocks, A): a skip link so keyboard/screen-
+   reader users don't have to tab through the masthead + full nav on
+   every page just to reach the content. Visually hidden until it
+   receives focus (the first Tab stop on any page), per the standard
+   pattern -- not display:none, which would also hide it from focus. */
 .skip-link {
   position: absolute;
   left: 0.75rem;
@@ -85,6 +133,9 @@ select:focus-visible,
   top: 0.75rem;
 }
 
+/* WCAG 2.1 SC 4.1.2 (Name, Role, Value): content for screen readers only
+   -- e.g. a <label> whose visible text is redundant with a nearby
+   heading, but which a form control still needs for an accessible name. */
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -144,7 +195,8 @@ select:focus-visible,
 .app-nav {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.6rem;
   padding-bottom: 0.7rem;
 }
 
@@ -188,7 +240,8 @@ select:focus-visible,
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
   margin-bottom: 0.35rem;
 }
 
@@ -331,10 +384,22 @@ select:focus {
 
 /* --- Statement-style data table ---------------------------------------- */
 
+/* Every data-table (Financials, Ratios, Trends, Rankings, Peers, Health's
+   sub-tables) is wider than a narrow viewport can show at once -- several
+   have 4-8 numeric columns. Rather than shrink text or drop columns
+   (both lose real information), the table scrolls horizontally within
+   its own box while the rest of the page stays put -- the standard
+   responsive-table pattern, and the only one that doesn't quietly hide
+   data. Wrapper carries the spacing .data-table used to own directly, so
+   wrapping every table doesn't change any existing layout. */
+.table-scroll {
+  margin-top: 1.1rem;
+  overflow-x: auto;
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1.1rem;
   font-size: 0.9rem;
 }
 
@@ -432,6 +497,11 @@ select:focus {
 
 .qa-input {
   flex: 1;
+  /* Without this a flex item's default min-width is auto (its content's
+     natural width), so on a narrow viewport the input refuses to shrink
+     below its placeholder text's width and pushes the Ask button off
+     the edge of the page instead of just filling less space. */
+  min-width: 0;
   font: inherit;
   font-size: 0.9rem;
   background: var(--paper-raised);
@@ -475,4 +545,37 @@ select:focus {
 .example-chip:hover {
   color: var(--brand-strong);
   border-color: var(--brand);
+}
+
+/* --- Responsive layout (Phase 14e) --------------------------------------
+   Everything above already reflows reasonably (rem-based type, flexible
+   flex/gap rows, tables handled separately via .table-scroll) -- the one
+   real problem at phone widths was the fixed 2rem side padding eating a
+   large fraction of a ~360-400px viewport before any content starts.
+   Tightened at two breakpoints rather than one flat cutover, so the
+   squeeze matches how much room is actually available. */
+@media (max-width: 720px) {
+  .app-header {
+    padding: 0.9rem 1.25rem 0;
+  }
+  .app-main {
+    padding: 1.5rem 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    padding: 0.8rem 1rem 0;
+  }
+  .app-main {
+    padding: 1.25rem 1rem;
+  }
+  .card {
+    padding: 1.1rem 1rem;
+  }
+  /* Ask button drops under the input instead of being squeezed down to
+     an unreadable sliver next to it. */
+  .qa-ask-button {
+    padding: 0.6rem 1.2rem;
+  }
 }

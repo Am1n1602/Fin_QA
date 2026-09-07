@@ -25,7 +25,7 @@ RANKING_CATEGORIES = {
     },
     "capital_efficiency": {
         "weight": 0.25,
-        "metrics": ["operating_roce_pct"],
+        "metrics": ["operating_roce_pct", "net_interest_margin_pct", "cost_to_income_pct"],
     },
     "safety": {
         "weight": 0.25,
@@ -37,6 +37,8 @@ RANKING_CATEGORIES = {
             "cash_ratio",
             "interest_coverage_ratio",
             "net_debt_to_operating_ebit",
+            "equity_to_assets_pct",
+            "credit_cost_pct",
         ],
     },
     "valuation": {
