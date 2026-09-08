@@ -32,6 +32,23 @@ BSE / NSE filings (XBRL + PDF)
 
 ---
 
+## 🚀 Live demo
+
+A free-tier, zero-cost public demo is live:
+
+- **Dashboard**: [fin-qa-rouge.vercel.app](https://fin-qa-rouge.vercel.app/)
+- **API**: [fin-qa.onrender.com](https://fin-qa.onrender.com) — interactive docs at `/docs`, health/readiness at `/health` and `/ready`
+
+This is a deliberately scaled-down deployment, not the full platform — two constraints, both to fit inside free hosting tiers:
+
+- **Reduced 8-company corpus**: TCS, INFY, HCLTECH, RELIANCE, ICICIBANK, ITC, BHARTIARTL, LT (the full local install covers the live NIFTY 50 universe — see [Data & validation](#data--validation)).
+- **Narrative/RAG-grounded "why" questions are disabled** (`FINQA_DISABLE_RAG=true`) — the embedding + reranker models don't fit in the host's 512MB free-tier memory budget alongside everything else. Numeric facts, trends, comparisons, rankings, financial health, and reports are all fully live and unaffected; a narrative question returns a clear "not available in this deployment" message instead of erroring.
+- The API backend (Render free tier) sleeps after inactivity — the first request after a quiet period can take 20–50 seconds to wake up.
+
+Run it locally (below) for the full NIFTY 50 dataset with narrative/RAG answers enabled.
+
+---
+
 ## What this is, concretely
 
 - **Data**: pulls quarterly/annual XBRL filings and results PDFs directly from NSE/BSE for the NIFTY 50 universe (auto-refreshed, not a hand-maintained list).
@@ -41,7 +58,7 @@ BSE / NSE filings (XBRL + PDF)
 - **QA Router**: classifies each question and decides whether it needs a structured DB lookup, a RAG retrieval, or both plus an LLM to synthesize the final answer.
 - **Hybrid LLM**: local Ollama handles cheap/simple tasks; a cloud model (Groq by default — free tier; Anthropic optional) handles complex reasoning and narrative writing. Every cloud-written numeric claim is automatically checked against the source figures/units before being returned.
 - **Ships as a real CLI**: `pip install -e .` gives you `finqa` (ask questions), `finqa-pipeline` (refresh data), `finqa-setup` (schedule automatic refreshes), and `finqa-api` (serve the REST API) as console commands, usable from anywhere.
-- **REST API + web dashboard**: a FastAPI layer (`api/`) exposes every read path above — financials, ratios, trends, peer comparison, ranking, financial health, research reports, sector comparison, and QA — as a thin, computation-free transport over the same deterministic engine the CLI uses. A React/Vite dashboard (`dashboard/`) sits on top of it for local, no-code use of the whole platform.
+- **REST API + web dashboard**: a FastAPI layer (`api/`) exposes every read path above — financials, ratios, trends, peer comparison, ranking, financial health, research reports, sector comparison, and QA — as a thin, computation-free transport over the same deterministic engine the CLI uses. A React/Vite dashboard (`dashboard/`) sits on top of it for local, no-code use of the whole platform — and is also what's deployed in the [live demo](#-live-demo) above.
 
 ---
 
@@ -82,6 +99,7 @@ The project is nine sibling folders plus one thin packaging layer, sharing a sin
 | 12. Scale to NIFTY 50 + production CLI | Live universe sourcing, full pipeline orchestration, rate-limit sizing, performance validation at scale, CLI robustness, `pip install`-able package with scheduler | ✅ |
 | 13. API | REST API over financials/ratios/trends/peers/ranking/health/reports/sectors/QA, thin transport only | ✅ |
 | 14. Dashboard | React/Vite web frontend over the API | 🚧 in progress — Home, Company page, Rankings, and Financial QA are built and live-tested; a final polish pass (loading/error consistency, responsive layout) is what's left |
+| Zero-cost demo deployment | Render (API, demo-mode) + Vercel (dashboard) public demo, reduced 8-company corpus, RAG disabled to fit free-tier memory | ✅ live — see [Live demo](#-live-demo) above |
 
 
 ---
@@ -98,6 +116,7 @@ The project is nine sibling folders plus one thin packaging layer, sharing a sin
 - The ranking/valuation/health framework (Capital Employed, Enterprise Value, current-liabilities-based safety checks) is built for non-financial companies. Banks/NBFCs need a different framework (e.g. CAMEL-style) and aren't meaningfully covered yet.
 - Multi-year (5-year) history and CAGR-based metrics are limited by what NSE/BSE actually expose for older periods; Growth is intentionally left out of the ranking formula for this reason rather than approximated.
 - The default install is CPU-only (`torch`/`faiss-cpu`); a CUDA GPU speeds up RAG ingestion if you install a CUDA build of `torch` yourself.
+- The [live demo](#-live-demo) is intentionally reduced (8 companies, RAG disabled) to fit free hosting tiers — see that section for the full list of what's scaled down there.
 
 ---
 
@@ -180,7 +199,7 @@ Question types that work today:
 - **Comparisons** — *"Compare BAJFINANCE and BAJAJFINSV on leverage"*
 - **Rankings** — *"Which companies have the best financial health?"*
 - **Full company reports** — financial health / ranking / valuation summary for a single company
-- **Narrative "why" questions**, answered from the actual filing text — *"Why did HCLTECH's profitability decline?"*
+- **Narrative "why" questions**, answered from the actual filing text — *"Why did HCLTECH's profitability decline?"* (disabled in the [live demo](#-live-demo) specifically — fully available in a local install)
 
 Use each company's real NSE ticker (e.g. `BAJAJFINSV`) — name matching is alias-based.
 
@@ -213,8 +232,9 @@ Key endpoints:
 - `GET /companies/{symbol}/financials`, `/ratios`, `/trends`, `/peers`, `/ranking`, `/health`, `/report`
 - `GET /rankings` (optional `sector=` filter), `GET /sectors`, `GET /sectors/{sector}/comparison`
 - `POST /qa`, `POST /companies/{symbol}/qa` — same grounded QA the CLI uses, over HTTP
+- `GET /health`, `GET /ready` — liveness/readiness, including which engines (analysis, RAG) have finished starting and whether RAG is enabled at all
 
-Configuration is environment-driven (`FINQA_API_HOST`, `FINQA_API_PORT`, `FINQA_API_CORS_ORIGINS`, `FINQA_API_KEY` — unset by default, fine for local use; set it before exposing the API beyond localhost). See `api/config.py` for the full list.
+Configuration is environment-driven (`FINQA_API_HOST`, `FINQA_API_PORT`, `FINQA_API_CORS_ORIGINS`, `FINQA_API_KEY` — unset by default, fine for local use; set it before exposing the API beyond localhost; `FINQA_MODE` and `FINQA_DISABLE_RAG` are used by the [live demo](#-live-demo) deployment specifically, not needed for local use). See `api/config.py` for the full list.
 
 ## Dashboard
 
@@ -224,7 +244,9 @@ npm install
 npm run dev
 ```
 
-A React (Vite) single-page app calling the API above (`VITE_API_BASE_URL`, defaults to `http://localhost:8000`) — run `finqa-api` first. Currently ships four pages: a market overview (Home), a per-company page (overview/financials/ratios/trends/peers/ranking/health/research report, tabbed), a sortable Rankings leaderboard, and a chat-style Financial QA page that renders each answer's cited sources alongside it. Local dev only for now — no build/deploy step yet.
+A React (Vite) single-page app calling the API above (`VITE_API_BASE_URL`, defaults to `http://localhost:8000`) — run `finqa-api` first. Ships four pages: a market overview (Home), a per-company page (overview/financials/ratios/trends/peers/ranking/health/research report, tabbed), a sortable Rankings leaderboard, and a chat-style Financial QA page that renders each answer's cited sources alongside it.
+
+A production build (`npm run build`) is deployed to Vercel as the [live demo](#-live-demo) above, with `VITE_API_BASE_URL` set at build time to the deployed API's URL and `vercel.json` handling SPA fallback routing for direct links to non-root pages.
 
 ---
 
@@ -238,11 +260,11 @@ Every layer has been checked against independent sources, not just internal cons
 
 ## Roadmap — what's next
 
-The CLI (`finqa`), the API, and now most of the Dashboard are all real and working — this isn't a plan anymore for those three, just remaining polish and later-stage extensions:
+The CLI (`finqa`), the API, most of the Dashboard, and a public zero-cost demo deployment are all real, live, and working — this isn't a plan anymore for those, just remaining polish and later-stage extensions:
 
 - **Dashboard polish pass**: consistent loading/error states, a responsive layout pass, and (optionally) charts for trend lines and ranking score breakdowns.
-- **Cloud deployment**: the Dashboard and API are local-only today (dev server + `localhost:8000`); hosting either of them anywhere else is a separate, not-yet-designed stage.
-- Open, non-blocking items: a Banks/NBFC-appropriate health framework (the current ranking/valuation/health model is built for non-financial companies), deeper multi-year history (blocked on what NSE/BSE actually expose for older periods, not on this codebase), and root-causing occasional cloud-LLM latency variance on complex questions.
+- **Production-grade deployment**: the [live demo](#-live-demo) intentionally trades scope for zero cost (8 companies, RAG disabled, Render free tier's cold starts). A paid or self-hosted deployment with the full NIFTY 50 dataset and RAG/narrative answers enabled is a separate, later stage.
+- Open, non-blocking items: a Banks/NBFC-appropriate health framework (the current ranking/valuation/health model is built for non-financial companies), deeper multi-year history (blocked on what NSE/BSE actually expose for older periods, not on this codebase), root-causing occasional cloud-LLM latency variance on complex questions, and a smaller embedding model + re-embedded demo index so RAG can be re-enabled on the free-tier demo without exceeding its memory budget.
 
 ---
 
