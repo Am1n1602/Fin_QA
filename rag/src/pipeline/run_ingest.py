@@ -22,6 +22,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import sqlite3
+import subprocess
 import sys
 import time
 import traceback
@@ -47,6 +49,29 @@ def load_jsonl(path: Path) -> list[dict]:
             if line:
                 records.append(json.loads(line))
     return records
+
+
+def _ensure_rag_schema(db_path: Path) -> None:
+    """
+    """
+    with get_connection(str(db_path)) as conn:
+        try:
+            conn.execute("SELECT 1 FROM document_chunks LIMIT 1")
+            return  # schema already present, nothing to do
+        except sqlite3.OperationalError as e:
+            if "no such table" not in str(e).lower():
+                raise
+
+    print(f"[INFO] RAG schema ('documents'/'document_chunks') not found in "
+          f"{db_path} -- applying src.storage.migrate automatically...")
+    result = subprocess.run([sys.executable, "-m", "src.storage.migrate",
+                              "--db-path", str(db_path)])
+    if result.returncode != 0:
+        print(f"[ERROR] src.storage.migrate failed (exit {result.returncode}) -- "
+              f"cannot continue without the RAG schema. Run it manually:\n"
+              f"    python -m src.storage.migrate --db-path {db_path}")
+        raise SystemExit(1)
+    print("[INFO] RAG schema migration applied successfully.\n")
 
 
 def main():
@@ -83,6 +108,8 @@ def main():
     if not meta_dir.exists():
         print(f"[ERROR] meta-dir not found: {meta_dir.resolve()}")
         return 1
+
+    _ensure_rag_schema(db_path)
 
     if args.mock:
         from src.embedding.embedder import MockEmbedder
