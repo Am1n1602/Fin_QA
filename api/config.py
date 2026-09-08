@@ -31,11 +31,24 @@ All of these can be overridden without touching code:
                                      spending it for everyone else in the
                                      first place. Set to 0 (or negative) to
                                      disable. See api/deps.py's rate_limit_qa().
+    FINQA_MODE                  -- "development" (default) or "demo". Purely
+                                     informational at the API layer today --
+                                     surfaced on GET /health and GET /ready so
+                                     Render/the dashboard can tell which mode
+                                     they're talking to -- the actual demo-mode
+                                     enforcement (refusing to run ingestion at
+                                     all) lives in orchestrator/
+                                     run_nifty50_pipeline.py, since that's the
+                                     one place ingestion can be triggered from.
+                                     See "Fin_QA -- ZeroCost Demo Deployment
+                                     Roadmap.md" section 6.
 """
 
 from __future__ import annotations
 
 import os
+
+FINQA_MODE = os.environ.get("FINQA_MODE", "development")
 
 HOST = os.environ.get("FINQA_API_HOST", "0.0.0.0")
 PORT = int(os.environ.get("FINQA_API_PORT", "8000"))

@@ -27,6 +27,14 @@ _CHILD_ENV = os.environ.copy()
 _CHILD_ENV["PYTHONIOENCODING"] = "utf-8"
 _CHILD_ENV["PYTHONUTF8"] = "1"
 
+# Demo-deployment guard the public demo serves a frozen, prebuilt dataset and must
+# NEVER run ingestion, XBRL/PDF downloads, re-analysis, or index rebuilding --
+# every stage below is exactly that. This is the single choke point both
+# `python run_nifty50_pipeline.py` and the `finqa-pipeline` console script
+# (fin_llm_platform/pipeline.py just imports and calls main() below) go
+# through, so one guard here covers both entry points.
+FINQA_MODE = os.environ.get("FINQA_MODE", "development")
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 LOG_DIR = Path(__file__).resolve().parent / "logs"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -101,7 +109,23 @@ def main() -> int:
         print("[dry-run] Stage plan:")
         for name, subdir, cmd in stages_to_run:
             print(f"  {name:12s} cwd={PROJECT_ROOT / subdir}  python {' '.join(cmd)}")
+        if FINQA_MODE == "demo":
+            print("[dry-run] Note: FINQA_MODE=demo -- an actual (non-dry-run) invocation "
+                  "would refuse to run any of the above; see the check just below this one.")
         return 0
+
+    if FINQA_MODE == "demo":
+        print(
+            "[orchestrator] Refusing to run: FINQA_MODE=demo. The public demo serves a "
+            "frozen, prebuilt dataset (database/data/financial_intelligence.db + "
+            "rag/data/indices/) and must never run ingestion, downloads, re-analysis, or "
+            "index rebuilding. "
+            "Unset FINQA_MODE (or set it to 'development') to run the pipeline "
+            "for real, e.g. on your own machine when rebuilding the dataset that then gets "
+            "uploaded to the demo host.",
+            file=sys.stderr,
+        )
+        return 1
 
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_path = LOG_DIR / f"pipeline_{run_id}.log"

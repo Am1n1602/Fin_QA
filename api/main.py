@@ -14,6 +14,7 @@ import logging
 import os
 import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -124,16 +125,55 @@ app.include_router(qa.router)
 @app.get("/health", tags=["meta"])
 def liveness() -> dict:
     """This API server's own liveness/readiness check -- not a company's
-    financial health (that's GET /companies/{symbol}/health)."""
+    financial health (that's GET /companies/{symbol}/health).
+
+    A cheap, always-fast check that the process is up and which engines have
+    finished warming up. For a stricter "is it actually safe to send this
+    demo real traffic" signal (data files present, not just process alive),
+    see GET /ready below -- see also "Fin_QA -- ZeroCost Demo Deployment
+    Roadmap.md" sections 17-18, which specify both endpoints separately."""
     analysis_ready = getattr(app.state, "analysis_bridge", None) is not None
     rag_ready = getattr(app.state, "rag_ready", False)
     return {
         "status": "ok" if analysis_ready else "starting",
+        "mode": api_config.FINQA_MODE,
         "analysis_engine_ready": analysis_ready,
         "rag_engine_ready": rag_ready,
         "note": "rag_engine_ready only matters for narrative/complex questions -- numeric facts, "
                 "ratios, trends, peer comparison, rankings, financial health, and reports never use it, "
                 "and work as soon as analysis_engine_ready is true.",
+    }
+
+
+@app.get("/ready", tags=["meta"])
+def readiness() -> dict:
+    """Stricter than GET /health: confirms the underlying data file is
+    actually present on disk (not just that the analysis engine subprocess
+    started, which it can do against a missing/empty DB path) and that the
+    RAG engine's embedding/reranker models plus its FAISS/BM25 artifacts
+    have finished loading. Intended as the readiness probe a deploy platform
+    (Render) or the dashboard's own "starting up" state (see roadmap section
+    35) should poll, since /health can say "ok" moments before a real
+    request would still fail.
+
+    faiss/bm25/models are reported together as `rag_ready`: RagBridge's own
+    warm_up() (see api/main.py's lifespan) only flips app.state.rag_ready
+    once its FAISS index and BM25/reranker models have all actually loaded
+    in the worker subprocess -- a bridge that started without them would
+    have failed warm_up already, so there's no way for rag_ready to be true
+    while any one of those three is silently missing."""
+    analysis_ready = getattr(app.state, "analysis_bridge", None) is not None
+    rag_ready = getattr(app.state, "rag_ready", False)
+    db_path = getattr(app.state, "db_path", None)
+    database_ok = bool(db_path) and Path(db_path).is_file()
+    ready = analysis_ready and rag_ready and database_ok
+    return {
+        "ready": ready,
+        "mode": api_config.FINQA_MODE,
+        "database": database_ok,
+        "faiss": rag_ready,
+        "bm25": rag_ready,
+        "models": rag_ready,
     }
 
 

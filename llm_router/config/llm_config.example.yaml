@@ -1,6 +1,13 @@
 llm:
 
-  router: local
+  # Demo deployment config: the cloud host has
+  # no Ollama installed, so every task routes straight to the cloud
+  # provider (Groq) -- nothing here ever attempts a local call first. This
+  # avoids the failed-connection round trip AND the extra Groq usage that
+  # local-then-fallback was silently causing when this file didn't exist
+  # (load_llm_config() fell back to config.py's DEFAULT_TASK_MAP, which
+  # sends classification/extraction/simple_summary/formatting to "local").
+  router: cloud
 
   local:
     provider: ollama
@@ -10,31 +17,30 @@ llm:
     fallback_to_cloud_on_error: true
 
   cloud:
-    # Killswitch: set false to run 100% local/free with no code change.
     enabled: true
-    # "groq" is the default -- genuinely free (no credit card), doesn't
-    # train on submitted data, workable free daily rate limit. Get a key
-    # at https://console.groq.com/keys.
-    #
-    # To use Anthropic Claude instead, change ONLY this one line:
-    #   provider: anthropic
-    # `model`/`api_key_env` below switch automatically to the right
-    # values for whichever provider you pick (see config.py's
-    # _CLOUD_PROVIDER_DEFAULTS) UNLESS you also override them explicitly
-    # here -- so you don't need to touch the two lines below at all
-    # unless you want a non-default model.
     provider: groq
     model: openai/gpt-oss-120b
     api_key_env: GROQ_API_KEY
     timeout_s: 60
     max_tokens: 1024
+    # Process-wide circuit breaker, shared across every visitor hitting
+    # this one API process -- the LAST line of defense if the per-client
+    # rate limit below (api/config.py's FINQA_QA_RATE_LIMIT_PER_MINUTE,
+    # enforced in api/deps.py's rate_limit_qa()) is somehow bypassed or set
+    # too high. Restart the process to reset it.
     max_calls_per_process: 200
+    # No local to fall back to on this host -- if Groq itself fails, that
+    # failure should surface, not silently try an Ollama that isn't there.
     fallback_to_local_on_error: false
+
+  # Every task type goes to cloud -- deliberately overriding config.py's
+  # DEFAULT_TASK_MAP (which sends the four "simple" ones to local) since
+  # this deployment has no local provider at all.
   tasks:
-    classification: local
-    extraction: local
-    simple_summary: local
-    formatting: local
+    classification: cloud
+    extraction: cloud
+    simple_summary: cloud
+    formatting: cloud
     narrative_synthesis: cloud
     complex_qa: cloud
     research_report: cloud

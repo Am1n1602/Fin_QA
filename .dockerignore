@@ -1,0 +1,33 @@
+.git
+.github
+venv
+.venv
+__pycache__
+*.pyc
+Fin_QA.egg-info
+
+database/data
+rag/data/indices
+
+# Raw/intermediate ingestion artifacts -- only ever read by the ingestion
+# pipeline itself, which FINQA_MODE=demo refuses to run in this image anyway.
+data_extraction/data/raw
+data_extraction/data/processed
+data_analysis/data
+orchestrator/logs
+
+# Frontend is deployed separately (Vercel) -- never needed in the API image.
+dashboard/node_modules
+dashboard/dist
+dashboard
+
+notebooks
+tests
+Claude outputs
+
+.env
+.env.local
+*.env
+!.env.example
+
+logger.txt
