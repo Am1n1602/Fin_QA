@@ -1,0 +1,14 @@
+{
+  "dim": 768,
+  "companies": {
+    "TCS": 140,
+    "INFY": 1015,
+    "HCLTECH": 144,
+    "RELIANCE": 169,
+    "ICICIBANK": 196,
+    "ITC": 229,
+    "BHARTIARTL": 374,
+    "LT": 94
+  },
+  "global_total": 2361
+}

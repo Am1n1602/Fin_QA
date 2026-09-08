@@ -1,46 +1,4 @@
-"""
-build_demo_corpus.py -- builds a small, self-contained demo dataset
-(SQLite DB + FAISS indices) from the existing full financial_intelligence.db
-and rag/data/indices/, for the zero-cost demo deployment.
 
-Run from the project root, with the project's venv active (needs faiss and
-numpy -- both already project dependencies, nothing extra to install):
-
-    python build_demo_corpus.py
-
-Defaults to the roadmap's suggested 8 companies (TCS, INFY, HCLTECH,
-RELIANCE, ICICIBANK, ITC, BHARTIARTL, LT) and the project's normal default
-paths for the source DB/index. Override with flags -- see --help. Neither
-the source financial_intelligence.db nor the source rag/data/indices/ is
-modified -- both are read-only inputs; everything is written under
-data/demo/.
-
-What it does:
-  1. Copies financial_intelligence.db to a new demo DB.
-  2. Deletes every row belonging to a company NOT in the keep-list, from
-     every table that has one (companies, filings, financial_facts,
-     financial_metrics, share_prices, documents, document_chunks) --
-     children before parents.
-  3. Copies rag/data/indices/ to a new demo index dir, keeping only the
-     per-company FAISS files for the kept companies (excluded companies'
-     files are simply never copied -- no slicing needed, they're already
-     separate files), and surgically removing the excluded companies'
-     vectors from global.faiss. This works because FAISS ids and
-     document_chunks.id are the same values 1:1 (see rag/src/indexing/
-     faiss_index.py's DualFaissIndex.add()) and the index is a
-     faiss.IndexIDMap, which supports remove_ids().
-  4. Note: BM25/phrase-overlap search need no separate handling -- per
-     rag/src/pipeline/retrieve.py, there's no persistent BM25 index in
-     this project yet (that's a RAG v2 roadmap item); it's rebuilt fresh
-     from document_chunks on every query, so trimming the DB automatically
-     scopes it too.
-  5. Regenerates the FAISS index dir's own manifest.json (the same shape
-     DualFaissIndex.save() writes -- read by run_ingest.py's DB/index
-     mismatch check) and writes a separate, human-readable
-     data/demo/manifest.json describing the frozen dataset. 
-  6. VACUUMs the demo DB so the file size actually shrinks after the
-     deletes (SQLite doesn't reclaim space on DELETE by itself).
-"""
 from __future__ import annotations
 
 import argparse
@@ -74,6 +32,8 @@ def _trim_db(db_path: Path, keep: list[str]) -> dict:
 
     removed_chunk_ids = _chunk_ids_to_remove(conn, keep)
 
+    # Children before parents (kept even with foreign_keys off, so this stays
+    # correct if that pragma is ever removed later).
     conn.execute(
         f"DELETE FROM document_chunks WHERE document_id IN "
         f"(SELECT id FROM documents WHERE company_symbol NOT IN ({placeholders}))",
@@ -123,6 +83,9 @@ def _trim_faiss(index_dir: Path, out_dir: Path, keep: list[str], removed_chunk_i
         idx = faiss.read_index(str(dst))
         company_counts[sym.upper()] = int(idx.ntotal)
 
+    # global.faiss holds every company's vectors together, so (unlike the
+    # per-company files above) it can't just be selectively copied -- load
+    # it, remove the excluded companies' vectors, save the trimmed result.
     global_src = index_dir / "global.faiss"
     global_index = faiss.read_index(str(global_src))
     if removed_chunk_ids:
@@ -150,9 +113,9 @@ def main() -> int:
                      help="Source (full) database. Read-only -- never modified.")
     ap.add_argument("--index-dir", default="rag/data/indices",
                      help="Source (full) FAISS index dir. Read-only -- never modified.")
-    ap.add_argument("--out-db", default="data/demo/finqa.db")
-    ap.add_argument("--out-index-dir", default="data/demo/faiss")
-    ap.add_argument("--manifest-out", default="data/demo/manifest.json",
+    ap.add_argument("--out-db", default="demo_dataset/finqa.db")
+    ap.add_argument("--out-index-dir", default="demo_dataset/faiss")
+    ap.add_argument("--manifest-out", default="demo_dataset/manifest.json",
                      help="Human-readable dataset manifest (roadmap section 13) -- separate "
                           "from the FAISS index dir's own manifest.json written alongside "
                           "--out-index-dir.")
@@ -203,11 +166,6 @@ def main() -> int:
     print(
         "\nThis script only BUILDS the demo dataset locally -- it doesn't deploy anything. "
         "To actually use it: copy/rename these on top of the paths the app expects "
-        "(database/data/financial_intelligence.db and rag/data/indices/) in whatever image "
-        "build context or upload you use for the demo host -- see Dockerfile and "
-        "SESSION_ADDENDUM_25.md/26.md. Never overwrite your own real "
-        "database/data/financial_intelligence.db with this -- build it to data/demo/ (the "
-        "default) and only copy it into place inside the deploy artifact/build context."
     )
     return 0
 

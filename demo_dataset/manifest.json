@@ -1,0 +1,19 @@
+{
+  "version": "demo-v1",
+  "created_at": "2026-09-08",
+  "companies": [
+    "TCS",
+    "INFY",
+    "HCLTECH",
+    "RELIANCE",
+    "ICICIBANK",
+    "ITC",
+    "BHARTIARTL",
+    "LT"
+  ],
+  "documents": 15,
+  "document_chunks": 2361,
+  "embedding_model": "all-mpnet-base-v2",
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "database_version": "demo-v1"
+}
