@@ -81,9 +81,10 @@ def install_exception_handlers(app: FastAPI) -> None:
             status_code=503,
             content={
                 "error": "database_unavailable",
-                "detail": f"Could not read the database ({exc}). Check FINQA_DB_PATH points at a real, "
-                          f"unlocked financial_intelligence.db and that no other process (e.g. the "
-                          f"orchestrator's scheduled pipeline run) has it open exclusively right now.",
+                "detail": "Could not read the database. Check FINQA_DB_PATH points at a real, "
+                          "unlocked financial_intelligence.db and that no other process (e.g. the "
+                          "orchestrator's scheduled pipeline run) has it open exclusively right now. "
+                          "See the server's own logs for the exact SQLite error.",
             },
         )
 
@@ -94,8 +95,10 @@ def install_exception_handlers(app: FastAPI) -> None:
             status_code=503,
             content={
                 "error": "data_not_ready",
-                "detail": f"A required file or folder is missing ({exc}). This usually means the "
-                          f"ingestion/analysis pipeline hasn't been run yet for this data.",
+                "detail": "A required data file or folder is missing on the server. This usually "
+                          "means the ingestion/analysis pipeline hasn't been run yet for this data "
+                          "(or, in the demo deployment, that the prebuilt dataset wasn't uploaded to "
+                          "the expected path). See the server's own logs for which file.",
             },
         )
 

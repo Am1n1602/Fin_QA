@@ -342,9 +342,12 @@ def _handle_narrative(q: Classification, question: str, rag: RagBridge, k: int =
         }
 
     sources = [
+        # local_path deliberately excluded -- see retrieve.py's _row_to_dict()
+        # docstring note for why (server filesystem path, not needed for
+        # citation display, was leaking to public API responses).
         {"type": "document_chunk", "company": r["company"], "title": r["title"], "source": r["source"],
          "period": r["period"], "page_start": r["page_start"], "page_end": r["page_end"],
-         "section": r["section"], "local_path": r["local_path"]}
+         "section": r["section"]}
         for r in results
     ]
     passages = "\n\n".join(
@@ -422,9 +425,12 @@ def _handle_regulatory_disclosure(q: Classification, question: str, rag: RagBrid
         }
 
     sources = [
+        # local_path deliberately excluded -- see retrieve.py's _row_to_dict()
+        # docstring note for why (server filesystem path, not needed for
+        # citation display, was leaking to public API responses).
         {"type": "document_chunk", "company": r["company"], "title": r["title"], "source": r["source"],
          "period": r["period"], "page_start": r["page_start"], "page_end": r["page_end"],
-         "section": r["section"], "local_path": r["local_path"]}
+         "section": r["section"]}
         for r in results
     ]
     passages = "\n\n".join(

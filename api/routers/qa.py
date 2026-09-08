@@ -18,10 +18,12 @@ from fastapi import APIRouter, Depends
 
 from src.qa import answer_question
 
-from api.deps import get_analysis_bridge, get_db_path, get_rag_bridge, require_api_key, resolve_company
+from api.deps import (
+    get_analysis_bridge, get_db_path, get_rag_bridge, rate_limit_qa, require_api_key, resolve_company,
+)
 from api.models import QARequest, QAResponse
 
-router = APIRouter(tags=["qa"], dependencies=[Depends(require_api_key)])
+router = APIRouter(tags=["qa"], dependencies=[Depends(require_api_key), Depends(rate_limit_qa)])
 
 
 @router.post("/qa", response_model=QAResponse)
