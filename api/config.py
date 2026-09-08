@@ -42,6 +42,26 @@ All of these can be overridden without touching code:
                                      one place ingestion can be triggered from.
                                      See "Fin_QA -- ZeroCost Demo Deployment
                                      Roadmap.md" section 6.
+    FINQA_DISABLE_RAG            -- "false" (default) or "true"/"1"/"yes"/"on".
+                                     When true, api/main.py's lifespan never
+                                     constructs a RagBridge at all (so the
+                                     embedding + reranker models are never
+                                     loaded, and the rag_worker subprocess is
+                                     never spawned) -- this is the fix for
+                                     Render free tier's 512MB memory limit
+                                     being exceeded by all-mpnet-base-v2 +
+                                     the cross-encoder reranker (see
+                                     SESSION_ADDENDUM_31.md). Numeric/
+                                     deterministic endpoints (financials,
+                                     ratios, trends, peer comparison,
+                                     rankings, financial health, reports) are
+                                     completely unaffected -- only
+                                     narrative/regulatory-disclosure/complex
+                                     questions degrade to a clean "not
+                                     available" answer instead of retrieving
+                                     passages. See qa_router/src/qa.py's
+                                     rag_bridge_disabled parameter and
+                                     _handle_rag_disabled().
 """
 
 from __future__ import annotations
@@ -49,6 +69,9 @@ from __future__ import annotations
 import os
 
 FINQA_MODE = os.environ.get("FINQA_MODE", "development")
+
+_raw_disable_rag = os.environ.get("FINQA_DISABLE_RAG", "false")
+RAG_DISABLED = _raw_disable_rag.strip().lower() in ("1", "true", "yes", "on")
 
 HOST = os.environ.get("FINQA_API_HOST", "0.0.0.0")
 PORT = int(os.environ.get("FINQA_API_PORT", "8000"))

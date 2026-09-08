@@ -52,14 +52,10 @@ logger = logging.getLogger("finqa.api")
 async def lifespan(app: FastAPI):
     db_path = os.environ.get("FINQA_DB_PATH", str(DB_PATH))
     analysis_bridge = AnalysisBridge(db_path=db_path, data_analysis_dir=str(DATA_ANALYSIS_DIR))
-    rag_bridge = RagBridge(
-        db_path=db_path, rag_dir=str(RAG_DIR), index_dir=str(RAG_INDEX_DIR),
-        model_name=EMBEDDING_MODEL_NAME, rerank_model=RERANK_MODEL_NAME, device=DEVICE,
-    )
 
     app.state.db_path = db_path
     app.state.analysis_bridge = analysis_bridge
-    app.state.rag_bridge = rag_bridge
+    app.state.rag_bridge = None
     app.state.rag_ready = False
 
     loop = asyncio.get_event_loop()
@@ -71,19 +67,35 @@ async def lifespan(app: FastAPI):
     await loop.run_in_executor(None, analysis_bridge.warm_up)
     logger.info("Analysis engine ready -- now serving requests.")
 
-    def _warm_up_rag() -> None:
-        rag_bridge.warm_up()
-        app.state.rag_ready = True
-        logger.info("RAG engine ready (embedding/rerank models loaded).")
 
-    app.state.rag_warmup_future = loop.run_in_executor(None, _warm_up_rag)
+    rag_bridge = None
+    if api_config.RAG_DISABLED:
+        logger.info(
+            "FINQA_DISABLE_RAG is set -- RAG engine will NOT be started. Narrative/"
+            "regulatory-disclosure/complex questions will return a clean 'not available' "
+            "answer instead of loading the embedding/reranker models."
+        )
+    else:
+        rag_bridge = RagBridge(
+            db_path=db_path, rag_dir=str(RAG_DIR), index_dir=str(RAG_INDEX_DIR),
+            model_name=EMBEDDING_MODEL_NAME, rerank_model=RERANK_MODEL_NAME, device=DEVICE,
+        )
+        app.state.rag_bridge = rag_bridge
+
+        def _warm_up_rag() -> None:
+            rag_bridge.warm_up()
+            app.state.rag_ready = True
+            logger.info("RAG engine ready (embedding/rerank models loaded).")
+
+        app.state.rag_warmup_future = loop.run_in_executor(None, _warm_up_rag)
 
     try:
         yield
     finally:
         logger.info("Shutting down engine subprocesses...")
         analysis_bridge.close()
-        rag_bridge.close()
+        if rag_bridge is not None:
+            rag_bridge.close()
 
 
 class UTF8JSONResponse(JSONResponse):
@@ -138,39 +150,32 @@ def liveness() -> dict:
         "status": "ok" if analysis_ready else "starting",
         "mode": api_config.FINQA_MODE,
         "analysis_engine_ready": analysis_ready,
+        "rag_engine_enabled": not api_config.RAG_DISABLED,
         "rag_engine_ready": rag_ready,
         "note": "rag_engine_ready only matters for narrative/complex questions -- numeric facts, "
                 "ratios, trends, peer comparison, rankings, financial health, and reports never use it, "
-                "and work as soon as analysis_engine_ready is true.",
+                "and work as soon as analysis_engine_ready is true. When rag_engine_enabled is false "
+                "(FINQA_DISABLE_RAG), those questions return a clean 'not available' answer instead "
+                "of ever trying to load the RAG engine.",
     }
 
 
 @app.get("/ready", tags=["meta"])
 def readiness() -> dict:
-    """Stricter than GET /health: confirms the underlying data file is
-    actually present on disk (not just that the analysis engine subprocess
-    started, which it can do against a missing/empty DB path) and that the
-    RAG engine's embedding/reranker models plus its FAISS/BM25 artifacts
-    have finished loading. Intended as the readiness probe a deploy platform
-    (Render) or the dashboard's own "starting up" state (see roadmap section
-    35) should poll, since /health can say "ok" moments before a real
-    request would still fail.
 
-    faiss/bm25/models are reported together as `rag_ready`: RagBridge's own
-    warm_up() (see api/main.py's lifespan) only flips app.state.rag_ready
-    once its FAISS index and BM25/reranker models have all actually loaded
-    in the worker subprocess -- a bridge that started without them would
-    have failed warm_up already, so there's no way for rag_ready to be true
-    while any one of those three is silently missing."""
     analysis_ready = getattr(app.state, "analysis_bridge", None) is not None
     rag_ready = getattr(app.state, "rag_ready", False)
     db_path = getattr(app.state, "db_path", None)
     database_ok = bool(db_path) and Path(db_path).is_file()
-    ready = analysis_ready and rag_ready and database_ok
+    # A deliberately-disabled RAG engine (FINQA_DISABLE_RAG) should never block
+    # overall readiness -- it's never going to become ready, by design.
+    rag_ok = rag_ready or api_config.RAG_DISABLED
+    ready = analysis_ready and database_ok and rag_ok
     return {
         "ready": ready,
         "mode": api_config.FINQA_MODE,
         "database": database_ok,
+        "rag_enabled": not api_config.RAG_DISABLED,
         "faiss": rag_ready,
         "bm25": rag_ready,
         "models": rag_ready,

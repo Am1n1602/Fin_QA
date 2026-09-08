@@ -342,12 +342,9 @@ def _handle_narrative(q: Classification, question: str, rag: RagBridge, k: int =
         }
 
     sources = [
-        # local_path deliberately excluded -- see retrieve.py's _row_to_dict()
-        # docstring note for why (server filesystem path, not needed for
-        # citation display, was leaking to public API responses).
         {"type": "document_chunk", "company": r["company"], "title": r["title"], "source": r["source"],
          "period": r["period"], "page_start": r["page_start"], "page_end": r["page_end"],
-         "section": r["section"]}
+         "section": r["section"], "local_path": r["local_path"]}
         for r in results
     ]
     passages = "\n\n".join(
@@ -425,12 +422,9 @@ def _handle_regulatory_disclosure(q: Classification, question: str, rag: RagBrid
         }
 
     sources = [
-        # local_path deliberately excluded -- see retrieve.py's _row_to_dict()
-        # docstring note for why (server filesystem path, not needed for
-        # citation display, was leaking to public API responses).
         {"type": "document_chunk", "company": r["company"], "title": r["title"], "source": r["source"],
          "period": r["period"], "page_start": r["page_start"], "page_end": r["page_end"],
-         "section": r["section"]}
+         "section": r["section"], "local_path": r["local_path"]}
         for r in results
     ]
     passages = "\n\n".join(
@@ -469,7 +463,7 @@ def _handle_regulatory_disclosure(q: Classification, question: str, rag: RagBrid
 
 
 def _handle_complex(q: Classification, question: str, analysis_bridge: AnalysisBridge,
-                     rag: RagBridge, db_path: str) -> dict:
+                     rag: RagBridge | None, db_path: str) -> dict:
     parts: dict = {}
     sources: list[dict] = []
     warnings: list[str] = []
@@ -489,7 +483,10 @@ def _handle_complex(q: Classification, question: str, analysis_bridge: AnalysisB
         parts["trend"] = trend
         sources += trend["sources"]
 
-    narrative = _handle_narrative(q, question, rag)
+    # rag is None exactly when the caller passed rag_bridge_disabled=True
+    # (see answer_question()) -- the numeric/comparison/trend parts above
+    # are completely unaffected either way.
+    narrative = _handle_rag_disabled() if rag is None else _handle_narrative(q, question, rag)
     parts["narrative"] = narrative
     sources += narrative["sources"]
     warnings += narrative["warnings"]
@@ -528,6 +525,33 @@ def _handle_complex(q: Classification, question: str, analysis_bridge: AnalysisB
     return {"answer": answer, "data": parts, "sources": sources, "warnings": warnings, "caveats": caveats}
 
 
+_RAG_DISABLED_MESSAGE = (
+    "Narrative and document-grounded answers are turned off in this deployment "
+    "(FINQA_DISABLE_RAG is set -- see SESSION_ADDENDUM_31.md) because the embedding and "
+    "reranker models don't fit in this host's memory budget. Numeric facts, trends, "
+    "comparisons, rankings, financial health, and reports are all still fully available -- "
+    "try rephrasing the question as one of those instead."
+)
+
+
+def _handle_rag_disabled() -> dict:
+    """Used in place of _handle_narrative/_handle_regulatory_disclosure/the
+    narrative part of _handle_complex whenever rag_bridge is None because
+    the caller explicitly passed rag_bridge_disabled=True (see
+    answer_question() below) -- never used for the CLI's own default
+    behavior, which still auto-creates a real RagBridge as before. Returns
+    the same dict shape as the real handlers (empty chunks/sources) so
+    downstream aggregation (e.g. _handle_complex's LLM-synthesis branch)
+    degrades cleanly instead of needing special-casing everywhere."""
+    return {
+        "answer": _RAG_DISABLED_MESSAGE,
+        "data": {"chunks": [], "llm_synthesis_used": False, "llm_synthesis_status": "rag_disabled"},
+        "sources": [],
+        "warnings": [],
+        "caveats": [_RAG_DISABLED_MESSAGE],
+    }
+
+
 def _handle_unknown(q: Classification) -> dict:
     lines = ["Could not confidently classify this question."]
     if q.companies:
@@ -547,10 +571,18 @@ def answer_question(
     db_path: str = str(DB_PATH),
     analysis_bridge: AnalysisBridge | None = None,
     rag_bridge: RagBridge | None = None,
+    rag_bridge_disabled: bool = False,
     intent_override: str | None = None,
     companies_override: list | None = None,
     metrics_override: list | None = None,
 ) -> dict:
+    """rag_bridge_disabled: set True ONLY when the caller deliberately has no
+    RAG engine available at all (api/main.py's FINQA_DISABLE_RAG path) --
+    distinct from rag_bridge=None on its own, which means "I didn't pass one,
+    please create your own" (the CLI's default usage). When True, rag_bridge
+    is left as None rather than auto-created, and every RAG-dependent intent
+    (narrative, regulatory_disclosure, and the narrative part of complex)
+    returns _handle_rag_disabled()'s clean "not available" answer instead."""
     q = classify_question(question, db_path, companies_override=companies_override)
     if intent_override:
         q.intent = intent_override
@@ -558,9 +590,12 @@ def answer_question(
         q.metrics = metrics_override
 
     owns_analysis_bridge = analysis_bridge is None
-    owns_rag_bridge = rag_bridge is None
+    owns_rag_bridge = rag_bridge is None and not rag_bridge_disabled
     analysis_bridge = analysis_bridge or AnalysisBridge(db_path=db_path)
-    rag_bridge = rag_bridge or RagBridge(db_path=db_path)
+    if rag_bridge is None and not rag_bridge_disabled:
+        rag_bridge = RagBridge(db_path=db_path)
+    # else: rag_bridge stays exactly what was passed in -- None when disabled,
+    # or an already-live bridge the caller owns and will close itself.
 
     try:
         if q.intent == INTENT_NUMERIC_FACT:
@@ -574,11 +609,11 @@ def answer_question(
         elif q.intent == INTENT_FINANCIAL_HEALTH:
             handled = _handle_financial_health(q, analysis_bridge)
         elif q.intent == INTENT_REGULATORY_DISCLOSURE:
-            handled = _handle_regulatory_disclosure(q, question, rag_bridge)
+            handled = _handle_rag_disabled() if rag_bridge is None else _handle_regulatory_disclosure(q, question, rag_bridge)
         elif q.intent == INTENT_REPORT:
             handled = _handle_report(q, analysis_bridge, db_path)
         elif q.intent == INTENT_NARRATIVE:
-            handled = _handle_narrative(q, question, rag_bridge)
+            handled = _handle_rag_disabled() if rag_bridge is None else _handle_narrative(q, question, rag_bridge)
         elif q.intent == INTENT_COMPLEX:
             handled = _handle_complex(q, question, analysis_bridge, rag_bridge, db_path)
         else:  # INTENT_UNKNOWN, or any override value this module doesn't recognize
