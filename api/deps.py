@@ -11,6 +11,10 @@ insertion.
 
 from __future__ import annotations
 
+import time
+from collections import defaultdict, deque
+from threading import Lock
+
 from fastapi import Header, Request
 
 from src.database_ro import list_companies, sector_peers as _sector_peers
@@ -24,6 +28,11 @@ class UnauthorizedError(ApiError):
     error_code = "unauthorized"
 
 
+class RateLimitExceededError(ApiError):
+    status_code = 429
+    error_code = "rate_limited"
+
+
 def require_api_key(x_api_key: str | None = Header(default=None, alias=api_config.API_KEY_HEADER)) -> None:
     """No-op when FINQA_API_KEY isn't set (the default -- local/dev use).
     Once set, every request must echo it back in the X-API-Key header."""
@@ -31,6 +40,29 @@ def require_api_key(x_api_key: str | None = Header(default=None, alias=api_confi
         return
     if x_api_key != api_config.API_KEY:
         raise UnauthorizedError("Missing or invalid API key (expected in the X-API-Key header).")
+
+
+_RATE_LIMIT_WINDOW_S = 60.0
+_rate_limit_lock = Lock()
+_rate_limit_hits: dict[str, deque] = defaultdict(deque)
+
+
+def rate_limit_qa(request: Request) -> None:
+    limit = api_config.QA_RATE_LIMIT_PER_MINUTE
+    if limit <= 0:
+        return  # 0 or negative disables the limit entirely
+    client_ip = request.client.host if request.client else "unknown"
+    now = time.monotonic()
+    with _rate_limit_lock:
+        hits = _rate_limit_hits[client_ip]
+        while hits and now - hits[0] >= _RATE_LIMIT_WINDOW_S:
+            hits.popleft()
+        if len(hits) >= limit:
+            raise RateLimitExceededError(
+                f"Too many questions from this client -- this demo allows {limit} per minute. "
+                f"Wait a moment and try again."
+            )
+        hits.append(now)
 
 
 def get_db_path(request: Request) -> str:

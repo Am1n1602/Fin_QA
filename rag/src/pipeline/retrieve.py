@@ -195,5 +195,5 @@ def _row_to_dict(row, score: float) -> dict:
         "page_start": row["page_start"],
         "page_end": row["page_end"],
         "section": row["section"],
-        "local_path": row["local_path"],
+
     }

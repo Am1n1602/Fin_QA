@@ -37,7 +37,7 @@ def run_for_company(company: dict):
     print("Fetching NSE integrated filings (financials)...")
     nse_filings = nse_source.fetch_corporate_filings(live_symbol)
     # Uncomment on first live run to inspect the real response shape:
-    print(json.dumps(nse_filings[:1], indent=2))
+    # print(json.dumps(nse_filings[:1], indent=2))
     downloaded = 0
     for rec in nse_filings:
         url = extract_attachment_url(rec, source="NSE")
@@ -55,7 +55,7 @@ def run_for_company(company: dict):
     # 3. BSE announcements (broader net, incl. results + governance-relevant items)
     print("Fetching BSE announcements...")
     bse_announcements = bse_source.fetch_announcements(bse_scrip)
-    print(json.dumps(bse_announcements[:1], indent=2))
+    # print(json.dumps(bse_announcements[:1], indent=2))
     downloaded_bse = 0
     for rec in bse_announcements:
         url = extract_attachment_url(rec, source="BSE")
