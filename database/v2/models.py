@@ -1,6 +1,7 @@
 """Universe-independent domain models (frozen value objects). See docs/file-guide.md."""
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import Enum
@@ -196,3 +197,55 @@ class DocumentMeta:
     def __post_init__(self) -> None:
         if not self.document_type or not self.title:
             raise ValueError("DocumentMeta requires document_type and title")
+
+
+def slugify(name: str) -> str:
+    s = re.sub(r"[^a-z0-9]+", "_", (name or "").strip().lower()).strip("_")
+    return s or "unnamed"
+
+
+@dataclass(frozen=True, slots=True)
+class Segment:
+    """A reportable business segment (§12). `name` is as-reported; `slug` is the stable
+    key within a company."""
+
+    company_id: int
+    name: str
+    slug: str = ""
+    segment_id: int | None = _UNSET_ID
+
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError("Segment requires a name")
+        if not self.slug:
+            object.__setattr__(self, "slug", slugify(self.name))
+
+
+@dataclass(frozen=True, slots=True)
+class SegmentFact:
+    """One segment-level figure for one period. Same missing-is-missing rule as
+    FinancialFact: `value is None` is never coerced to 0."""
+
+    segment_id: int
+    company_id: int
+    metric: str                            # 'segment_revenue' | 'segment_result' | 'segment_assets' | ...
+    value: float | None
+    basis: Basis
+    unit: str | None = "INR"
+    period_start: date | None = None
+    period_end: date | None = None
+    financial_year: int | None = None
+    quarter: int | None = None
+    is_annual: bool = False
+    source_id: int | None = None
+
+    def __post_init__(self) -> None:
+        if not self.metric:
+            raise ValueError("SegmentFact requires a metric name")
+        object.__setattr__(self, "basis", Basis(self.basis))
+        if self.quarter is not None and self.quarter not in (1, 2, 3, 4):
+            raise ValueError(f"quarter must be 1..4 or None, got {self.quarter!r}")
+
+    @property
+    def is_missing(self) -> bool:
+        return self.value is None

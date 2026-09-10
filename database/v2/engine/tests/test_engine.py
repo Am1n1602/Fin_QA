@@ -108,9 +108,11 @@ class TestEngine(unittest.TestCase):
         self.assertFalse(self.eng.calculate("a +").ok)
 
     # --- guards ---
-    def test_segment_not_implemented(self):
-        with self.assertRaises(NotImplementedError):
-            self.eng.get_segment_data("TEST")
+    def test_segment_data_empty_for_single_segment_company(self):
+        r = self.eng.get_segment_data("TEST")           # fixture seeds no segments
+        self.assertFalse(r.ok)
+        self.assertEqual(r.rows, ())
+        self.assertTrue(r.limitations)
 
     def test_unknown_company_raises(self):
         with self.assertRaises(EngineError):

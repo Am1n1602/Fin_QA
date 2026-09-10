@@ -15,6 +15,8 @@ from database.v2.models import (
     Index,
     IndexMembership,
     MappingConfidence,
+    Segment,
+    SegmentFact,
     Source,
     StatementType,
 )
@@ -131,6 +133,27 @@ def _row_fact(r: sqlite3.Row) -> FinancialFact:
         source_id=r["source_id"],
         mapping_confidence=MappingConfidence(r["mapping_confidence"]),
         mapping_reason=r["mapping_reason"],
+    )
+
+
+def _row_segment(r: sqlite3.Row) -> Segment:
+    return Segment(company_id=r["company_id"], name=r["name"], slug=r["slug"], segment_id=r["segment_id"])
+
+
+def _row_segment_fact(r: sqlite3.Row) -> SegmentFact:
+    return SegmentFact(
+        segment_id=r["segment_id"],
+        company_id=r["company_id"],
+        metric=r["metric"],
+        value=r["value"],
+        unit=r["unit"],
+        basis=Basis(r["basis"]),
+        period_start=_d(r["period_start"]),
+        period_end=_d(r["period_end"]),
+        financial_year=r["financial_year"],
+        quarter=r["quarter"],
+        is_annual=_b(r["is_annual"]),
+        source_id=r["source_id"],
     )
 
 
@@ -484,6 +507,90 @@ class SqliteFinancialFactRepository:
         return [_row_fact(r) for r in rows]
 
 
+class SqliteSegmentRepository:
+    def __init__(self, conn: sqlite3.Connection) -> None:
+        self._c = conn
+
+    def upsert_segment(self, segment: Segment) -> Segment:
+        self._c.execute(
+            """INSERT INTO segments (company_id, name, slug) VALUES (?, ?, ?)
+               ON CONFLICT (company_id, slug) DO UPDATE SET name = excluded.name""",
+            (segment.company_id, segment.name, segment.slug),
+        )
+        row = self._c.execute(
+            "SELECT * FROM segments WHERE company_id = ? AND slug = ?",
+            (segment.company_id, segment.slug),
+        ).fetchone()
+        return _row_segment(row)
+
+    def get_segment(self, segment_id: int):
+        row = self._c.execute("SELECT * FROM segments WHERE segment_id = ?", (segment_id,)).fetchone()
+        return _row_segment(row) if row else None
+
+    def segments_for(self, company_id: int) -> list[Segment]:
+        rows = self._c.execute(
+            "SELECT * FROM segments WHERE company_id = ? ORDER BY name", (company_id,)
+        ).fetchall()
+        return [_row_segment(r) for r in rows]
+
+    def resolve_segment(self, company_id: int, name_or_slug: str):
+        from database.v2.models import slugify
+
+        token = (name_or_slug or "").strip()
+        row = self._c.execute(
+            "SELECT * FROM segments WHERE company_id = ? AND (slug = ? OR slug = ? OR name = ? COLLATE NOCASE)",
+            (company_id, token, slugify(token), token),
+        ).fetchone()
+        return _row_segment(row) if row else None
+
+    def add_facts(self, facts) -> int:
+        n = 0
+        for f in facts:
+            self._c.execute(
+                """
+                INSERT INTO segment_facts
+                    (segment_id, company_id, metric, value, unit, period_start, period_end,
+                     financial_year, quarter, is_annual, basis, source_id)
+                VALUES (:segment_id, :company_id, :metric, :value, :unit, :period_start, :period_end,
+                        :financial_year, :quarter, :is_annual, :basis, :source_id)
+                ON CONFLICT (segment_id, metric, basis, COALESCE(period_end, ''), COALESCE(period_start, ''))
+                DO UPDATE SET
+                    value = excluded.value, unit = excluded.unit,
+                    financial_year = excluded.financial_year, quarter = excluded.quarter,
+                    is_annual = excluded.is_annual,
+                    source_id = COALESCE(excluded.source_id, segment_facts.source_id)
+                """,
+                {
+                    "segment_id": f.segment_id, "company_id": f.company_id, "metric": f.metric,
+                    "value": f.value, "unit": f.unit,
+                    "period_start": _ds(f.period_start), "period_end": _ds(f.period_end),
+                    "financial_year": f.financial_year, "quarter": f.quarter,
+                    "is_annual": int(f.is_annual), "basis": f.basis.value, "source_id": f.source_id,
+                },
+            )
+            n += 1
+        return n
+
+    def list_segment_facts(self, company_id: int, *, metric=None, basis=None, segment_id=None):
+        clauses = ["company_id = ?"]
+        params: list = [company_id]
+        if metric is not None:
+            clauses.append("metric = ?")
+            params.append(metric)
+        if basis is not None:
+            clauses.append("basis = ?")
+            params.append(Basis(basis).value)
+        if segment_id is not None:
+            clauses.append("segment_id = ?")
+            params.append(segment_id)
+        rows = self._c.execute(
+            f"""SELECT * FROM segment_facts WHERE {' AND '.join(clauses)}
+                ORDER BY (period_end IS NULL), period_end, (period_start IS NULL), period_start, segment_id""",
+            params,
+        ).fetchall()
+        return [_row_segment_fact(r) for r in rows]
+
+
 class SqliteDocumentRepository:
     def __init__(self, conn: sqlite3.Connection) -> None:
         self._c = conn
@@ -559,6 +666,7 @@ class SqliteRepositories:
         self.indices = SqliteIndexRepository(self._conn)
         self.sources = SqliteSourceRepository(self._conn)
         self.facts = SqliteFinancialFactRepository(self._conn)
+        self.segments = SqliteSegmentRepository(self._conn)
         self.documents = SqliteDocumentRepository(self._conn)
 
     @property

@@ -92,6 +92,41 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_facts_grain
     );
 
 -- ---------------------------------------------------------------------------
+-- Segments  (§12 -- reportable business segments; revenue only for now)
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS segments (
+    segment_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+    company_id   INTEGER NOT NULL REFERENCES companies(company_id) ON DELETE CASCADE,
+    name         TEXT NOT NULL,                   -- as reported
+    slug         TEXT NOT NULL,                   -- normalized key within the company
+    UNIQUE (company_id, slug)
+);
+
+CREATE TABLE IF NOT EXISTS segment_facts (
+    segment_fact_id  INTEGER PRIMARY KEY AUTOINCREMENT,
+    segment_id       INTEGER NOT NULL REFERENCES segments(segment_id) ON DELETE CASCADE,
+    company_id       INTEGER NOT NULL REFERENCES companies(company_id) ON DELETE CASCADE,
+    metric           TEXT    NOT NULL,            -- 'segment_revenue' | 'segment_result' | 'segment_assets' | ...
+    value            REAL,                        -- NULL = not reported; never 0-filled
+    unit             TEXT DEFAULT 'INR',
+    period_start     TEXT,
+    period_end       TEXT,
+    financial_year   INTEGER,
+    quarter          INTEGER,
+    is_annual        INTEGER NOT NULL DEFAULT 0,
+    basis            TEXT    NOT NULL,
+    source_id        INTEGER REFERENCES sources(source_id) ON DELETE SET NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_segment_facts_grain
+    ON segment_facts (
+        segment_id, metric, basis,
+        COALESCE(period_end, ''), COALESCE(period_start, '')
+    );
+CREATE INDEX IF NOT EXISTS ix_segment_facts_company ON segment_facts (company_id, metric);
+
+-- ---------------------------------------------------------------------------
 -- Documents  (parent records only; chunk storage is Phase 5)
 -- ---------------------------------------------------------------------------
 

@@ -58,6 +58,29 @@ class TestEngineReal(unittest.TestCase):
         for row in out["results"]:
             self.assertIn("rank", row)
 
+    def test_reliance_segments(self):
+        if self.repos.companies.resolve("RELIANCE") is None:
+            self.skipTest("RELIANCE not in db")
+        r = self.eng.get_segment_data("RELIANCE", period="latest_annual")
+        if not r.ok:
+            self.skipTest("no segment data backfilled")
+        self.assertGreaterEqual(len(r.rows), 3)
+        self.assertAlmostEqual(sum(x.contribution_pct for x in r.rows), 100.0, places=4)
+        g = self.eng.segment_growth("RELIANCE", kind="yoy")
+        if g.ok:
+            self.assertIsNotNone(g.total_change)
+
+    def test_single_segment_company_returns_empty(self):
+        # a company with no reportable segments -> ok=False + limitation, never a crash
+        for t in ("HINDUNILVR", "NESTLEIND", "BRITANNIA", "ASIANPAINT"):
+            if self.repos.companies.resolve(t) is None:
+                continue
+            r = self.eng.get_segment_data(t)
+            self.assertIsInstance(r.rows, tuple)
+            if not r.ok:
+                self.assertTrue(r.limitations)
+            break
+
 
 if __name__ == "__main__":
     unittest.main()

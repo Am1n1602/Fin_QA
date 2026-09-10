@@ -12,6 +12,7 @@ from typing import Any
 from database.v2.engine import decompose, derive, growth, ratios
 from database.v2.engine.calculator import calculate as _calc
 from database.v2.engine.records import PeriodRecord, build_period_records
+from database.v2.engine.segments import SegmentEngine
 from database.v2.models import Basis
 from database.v2.normalize import metrics as _reg
 
@@ -69,6 +70,7 @@ class FinancialEngine:
     def __init__(self, repos):
         self._repos = repos
         self._cache: dict[tuple[int, str], list[PeriodRecord]] = {}
+        self._segments = SegmentEngine(repos)
 
     # ------------------------------------------------------------------ #
     # infrastructure
@@ -327,8 +329,14 @@ class FinancialEngine:
             return EngineResult("calculation", "calculate", None, formula=expr, limitations=(str(e),))
         return EngineResult("calculation", "calculate", v, formula=expr, components=dict(vars))
 
-    def get_segment_data(self, *args, **kwargs):
-        raise NotImplementedError("segment intelligence is roadmap Phase 4")
+    def get_segment_data(self, ticker: str, *, basis="consolidated", period="latest_annual"):
+        """Per-segment revenue + contribution % for one period (§12)."""
+        return self._segments.get_segment_data(ticker, basis=basis, period=period)
+
+    def segment_growth(self, ticker: str, *, basis="consolidated", kind="yoy"):
+        """Per-segment revenue change, growth %, and each segment's share of the
+        total revenue change (§12: "which segment contributed most to growth")."""
+        return self._segments.segment_growth(ticker, basis=basis, kind=kind)
 
     # ------------------------------------------------------------------ #
     # introspection helpers

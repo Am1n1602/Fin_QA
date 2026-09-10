@@ -11,8 +11,11 @@ from .models import (
     Index,
     IndexMembership,
     MappingConfidence,
+    Segment,
+    SegmentFact,
     Source,
     StatementType,
+    slugify,
 )
 
 __all__ = [
@@ -24,6 +27,9 @@ __all__ = [
     "Index",
     "IndexMembership",
     "MappingConfidence",
+    "Segment",
+    "SegmentFact",
     "Source",
     "StatementType",
+    "slugify",
 ]

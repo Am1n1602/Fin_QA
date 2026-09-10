@@ -13,6 +13,8 @@ from .models import (
     FinancialFact,
     Index,
     IndexMembership,
+    Segment,
+    SegmentFact,
     Source,
 )
 
@@ -105,6 +107,32 @@ class FinancialFactRepository(Protocol):
 
 
 @runtime_checkable
+class SegmentRepository(Protocol):
+    def upsert_segment(self, segment: Segment) -> Segment:
+        """Insert or fetch by (company_id, slug). Returns the row with segment_id set."""
+
+    def get_segment(self, segment_id: int) -> Optional[Segment]: ...
+
+    def segments_for(self, company_id: int) -> list[Segment]: ...
+
+    def resolve_segment(self, company_id: int, name_or_slug: str) -> Optional[Segment]: ...
+
+    def add_facts(self, facts: Iterable[SegmentFact]) -> int:
+        """Upsert segment facts, keyed by (segment_id, metric, basis, period_end,
+        period_start). `value is None` round-trips as NULL."""
+
+    def list_segment_facts(
+        self,
+        company_id: int,
+        *,
+        metric: Optional[str] = None,
+        basis: Optional[Basis | str] = None,
+        segment_id: Optional[int] = None,
+    ) -> list[SegmentFact]:
+        """Ordered by (period_end NULLs last, period_start, segment_id)."""
+
+
+@runtime_checkable
 class DocumentRepository(Protocol):
     def upsert(self, document: DocumentMeta) -> DocumentMeta: ...
 
@@ -122,6 +150,7 @@ class Repositories(Protocol):
     indices: IndexRepository
     sources: SourceRepository
     facts: FinancialFactRepository
+    segments: SegmentRepository
     documents: DocumentRepository
 
     def commit(self) -> None: ...
