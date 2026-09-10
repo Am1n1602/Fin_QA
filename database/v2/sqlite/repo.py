@@ -460,6 +460,29 @@ class SqliteFinancialFactRepository:
         ).fetchall()
         return [r["metric"] for r in rows]
 
+    def list_facts(
+        self,
+        company_id: int,
+        *,
+        basis: Basis | str | None = None,
+        metric: str | None = None,
+    ) -> list[FinancialFact]:
+        clauses = ["company_id = ?"]
+        params: list = [company_id]
+        if basis is not None:
+            clauses.append("basis = ?")
+            params.append(Basis(basis).value)
+        if metric is not None:
+            clauses.append("metric = ?")
+            params.append(metric)
+        rows = self._c.execute(
+            f"""SELECT * FROM financial_facts
+                WHERE {' AND '.join(clauses)}
+                ORDER BY (period_end IS NULL), period_end, (period_start IS NULL), period_start""",
+            params,
+        ).fetchall()
+        return [_row_fact(r) for r in rows]
+
 
 class SqliteDocumentRepository:
     def __init__(self, conn: sqlite3.Connection) -> None:

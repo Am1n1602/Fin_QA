@@ -93,6 +93,16 @@ class FinancialFactRepository(Protocol):
     def metrics_for(self, company_id: int) -> list[str]:
         """Distinct metric names present for the company."""
 
+    def list_facts(
+        self,
+        company_id: int,
+        *,
+        basis: Optional[Basis | str] = None,
+        metric: Optional[str] = None,
+    ) -> list[FinancialFact]:
+        """Bulk fact access for the Financial Engine. Ordered by
+        (period_end NULLs last, period_start). No value filter."""
+
 
 @runtime_checkable
 class DocumentRepository(Protocol):
