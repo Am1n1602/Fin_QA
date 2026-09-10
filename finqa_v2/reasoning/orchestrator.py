@@ -24,6 +24,7 @@ from finqa_v2.reasoning.synthesize import (
     parse_synthesis,
 )
 from finqa_v2.tools import build_default_registry
+from finqa_v2.verification import Verifier
 
 _UNIVERSE_CAP = 12
 
@@ -46,6 +47,7 @@ class ReasoningOrchestrator:
                                             provider=self._provider)
         self._crossval = CrossValidator(repos, engine=engine, retriever=retriever,
                                         provider=self._provider)
+        self._verifier = Verifier()
 
     # ------------------------------------------------------------------ #
     def answer(self, question: str, *, use_llm: bool = True) -> ReasoningResult:
@@ -79,6 +81,9 @@ class ReasoningOrchestrator:
 
         answer, limitations, llm_used = self._reason(question, plan, ws, graph, use_llm, report)
         response = graph.to_response(answer, limitations=limitations)
+        # §25: verify verbatim figures only when the answer is a direct restatement of the
+        # workspace -- Phase 11/12 verdict prose carries derived figures, not fact values.
+        verification = self._verifier.verify(response, ws, check_numbers=kind is None)
         return ReasoningResult(
             question=question, plan=plan.to_dict(), response=response,
             trace=[asdict(c) for c in self._registry.trace],
@@ -86,6 +91,7 @@ class ReasoningOrchestrator:
             latency_ms=(perf_counter() - t0) * 1000,
             hypothesis_report=report.to_dict() if kind == "hypothesis" else None,
             cross_validation_report=report.to_dict() if kind == "cross_validation" else None,
+            verification=verification.to_dict(),
         )
 
     # ------------------------------------------------------------------ #

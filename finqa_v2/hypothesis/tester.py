@@ -66,7 +66,7 @@ class HypothesisTester:
             for hit in self._search(ticker, metric, h.statement, fy):
                 ev = evidence_from_retrieved_chunk(hit, repos=self._repos, company=ticker, workspace=ws)
                 if lexical_overlap(f"{metric} {h.statement}", ev.text) >= 1:
-                    h.doc_evidence_ids.append(ev.evidence_id)
+                    h.doc_evidence_ids.append(ws.add(ev))   # canonical id after dedup
                     doc_confs.append(ev.confidence)
             h.structural_check, h.structural_note = structural_check(h, view)
             h.status, h.confidence = classify(h, doc_confs)

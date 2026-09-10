@@ -2,6 +2,8 @@
 reasoning layer reads instead of touching the database."""
 from __future__ import annotations
 
+from dataclasses import replace
+
 from finqa_v2.evidence.models import Evidence, EvidenceType
 
 
@@ -21,13 +23,15 @@ class EvidenceSet:
     def add(self, ev: Evidence) -> str:
         key = _dedup_key(ev)
         if key in self._seen:
-            # keep the higher-confidence copy
+            # keep the higher-confidence copy, but under the id already handed out for
+            # this slot -- callers hold that id, and a later replacement must not orphan it
             for i, cur in enumerate(self._items):
                 if _dedup_key(cur) == key:
                     if ev.confidence > cur.confidence:
-                        self._items[i] = ev
-                        self._by_id.pop(cur.evidence_id, None)
-                        self._by_id[ev.evidence_id] = ev
+                        merged = ev if ev.evidence_id == cur.evidence_id else \
+                            replace(ev, evidence_id=cur.evidence_id)
+                        self._items[i] = merged
+                        self._by_id[cur.evidence_id] = merged
                     return self._items[i].evidence_id
         self._seen.add(key)
         self._items.append(ev)

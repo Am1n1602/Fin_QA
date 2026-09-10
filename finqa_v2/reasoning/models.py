@@ -15,6 +15,7 @@ class ReasoningResult:
     latency_ms: float = 0.0
     hypothesis_report: dict | None = None            # §22 HypothesisReport.to_dict() for causal questions
     cross_validation_report: dict | None = None      # §23 CrossValidationReport.to_dict() for "is management right?" questions
+    verification: dict | None = None                 # §25 VerificationReport.to_dict()
 
     @property
     def answer(self) -> str:
@@ -35,4 +36,5 @@ class ReasoningResult:
             "latency_ms": round(self.latency_ms, 1),
             "hypothesis_report": self.hypothesis_report,
             "cross_validation_report": self.cross_validation_report,
+            "verification": self.verification,
         }

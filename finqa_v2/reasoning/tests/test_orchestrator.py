@@ -107,6 +107,27 @@ class TestOrchestrator(OrchestratorTestCase):
         r = self.orch.answer("What was TEST revenue in FY2026?")
         json.dumps(r.to_dict())
 
+    def test_verification_attached_and_passes(self):
+        r = self.orch.answer("What was TEST ROE in FY2026?")
+        self.assertIsNotNone(r.verification)
+        self.assertEqual(r.verification["status"], "passed")
+        self.assertFalse(r.verification["abstained"])
+        # the deterministic ROE calc recomputes from its pinned inputs
+        self.assertGreaterEqual(r.verification["counts"].get("recomputed", 0), 1)
+        self.assertNotIn("[unverified]", r.answer)
+        self.assertEqual(set(r.response), _KEYS)
+
+    def test_verification_flags_a_broken_calculation(self):
+        from finqa_v2.evidence import EvidenceSet
+        from finqa_v2.verification import Verifier
+
+        r = self.orch.answer("What was TEST ROE in FY2026?")
+        resp = dict(r.response)
+        resp["calculations"] = [dict(resp["calculations"][0], result=999.0)]
+        rep = Verifier().verify(resp, EvidenceSet())
+        self.assertTrue(any(c.verdict == "does_not_recompute" for c in rep.checks))
+        self.assertLessEqual(resp["confidence"], 0.6)
+
     def test_max_tools_bound(self):
         orch = ReasoningOrchestrator(self.repos, max_tools=1)
         r = orch.answer("Give me a fundamental overview of TEST.")   # rules plan wants 4 tools

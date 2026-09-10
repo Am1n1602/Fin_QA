@@ -45,11 +45,12 @@ def corroborate_in_docs(retriever, repos, ticker, claim, fy, *, workspace=None, 
         ov = lexical_overlap(probe, ev.text)
         if ov < _MIN_OVERLAP or (ev.confidence or 0) < _MIN_CONF:
             continue
-        kept.append(ev.evidence_id)
+        eid = workspace.add(ev) if workspace is not None else ev.evidence_id  # canonical id
+        kept.append(eid)
         if _negated_near(ev.text, claim):
-            contra_ids.append(ev.evidence_id)
+            contra_ids.append(eid)
         else:
-            stated_ids.append(ev.evidence_id)
+            stated_ids.append(eid)
         if len(kept) >= 3:
             break
 

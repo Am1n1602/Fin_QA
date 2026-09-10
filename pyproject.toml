@@ -20,6 +20,7 @@ dependencies = [
     "sentence-transformers",
     "faiss-cpu",
     "pypdf",
+    "pymupdf",
     "rank-bm25",
     "numpy",
 ]
@@ -27,7 +28,7 @@ dependencies = [
 [project.optional-dependencies]
 anthropic = ["anthropic>=0.39"]
 api = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
-ocr = ["pymupdf", "pytesseract", "pillow"]
+ocr = ["pytesseract", "pillow"]
 
 [project.scripts]
 finqa = "fin_llm_platform.cli:main"

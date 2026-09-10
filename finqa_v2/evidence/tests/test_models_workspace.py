@@ -63,13 +63,22 @@ class TestModels(unittest.TestCase):
 
 
 class TestEvidenceSet(unittest.TestCase):
-    def test_dedup_keeps_higher_confidence(self):
+    def test_dedup_keeps_higher_confidence_under_a_stable_id(self):
         ws = EvidenceSet()
         a = ws.add(_doc_ev("d1", 7, 3, "same passage text here", 0.4))
         b = ws.add(_doc_ev("d2", 7, 3, "same passage text here", 0.7))
         self.assertEqual(len(ws), 1)
-        self.assertEqual(ws.get(b).confidence, 0.7)
-        self.assertIsNone(ws.get("d1"))
+        # the id handed out first stays valid; a later replacement keeps the better data
+        self.assertEqual(a, b)
+        self.assertEqual(ws.get("d1").confidence, 0.7)
+        self.assertIsNone(ws.get("d2"))
+
+    def test_dedup_ignores_lower_confidence_duplicate(self):
+        ws = EvidenceSet()
+        a = ws.add(_doc_ev("d1", 7, 3, "same passage text here", 0.7))
+        b = ws.add(_doc_ev("d2", 7, 3, "same passage text here", 0.4))
+        self.assertEqual(a, b)
+        self.assertEqual(ws.get("d1").confidence, 0.7)
 
     def test_by_type_and_metric(self):
         ws = EvidenceSet()
