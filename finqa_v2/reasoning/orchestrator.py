@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import asdict
 from time import perf_counter
 
+from finqa_v2.crossval import CrossValidator
 from finqa_v2.evidence import ClaimGraph, Evidence, EvidenceSet
 from finqa_v2.evidence.models import Calculation
 from finqa_v2.hypothesis import HypothesisTester
@@ -43,6 +44,8 @@ class ReasoningOrchestrator:
         self._max_tools = max_tools
         self._hypothesis = HypothesisTester(repos, engine=engine, retriever=retriever,
                                             provider=self._provider)
+        self._crossval = CrossValidator(repos, engine=engine, retriever=retriever,
+                                        provider=self._provider)
 
     # ------------------------------------------------------------------ #
     def answer(self, question: str, *, use_llm: bool = True) -> ReasoningResult:
@@ -72,7 +75,7 @@ class ReasoningOrchestrator:
             if isinstance(res.value, dict) and isinstance(res.value.get("calculation"), dict):
                 graph.add_calculation(Calculation.from_dict(res.value["calculation"]))
 
-        report = self._run_hypothesis_testing(question, plan, ws, graph, use_llm)
+        kind, report = self._run_deep_analysis(question, plan, ws, graph, use_llm)
 
         answer, limitations, llm_used = self._reason(question, plan, ws, graph, use_llm, report)
         response = graph.to_response(answer, limitations=limitations)
@@ -81,37 +84,47 @@ class ReasoningOrchestrator:
             trace=[asdict(c) for c in self._registry.trace],
             tools_run=tools_run, llm_used=llm_used,
             latency_ms=(perf_counter() - t0) * 1000,
-            hypothesis_report=report.to_dict() if report is not None else None,
+            hypothesis_report=report.to_dict() if kind == "hypothesis" else None,
+            cross_validation_report=report.to_dict() if kind == "cross_validation" else None,
         )
 
     # ------------------------------------------------------------------ #
-    def _run_hypothesis_testing(self, question, plan, ws, graph, use_llm):
-        """§22 HYPOTHESIZE step -- only for causal questions that name a company."""
-        if plan.intent is not Intent.CAUSAL or not plan.companies:
-            return None
-        metric = plan.metrics[0] if plan.metrics else "net_profit"
-        report = self._hypothesis.run(question, plan.companies[0], metric,
-                                      workspace=ws, use_llm=use_llm)
-        for h in report.hypotheses:
-            graph.add_claim(h.statement, kind="causal",
-                            evidence_ids=h.support_evidence_ids, status=h.status)
-        return report
+    def _run_deep_analysis(self, question, plan, ws, graph, use_llm):
+        """§22 HYPOTHESIZE / §23 cross-validate -- needs a named company. -> (kind, report)."""
+        if not plan.companies:
+            return None, None
+        if plan.intent is Intent.CAUSAL:
+            metric = plan.metrics[0] if plan.metrics else "net_profit"
+            rep = self._hypothesis.run(question, plan.companies[0], metric,
+                                       workspace=ws, use_llm=use_llm)
+            for h in rep.hypotheses:
+                graph.add_claim(h.statement, kind="causal",
+                                evidence_ids=h.support_evidence_ids, status=h.status)
+            return "hypothesis", rep
+        if plan.intent is Intent.CROSS_VALIDATION:
+            rep = self._crossval.validate(question, plan.companies[0], plan_metrics=plan.metrics,
+                                          workspace=ws, use_llm=use_llm)
+            if rep.claim is not None:
+                graph.add_claim(rep.claim.raw, kind="cross_validation",
+                                evidence_ids=rep.support_evidence_ids, status=rep.status)
+            return "cross_validation", rep
+        return None, None
 
     # ------------------------------------------------------------------ #
     def _reason(self, question, plan, ws, graph, use_llm, report=None):
-        hyp_block = report.render() if report is not None else None
+        analysis_block = report.render() if report is not None else None
         parsed = None
         if use_llm and not isinstance(self._provider, NullProvider) and len(ws):
             try:
                 raw = self._provider.complete(
-                    build_prompt(question, plan, ws, hypotheses=hyp_block), system=SYSTEM,
+                    build_prompt(question, plan, ws, analysis=analysis_block), system=SYSTEM,
                     json_object=True, temperature=0.1, max_tokens=900,
                 )
                 parsed = parse_synthesis(raw, {e.evidence_id for e in ws})
             except (LLMError, LLMBudgetExceededError):
                 parsed = None
         if parsed is None:
-            parsed = deterministic_answer(question, plan, ws, report=report)
+            parsed = deterministic_answer(question, plan, ws, analysis=report)
             llm_used = False
         else:
             llm_used = True

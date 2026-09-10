@@ -80,6 +80,21 @@ class TestOrchestrator(OrchestratorTestCase):
     def test_non_causal_has_no_hypothesis_report(self):
         r = self.orch.answer("What was TEST revenue in FY2026?")
         self.assertIsNone(r.hypothesis_report)
+        self.assertIsNone(r.cross_validation_report)
+
+    def test_cross_validation_runs(self):
+        r = self.orch.answer("Management said TEST net profit margin contracted in FY2026. "
+                             "Is that visible in the financial statements?")
+        self.assertIsNotNone(r.cross_validation_report)
+        self.assertIsNone(r.hypothesis_report)
+        cvr = r.cross_validation_report
+        self.assertIsNotNone(cvr["claim"])
+        # fixture margin rose, so a contraction claim is not supported
+        self.assertEqual(cvr["status"], "not_supported")
+        xv = [c for c in r.response["claims"] if c["kind"] == "cross_validation"]
+        self.assertTrue(xv)
+        self.assertEqual(xv[0]["status"], "not_supported")
+        self.assertEqual(set(r.response), _KEYS)
 
     def test_unknown_question_degrades_gracefully(self):
         r = self.orch.answer("what is the meaning of life")

@@ -54,18 +54,18 @@ def render_workspace(workspace) -> str:
     return "\n".join(lines) or "(no evidence was gathered)"
 
 
-def build_prompt(question: str, plan, workspace, *, hypotheses: str | None = None) -> str:
-    hyp_block = (f"\n\nHypothesis testing\n------------------\n{hypotheses}\n\n"
-                 "The candidate causes above were already classified against the numbers. "
-                 "Do not re-open a NOT_SUPPORTED cause; explain the SUPPORTED / "
-                 "PARTIALLY_SUPPORTED ones and say plainly what stays uncertain."
-                 ) if hypotheses else ""
+def build_prompt(question: str, plan, workspace, *, analysis: str | None = None) -> str:
+    analysis_block = (f"\n\nDeeper analysis (already classified against the numbers)\n"
+                      f"------------------------------------------------------\n{analysis}\n\n"
+                      "Explain the SUPPORTED / PARTIALLY_SUPPORTED findings, do not re-open a "
+                      "NOT_SUPPORTED one, and say plainly what stays uncertain."
+                      ) if analysis else ""
     return f"""Question: {question}
 Planned intent: {plan.intent.value}
 
 Evidence Workspace
 ------------------
-{render_workspace(workspace)}{hyp_block}
+{render_workspace(workspace)}{analysis_block}
 
 Return a JSON object exactly like:
 {{
@@ -113,10 +113,14 @@ def parse_synthesis(raw: str, valid_ids: set[str]) -> dict | None:
     }
 
 
-def deterministic_answer(question: str, plan, workspace, *, report=None) -> dict:
-    """No-LLM fallback: state the facts, one claim each, flag the gap for 'why' questions."""
-    if report is not None and report.change is not None:
-        return _deterministic_causal_answer(report)
+def deterministic_answer(question: str, plan, workspace, *, analysis=None) -> dict:
+    """No-LLM fallback: state the facts, one claim each, flag the gap for 'why' questions.
+
+    `analysis` is a HypothesisReport / CrossValidationReport (§22 / §23); when present its
+    own verdict lines are the answer.
+    """
+    if analysis is not None:
+        return _deterministic_analysis_answer(analysis)
     facts = [e for e in workspace if e.type in _FACTLIKE and e.value is not None]
     docs = workspace.documents()
     sentences = []
@@ -135,23 +139,13 @@ def deterministic_answer(question: str, plan, workspace, *, report=None) -> dict
             "claims": claims, "limitations": limitations}
 
 
-def _deterministic_causal_answer(report) -> dict:
-    """No-LLM fallback for a why-question: report the tested candidate causes verbatim."""
-    from finqa_v2.hypothesis.models import VERDICT_PHRASE
+def _deterministic_analysis_answer(report) -> dict:
+    """No-LLM fallback for §22/§23: the report's own verdict lines are the answer.
 
-    change = report.change
-    sentences = [change.describe() + "."]
-    key_findings = []
-    for h in report.ranked:
-        line = f"Candidate cause — {h.statement} — is {VERDICT_PHRASE[h.status]}."
-        sentences.append(line)
-        key_findings.append(line)
-    limitations = list(report.limitations)
-    if not report.has_confirmed_cause:
-        limitations.append("The cause is not established: no candidate cause is confirmed by both "
-                           "the reported numbers and management commentary.")
-    limitations.append("Answer assembled from deterministic hypothesis testing; no LLM synthesis was run.")
-    if not report.hypotheses:
-        sentences.append("No candidate causes could be formed from the available evidence.")
-    return {"answer": " ".join(sentences), "key_findings": key_findings or sentences[:],
-            "claims": [], "limitations": limitations}
+    Claims are added to the graph by the orchestrator (with their classified status), so
+    this returns none.
+    """
+    sentences = report.answer_sentences()
+    return {"answer": " ".join(sentences),
+            "key_findings": sentences[1:] or sentences,
+            "claims": [], "limitations": report.answer_limitations()}

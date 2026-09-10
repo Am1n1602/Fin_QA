@@ -126,15 +126,26 @@ class HypothesisReport:
         return any(h.status is ClaimStatus.SUPPORTED for h in self.hypotheses)
 
     def summary_text(self) -> str:
+        return " ".join(self.answer_sentences())
+
+    # ---- uniform view the reasoning layer's deterministic path consumes ----
+    def answer_sentences(self) -> list[str]:
         if self.change is None:
-            return "The change asked about could not be quantified, so no causes were tested."
+            return ["The change asked about could not be quantified, so no causes were tested."]
         lines = [self.change.describe() + "."]
-        if not self.hypotheses:
-            lines.append("No candidate causes could be formed from the available evidence.")
-            return " ".join(lines)
         for h in self.ranked:
             lines.append(f"Candidate cause — {h.statement} — is {VERDICT_PHRASE[h.status]}.")
-        return " ".join(lines)
+        if not self.hypotheses:
+            lines.append("No candidate causes could be formed from the available evidence.")
+        return lines
+
+    def answer_limitations(self) -> list[str]:
+        lims = list(self.limitations)
+        if not self.has_confirmed_cause:
+            lims.append("The cause is not established: no candidate cause is confirmed by both "
+                        "the reported numbers and management commentary.")
+        lims.append("Answer assembled from deterministic hypothesis testing; no LLM synthesis was run.")
+        return lims
 
     def render(self) -> str:
         """Compact block for the reasoning-LLM prompt."""
