@@ -19,9 +19,12 @@ class Verifier:
         self._abstain_cap = abstain_conf_cap
 
     # ------------------------------------------------------------------ #
-    def verify(self, response: dict, workspace, *, check_numbers: bool = True) -> VerificationReport:
+    def verify(self, response: dict, workspace, *, graph=None,
+               check_numbers: bool = True) -> VerificationReport:
         """`check_numbers=False` for answers whose prose is verdict text with derived
-        figures (Phase 11/12) rather than verbatim restatements of workspace values."""
+        figures (Phase 11/12) rather than verbatim restatements of workspace values.
+        `graph` (a ClaimGraph): status/confidence downgrades are mirrored onto its
+        `Claim` objects so a ClaimGraphView built afterwards reflects verification."""
         checks: list[ClaimCheck] = []
         by_id = {e["evidence_id"]: e for e in response.get("evidence", [])}
 
@@ -32,22 +35,29 @@ class Verifier:
         if check_numbers:
             checks.extend(check_answer_numbers(response.get("answer", ""), workspace))
 
-        return self._adjudicate(response, checks)
+        return self._adjudicate(response, checks, graph)
 
     # ------------------------------------------------------------------ #
-    def _adjudicate(self, response: dict, checks: list[ClaimCheck]) -> VerificationReport:
+    def _adjudicate(self, response: dict, checks: list[ClaimCheck], graph=None) -> VerificationReport:
         adjustments: list[str] = []
         limitations = list(response.get("limitations", []))
 
         # 1. claims that failed a hard check -> not_supported
         failed_claims = {c.target.split(":", 1)[1] for c in checks
                          if c.hard_fail and c.target.startswith("claim:")}
+        graph_claims = {c.claim_id: c for c in graph.claims} if graph is not None else {}
         for cl in response.get("claims", []):
             if cl.get("claim_id") in failed_claims:
                 if cl.get("status") != "not_supported":
                     cl["status"] = "not_supported"
                     cl["confidence"] = round(float(cl.get("confidence", 0.0)) * 0.3, 4)
                     adjustments.append(f"claim marked not_supported: {cl.get('text', '')[:80]}")
+                gc = graph_claims.get(cl.get("claim_id"))
+                if gc is not None:
+                    from finqa_v2.evidence.models import ClaimStatus
+
+                    gc.status = ClaimStatus.NOT_SUPPORTED
+                    gc.confidence = cl["confidence"]
 
         # 2. calculations that don't reproduce -> limitation
         for c in checks:

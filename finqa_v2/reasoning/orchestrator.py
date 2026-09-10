@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import asdict
 from time import perf_counter
 
+from finqa_v2.claimgraph import ClaimGraphView
 from finqa_v2.crossval import CrossValidator
 from finqa_v2.evidence import ClaimGraph, Evidence, EvidenceSet
 from finqa_v2.evidence.models import Calculation
@@ -83,7 +84,9 @@ class ReasoningOrchestrator:
         response = graph.to_response(answer, limitations=limitations)
         # §25: verify verbatim figures only when the answer is a direct restatement of the
         # workspace -- Phase 11/12 verdict prose carries derived figures, not fact values.
-        verification = self._verifier.verify(response, ws, check_numbers=kind is None)
+        verification = self._verifier.verify(response, ws, graph=graph,
+                                             check_numbers=kind is None)
+        claim_graph = ClaimGraphView(graph).to_dict()   # §24 -- post-verification statuses
         return ReasoningResult(
             question=question, plan=plan.to_dict(), response=response,
             trace=[asdict(c) for c in self._registry.trace],
@@ -92,6 +95,7 @@ class ReasoningOrchestrator:
             hypothesis_report=report.to_dict() if kind == "hypothesis" else None,
             cross_validation_report=report.to_dict() if kind == "cross_validation" else None,
             verification=verification.to_dict(),
+            claim_graph=claim_graph,
         )
 
     # ------------------------------------------------------------------ #

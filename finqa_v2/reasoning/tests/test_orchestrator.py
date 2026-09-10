@@ -128,6 +128,20 @@ class TestOrchestrator(OrchestratorTestCase):
         self.assertTrue(any(c.verdict == "does_not_recompute" for c in rep.checks))
         self.assertLessEqual(resp["confidence"], 0.6)
 
+    def test_claim_graph_attached(self):
+        r = self.orch.answer("What was TEST ROE in FY2026?")
+        cg = r.claim_graph
+        self.assertIsNotNone(cg)
+        self.assertGreaterEqual(cg["counts"]["claims"], 1)
+        self.assertEqual(len(cg["claims"]), cg["counts"]["claims"])
+        # each claim explanation only references evidence present in the graph
+        node_ids = {n["id"] for n in cg["graph"]["nodes"]}
+        for c in cg["claims"]:
+            for e in c["evidence"]:
+                self.assertIn(e["evidence_id"], node_ids)
+            self.assertIn("claim_confidence", c["confidence_breakdown"])
+        self.assertEqual(set(r.response), _KEYS)   # §31 response unchanged
+
     def test_max_tools_bound(self):
         orch = ReasoningOrchestrator(self.repos, max_tools=1)
         r = orch.answer("Give me a fundamental overview of TEST.")   # rules plan wants 4 tools

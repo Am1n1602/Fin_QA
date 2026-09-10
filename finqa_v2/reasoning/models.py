@@ -16,6 +16,7 @@ class ReasoningResult:
     hypothesis_report: dict | None = None            # §22 HypothesisReport.to_dict() for causal questions
     cross_validation_report: dict | None = None      # §23 CrossValidationReport.to_dict() for "is management right?" questions
     verification: dict | None = None                 # §25 VerificationReport.to_dict()
+    claim_graph: dict | None = None                  # §24 ClaimGraphView.to_dict() -- claims -> evidence/calc/source
 
     @property
     def answer(self) -> str:
@@ -37,4 +38,5 @@ class ReasoningResult:
             "hypothesis_report": self.hypothesis_report,
             "cross_validation_report": self.cross_validation_report,
             "verification": self.verification,
+            "claim_graph": self.claim_graph,
         }

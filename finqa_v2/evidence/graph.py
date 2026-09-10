@@ -23,6 +23,16 @@ class ClaimGraph:
         self._calcs: dict[str, Calculation] = {}
 
     # ------------------------------------------------------------------ #
+    @property
+    def calculations(self) -> list[Calculation]:
+        return list(self._calcs.values())
+
+    def get_calculation(self, calculation_id: str) -> Calculation | None:
+        return self._calcs.get(calculation_id)
+
+    def get_claim(self, claim_id: str) -> Claim | None:
+        return next((c for c in self.claims if c.claim_id == claim_id), None)
+
     def add_calculation(self, calc: Calculation) -> str:
         self._calcs[calc.calculation_id] = calc
         return calc.calculation_id
