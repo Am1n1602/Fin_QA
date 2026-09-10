@@ -63,6 +63,24 @@ class TestOrchestrator(OrchestratorTestCase):
         self.assertIn("get_growth", r.tools_run)
         self.assertTrue(any("not established" in l for l in r.response["limitations"]))
 
+    def test_causal_runs_hypothesis_testing(self):
+        r = self.orch.answer("Why did TEST net profit rise in FY2026?")
+        self.assertIsNotNone(r.hypothesis_report)
+        hyps = r.hypothesis_report["hypotheses"]
+        self.assertTrue(hyps)
+        valid = {"supported", "partially_supported", "not_supported", "insufficient_evidence"}
+        self.assertTrue(all(h["status"] in valid for h in hyps))
+        self.assertEqual(r.hypothesis_report["change"]["direction"], "increase")
+        causal = [c for c in r.response["claims"] if c["kind"] == "causal"]
+        self.assertTrue(causal)
+        self.assertTrue(all(c["evidence_ids"] for c in causal))
+        # §31 core schema is unchanged for causal questions
+        self.assertEqual(set(r.response), _KEYS)
+
+    def test_non_causal_has_no_hypothesis_report(self):
+        r = self.orch.answer("What was TEST revenue in FY2026?")
+        self.assertIsNone(r.hypothesis_report)
+
     def test_unknown_question_degrades_gracefully(self):
         r = self.orch.answer("what is the meaning of life")
         self.assertEqual(set(r.response), _KEYS)

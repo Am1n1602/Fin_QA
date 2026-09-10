@@ -13,6 +13,7 @@ class ReasoningResult:
     tools_run: list[str] = field(default_factory=list)
     llm_used: bool = False
     latency_ms: float = 0.0
+    hypothesis_report: dict | None = None            # §22 HypothesisReport.to_dict() for causal questions
 
     @property
     def answer(self) -> str:
@@ -31,4 +32,5 @@ class ReasoningResult:
             "tools_run": self.tools_run,
             "llm_used": self.llm_used,
             "latency_ms": round(self.latency_ms, 1),
+            "hypothesis_report": self.hypothesis_report,
         }
