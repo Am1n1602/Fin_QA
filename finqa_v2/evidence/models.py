@@ -84,6 +84,21 @@ class Evidence:
     def is_document(self) -> bool:
         return self.type is EvidenceType.DOCUMENT
 
+    @classmethod
+    def from_dict(cls, d: dict) -> "Evidence":
+        cit = d.get("citation")
+        return cls(
+            evidence_id=d["evidence_id"], type=d["type"], text=d.get("text"),
+            company=d.get("company"), company_id=d.get("company_id"),
+            metric=d.get("metric"), period=d.get("period"), value=d.get("value"),
+            unit=d.get("unit"), document_id=d.get("document_id"), page=d.get("page"),
+            section=d.get("section"), retrieval_score=d.get("retrieval_score"),
+            confidence=d.get("confidence", 0.0),
+            citation=Citation(**cit) if isinstance(cit, dict) else None,
+            formula=d.get("formula"), inputs=tuple(d.get("inputs", ())),
+            limitations=tuple(d.get("limitations", ())),
+        )
+
     def to_dict(self) -> dict:
         return {
             "evidence_id": self.evidence_id,
@@ -120,6 +135,15 @@ class Calculation:
     inputs: tuple[dict, ...] = ()      # ({name, value, unit, evidence_id}, ...)
     period: str | None = None
     limitations: tuple[str, ...] = ()
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "Calculation":
+        return cls(
+            calculation_id=d["calculation_id"], kind=d["kind"], name=d["name"],
+            result=d.get("result"), unit=d.get("unit"), expression=d.get("expression"),
+            inputs=tuple(dict(i) for i in d.get("inputs", ())),
+            period=d.get("period"), limitations=tuple(d.get("limitations", ())),
+        )
 
     def to_dict(self) -> dict:
         return {

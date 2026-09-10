@@ -17,7 +17,8 @@ def _cid(prefix: str) -> str:
 
 class ClaimGraph:
     def __init__(self, workspace: EvidenceSet | None = None):
-        self.workspace = workspace or EvidenceSet()
+        # explicit None check -- an empty EvidenceSet is falsy but must still be reused
+        self.workspace = workspace if workspace is not None else EvidenceSet()
         self.claims: list[Claim] = []
         self._calcs: dict[str, Calculation] = {}
 

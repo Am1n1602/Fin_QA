@@ -70,13 +70,15 @@ class _Decompose(BaseModel):
 
 def _payload(res) -> tuple[dict, list[dict]]:
     ws = EvidenceSet()
-    evidence_from_engine_result(res, workspace=ws)
+    result_ev, calc = evidence_from_engine_result(res, workspace=ws)
     return (
         {
             "name": res.name, "value": res.value, "unit": res.unit, "ok": res.ok,
             "company": res.company, "basis": res.basis, "period": res.period,
             "formula": res.formula, "components": res.components,
             "limitations": list(res.limitations),
+            "result_evidence_id": result_ev.evidence_id,
+            "calculation": calc.to_dict(),
         },
         ws.to_list(),
     )
