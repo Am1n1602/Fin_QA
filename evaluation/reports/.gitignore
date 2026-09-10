@@ -1,0 +1,4 @@
+# Run outputs are reproducible artifacts, not source. Keep the dir only.
+*
+!.gitignore
+!.gitkeep
