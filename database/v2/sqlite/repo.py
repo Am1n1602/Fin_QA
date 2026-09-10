@@ -9,6 +9,7 @@ from typing import Iterable, Optional
 from database.v2.models import (
     Basis,
     Company,
+    DocumentChunk,
     DocumentMeta,
     Exchange,
     FinancialFact,
@@ -154,6 +155,25 @@ def _row_segment_fact(r: sqlite3.Row) -> SegmentFact:
         quarter=r["quarter"],
         is_annual=_b(r["is_annual"]),
         source_id=r["source_id"],
+    )
+
+
+def _row_chunk(r: sqlite3.Row) -> DocumentChunk:
+    return DocumentChunk(
+        chunk_id=r["chunk_id"],
+        document_id=r["document_id"],
+        company_id=r["company_id"],
+        chunk_index=r["chunk_index"],
+        text=r["text"],
+        page_start=r["page_start"],
+        page_end=r["page_end"],
+        section=r["section"],
+        subsection=r["subsection"],
+        financial_year=r["financial_year"],
+        document_type=r["document_type"],
+        topic=r["topic"],
+        segment=r["segment"],
+        char_count=r["char_count"] or 0,
     )
 
 
@@ -649,6 +669,72 @@ class SqliteDocumentRepository:
                 (company_id, document_type),
             ).fetchall()
         return [_row_document(r) for r in rows]
+
+    def find(self, company_id: int, *, title: str | None = None, source_id: int | None = None):
+        if source_id is not None:
+            row = self._c.execute(
+                "SELECT * FROM documents WHERE company_id = ? AND source_id = ?",
+                (company_id, source_id),
+            ).fetchone()
+            if row:
+                return _row_document(row)
+        if title is not None:
+            row = self._c.execute(
+                "SELECT * FROM documents WHERE company_id = ? AND title = ?",
+                (company_id, title),
+            ).fetchone()
+            if row:
+                return _row_document(row)
+        return None
+
+    def add_chunks(self, chunks) -> int:
+        n = 0
+        for ch in chunks:
+            self._c.execute(
+                """
+                INSERT INTO document_chunks
+                    (document_id, company_id, chunk_index, text, page_start, page_end,
+                     section, subsection, financial_year, document_type, topic, segment, char_count)
+                VALUES (:document_id, :company_id, :chunk_index, :text, :page_start, :page_end,
+                        :section, :subsection, :financial_year, :document_type, :topic, :segment, :char_count)
+                ON CONFLICT (document_id, chunk_index) DO UPDATE SET
+                    text=excluded.text, page_start=excluded.page_start, page_end=excluded.page_end,
+                    section=excluded.section, subsection=excluded.subsection,
+                    financial_year=excluded.financial_year, document_type=excluded.document_type,
+                    topic=excluded.topic, segment=excluded.segment, char_count=excluded.char_count
+                """,
+                {
+                    "document_id": ch.document_id, "company_id": ch.company_id,
+                    "chunk_index": ch.chunk_index, "text": ch.text,
+                    "page_start": ch.page_start, "page_end": ch.page_end,
+                    "section": ch.section, "subsection": ch.subsection,
+                    "financial_year": ch.financial_year, "document_type": ch.document_type,
+                    "topic": ch.topic, "segment": ch.segment, "char_count": ch.char_count,
+                },
+            )
+            n += 1
+        return n
+
+    def chunks_for(self, document_id: int, *, section: str | None = None):
+        if section is None:
+            rows = self._c.execute(
+                "SELECT * FROM document_chunks WHERE document_id = ? ORDER BY chunk_index",
+                (document_id,),
+            ).fetchall()
+        else:
+            rows = self._c.execute(
+                "SELECT * FROM document_chunks WHERE document_id = ? AND section = ? ORDER BY chunk_index",
+                (document_id, section),
+            ).fetchall()
+        return [_row_chunk(r) for r in rows]
+
+    def delete_chunks(self, document_id: int) -> None:
+        self._c.execute("DELETE FROM document_chunks WHERE document_id = ?", (document_id,))
+
+    def chunk_count(self, document_id: int) -> int:
+        return self._c.execute(
+            "SELECT COUNT(*) FROM document_chunks WHERE document_id = ?", (document_id,)
+        ).fetchone()[0]
 
 
 # --------------------------------------------------------------------------- #

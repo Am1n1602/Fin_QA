@@ -142,6 +142,27 @@ CREATE TABLE IF NOT EXISTS documents (
     is_superseded  INTEGER NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS document_chunks (
+    chunk_id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_id    INTEGER NOT NULL REFERENCES documents(document_id) ON DELETE CASCADE,
+    company_id     INTEGER NOT NULL REFERENCES companies(company_id) ON DELETE CASCADE,
+    chunk_index    INTEGER NOT NULL,               -- 0-based within the document
+    text           TEXT    NOT NULL,
+    page_start     INTEGER,
+    page_end       INTEGER,
+    section        TEXT,
+    subsection     TEXT,
+    financial_year INTEGER,
+    document_type  TEXT,
+    topic          TEXT,                           -- 'prose' | 'table' | 'segment' | ...
+    segment        TEXT,                           -- segment slug, if about one
+    char_count     INTEGER,
+    UNIQUE (document_id, chunk_index)
+);
+
+CREATE INDEX IF NOT EXISTS ix_chunks_document        ON document_chunks (document_id);
+CREATE INDEX IF NOT EXISTS ix_chunks_company_section ON document_chunks (company_id, section);
+
 -- ---------------------------------------------------------------------------
 -- Indexes for the common access paths
 -- ---------------------------------------------------------------------------

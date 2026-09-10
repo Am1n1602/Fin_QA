@@ -5,6 +5,7 @@ from __future__ import annotations
 from .models import (
     Basis,
     Company,
+    DocumentChunk,
     DocumentMeta,
     Exchange,
     FinancialFact,
@@ -21,6 +22,7 @@ from .models import (
 __all__ = [
     "Basis",
     "Company",
+    "DocumentChunk",
     "DocumentMeta",
     "Exchange",
     "FinancialFact",

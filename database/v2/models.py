@@ -180,9 +180,36 @@ class FinancialFact:
 
 
 @dataclass(frozen=True, slots=True)
+class DocumentChunk:
+    """A structure-aware chunk of a document (§15). Page and section provenance
+    survive here so a retrieved passage can always be cited."""
+
+    document_id: int
+    company_id: int
+    chunk_index: int                        # 0-based within the document
+    text: str
+    page_start: int | None = None
+    page_end: int | None = None
+    section: str | None = None
+    subsection: str | None = None
+    financial_year: int | None = None
+    document_type: str | None = None
+    topic: str | None = None               # 'prose' | 'table' | 'segment' | ...
+    segment: str | None = None             # segment slug, if the chunk is about one
+    char_count: int = 0
+    chunk_id: int | None = _UNSET_ID
+
+    def __post_init__(self) -> None:
+        if self.text is None:
+            raise ValueError("DocumentChunk requires text")
+        if not self.char_count:
+            object.__setattr__(self, "char_count", len(self.text))
+
+
+@dataclass(frozen=True, slots=True)
 class DocumentMeta:
     """Metadata for a source document (results PDF, annual report, transcript...).
-    Page/section-level chunk storage is Phase 5 -- this is the parent record only."""
+    Chunks live in DocumentChunk / the document_chunks table."""
 
     company_id: int
     document_type: str

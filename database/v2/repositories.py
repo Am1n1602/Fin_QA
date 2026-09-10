@@ -9,6 +9,7 @@ from typing import Iterable, Optional, Protocol, runtime_checkable
 from .models import (
     Basis,
     Company,
+    DocumentChunk,
     DocumentMeta,
     FinancialFact,
     Index,
@@ -141,6 +142,23 @@ class DocumentRepository(Protocol):
     def for_company(
         self, company_id: int, *, document_type: Optional[str] = None
     ) -> list[DocumentMeta]: ...
+
+    def find(
+        self, company_id: int, *, title: Optional[str] = None, source_id: Optional[int] = None
+    ) -> Optional[DocumentMeta]:
+        """Look up an existing document by title or its source_id (for idempotent ingest)."""
+
+    def add_chunks(self, chunks: Iterable[DocumentChunk]) -> int:
+        """Upsert chunks, keyed by (document_id, chunk_index)."""
+
+    def chunks_for(
+        self, document_id: int, *, section: Optional[str] = None
+    ) -> list[DocumentChunk]: ...
+
+    def delete_chunks(self, document_id: int) -> None:
+        """Drop all chunks for a document (used before re-chunking on re-ingest)."""
+
+    def chunk_count(self, document_id: int) -> int: ...
 
 
 class Repositories(Protocol):
