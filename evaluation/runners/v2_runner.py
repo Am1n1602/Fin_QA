@@ -70,6 +70,9 @@ def main() -> int:
     ap.add_argument("--dataset", required=True, type=Path)
     ap.add_argument("--label", default="v2")
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--sample", type=int, default=None,
+                    help="stratified sample of ~N records (proportional per category)")
+    ap.add_argument("--sample-seed", type=int, default=13)
     ap.add_argument("--filter-category", default=None)
     ap.add_argument("--llm", action="store_true", help="use the LLM synthesizer (spends tokens)")
     ap.add_argument("--no-retriever", action="store_true", help="skip wiring BM25/vector into the pipeline")
@@ -86,6 +89,20 @@ def main() -> int:
     records = load_dataset(args.dataset)
     if args.filter_category:
         records = [r for r in records if r.get("category") == args.filter_category]
+    if args.sample and args.sample < len(records):
+        import random as _rnd
+
+        rng = _rnd.Random(args.sample_seed)
+        by_cat: dict[str, list] = {}
+        for r in records:
+            by_cat.setdefault(r.get("category", "?"), []).append(r)
+        frac = args.sample / len(records)
+        picked: list = []
+        for cat, rows in by_cat.items():
+            k = max(1, round(len(rows) * frac))
+            picked.extend(rng.sample(rows, min(k, len(rows))))
+        rng.shuffle(picked)
+        records = picked
     if args.limit:
         records = records[: args.limit]
 

@@ -77,7 +77,10 @@ class NumericalEvaluator:
         tol_pct = record.get("tolerance_pct")
         tol_pct = self.default_tolerance_pct if tol_pct is None else tol_pct
         denom = abs(ref) if ref else 1.0
-        tol = max(denom * tol_pct / 100.0, 1e-9)
+        # absolute floor: the synthesizer prints ratios to 2 dp, so a gold like 0.0487
+        # rendered "0.05" is within rounding, not a mismatch. Harmless for large values.
+        abs_floor = 0.01 if family in ("x", "pct") else 0.0
+        tol = max(denom * tol_pct / 100.0, abs_floor, 1e-9)
 
         best = min((abs(v - ref) for v in figs), default=None)
         within_tol = best is not None and best <= tol

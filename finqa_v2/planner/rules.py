@@ -35,11 +35,14 @@ _METRIC_PHRASES: list[tuple[re.Pattern, str]] = [
     (re.compile(r"\bearnings yield\b"), "earnings_yield"),
     (re.compile(r"\bdividend yield\b|\bdiv yield\b"), "dividend_yield"),
     (re.compile(r"\bebitda\b"), "ebitda"),
+    (re.compile(r"\bebit\b"), "ebit"),
     (re.compile(r"\brevenue\b|\bsales\b|\btop[ -]?line\b|\bturnover\b"), "revenue"),
+    (re.compile(r"\btotal income\b"), "total_income"),
     (re.compile(r"\bnet profit\b|\bpat\b|\bbottom[ -]?line\b|\bprofit after tax\b"), "net_profit"),
     (re.compile(r"\bprofit before tax\b|\bpbt\b"), "pbt"),
     (re.compile(r"\bearnings per share\b|\beps\b"), "eps_basic"),
     (re.compile(r"\boperating cash flow\b|\bcash from operations\b|\bcfo\b"), "operating_cash_flow"),
+    (re.compile(r"\bcash and (cash )?equivalents\b|\bcash and bank balances\b|\bcash balance\b"), "cash_and_equivalents"),
     (re.compile(r"\btotal assets\b|\bbalance sheet size\b"), "total_assets"),
     (re.compile(r"\btotal equity\b|\bshareholders'? funds\b|\bnet worth\b"), "total_equity"),
     (re.compile(r"\btotal debt\b|\bborrowings\b"), "total_debt"),
@@ -59,10 +62,11 @@ _COMPARE = re.compile(r"\bcompare\b|\bvs\.?\b|\bversus\b|\bcompared (to|with)\b|
                       r"|\bbetter than\b|\bhigher than\b|\blower than\b|\brelative to\b", re.I)
 _RANK = re.compile(r"\brank\b|\branking\b|\bstrongest\b|\bweakest\b|\btop \d+\b|\bbest\b|\bworst\b"
                    r"|\bwhich companies\b|\bleaderboard\b|\bmost (profitable|leveraged)\b", re.I)
-_TREND = re.compile(r"\btrend\b|\bover the (years|last|past)\b|\bhow (has|have)\b|\bhistorical(ly)?\b"
-                    r"|\byoy\b|\byear[- ]on[- ]year\b|\bcagr\b|\bgrow(n|th|ing)?\b|\bchang(e|ed|ing)\b", re.I)
-_OVERVIEW = re.compile(r"\boverview\b|\bfundamental(s)?\b|\btell me about\b|\bsummary of\b|\bprofile\b"
-                       r"|\bhow is .* doing\b", re.I)
+_TREND = re.compile(r"\btrend(ed|ing)?\b|\bover the (years|last|past|available)\b|\bhow (has|have)\b"
+                    r"|\bhistorical(ly)?\b|\byoy\b|\byear[- ]on[- ]year\b|\byear[- ]over[- ]year\b|\bcagr\b"
+                    r"|\bgrow(n|th|ing)?\b|\bgrew\b|\bchang(e|ed|ing)\b|\bmove(d|s)?\b|\bevolv(e|ed|ing)\b", re.I)
+_OVERVIEW = re.compile(r"\boverview\b|\bfundamental(s)?\b|\btell me about\b|\bsummary of\b|\bsummaris[ez]e?\b"
+                       r"|\bprofile\b|\bhow is .* doing\b", re.I)
 
 _FY_RE = re.compile(r"\bFY\s?'?(\d{2}(?:\d{2})?)(?:\s?Q([1-4]))?\b", re.I)
 _FYRANGE_RE = re.compile(r"\b(20\d{2})[-/](\d{2})\b")
