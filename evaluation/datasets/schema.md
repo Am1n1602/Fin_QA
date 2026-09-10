@@ -19,6 +19,20 @@ Designed to serve both the v1 baseline capture and v2 evaluation without a schem
 | `tolerance_pct` | number \| null | no | Allowed relative error for numeric scoring (default 1.0 when scoring is added). |
 | `notes` | string | no | Rationale, gotchas, why it's adversarial, etc. |
 
+## Phase 18 — v2 fields (`finqa_v2_eval.jsonl`)
+
+The v2 set reuses every field above and adds a few the v2 runner / evaluators read:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `expected_intent` | string \| null | v2 `planner.Intent` value the plan should carry (`numeric_fact`, `trend`, `comparison`, `ranking`, `causal`, `cross_validation`, `segment`, `research_overview`, `unknown`). `null` skips the intent check. |
+| `gold_spec` | object | On numeric rows only: `{tool: get_metric\|get_ratio\|get_growth\|get_valuation, name, period, kind}`. `build_v2_gold.py` runs the Financial Engine (the §11 source of numerical truth) with this spec and writes `reference_value` / `reference_unit`. Regenerate: `python -m evaluation.datasets.build_v2_gold`; verify no drift: `--check`. |
+| `must_contain` | string[] | Text rows: phrases the answer must contain for `CorrectnessEvaluator` (keyword mode) — ≥ 60 % coverage passes. |
+| `reference_sources[].section` | string | v2 citation scoring matches on `section` (case-insensitive substring) and, when both give one, `page` (± 1). |
+
+`reference_value` on the v2 set is stored in the **engine's own unit** — absolute INR (not crore),
+`pct`, or `x` — so `NumericalEvaluator` reconciles directly against the answer text.
+
 ## Conventions
 
 - One universe: NIFTY 50 tickers only, real NSE symbols (`TCS`, `INFY`, `HDFCBANK`, …).
