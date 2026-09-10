@@ -23,6 +23,8 @@ dependencies = [
     "pymupdf",
     "rank-bm25",
     "numpy",
+    "psycopg[binary]>=3.1",
+    "pgvector>=0.2.5",
 ]
 
 [project.optional-dependencies]

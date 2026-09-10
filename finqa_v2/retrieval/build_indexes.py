@@ -27,6 +27,8 @@ def main() -> int:
     ap.add_argument("--vector", action="store_true")
     ap.add_argument("--vector-dir", type=Path, default=_VEC_DIR)
     ap.add_argument("--model", default="all-mpnet-base-v2")
+    ap.add_argument("--device", default="auto",
+                    help="'auto' (cuda if available else cpu), 'cuda', or 'cpu'.")
     ap.add_argument("--hash-embedder", action="store_true",
                     help="Build the vector index with the dependency-free HashEmbedder "
                          "(exercises the path; not semantically strong).")
@@ -47,7 +49,19 @@ def main() -> int:
         from finqa_v2.retrieval.embed import HashEmbedder, SentenceTransformerEmbedder
         from finqa_v2.retrieval.vector import VectorIndex
 
-        embedder = HashEmbedder() if args.hash_embedder else SentenceTransformerEmbedder(args.model)
+        device = args.device
+        if device == "auto":
+            try:
+                import torch
+
+                device = "cuda" if torch.cuda.is_available() else "cpu"
+            except Exception:
+                device = "cpu"
+        if args.hash_embedder:
+            embedder = HashEmbedder()
+        else:
+            embedder = SentenceTransformerEmbedder(args.model, device=device)
+            print(f"[vector] embedding with {args.model} on {device}")
         try:
             idx = VectorIndex.build(repos, embedder)
         except Exception as e:  # torch/paging-file/import failures land here
@@ -56,8 +70,13 @@ def main() -> int:
                   "environment is stable, or run with --hash-embedder.")
             return 3
         idx.save(args.vector_dir)
-        print(f"[vector] {len(idx.chunk_ids)} chunks, dim={idx.dim}, "
+        model_id = "hash-embedder" if args.hash_embedder else args.model
+        (args.vector_dir / "model.txt").write_text(f"{model_id}\ndevice={device}\n",
+                                                   encoding="utf-8")
+        print(f"[vector] {len(idx.chunk_ids)} chunks, dim={idx.dim}, model={model_id}, "
               f"faiss={'yes' if idx._faiss is not None else 'numpy'} -> {args.vector_dir}")
+        print("[vector] NOTE: query with the SAME embedder -- "
+              f"HybridRetriever(..., embedder=SentenceTransformerEmbedder('{model_id}'))")
         return 0
     finally:
         repos.close()

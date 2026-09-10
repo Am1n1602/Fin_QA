@@ -92,7 +92,17 @@ def build_retriever(repos, *, bm25_path: Path, vector_dir: Path) -> HybridRetrie
             from finqa_v2.retrieval.vector import VectorIndex
 
             vector = VectorIndex.load(vector_dir)
-            embedder = SentenceTransformerEmbedder()
+            model_txt = vector_dir / "model.txt"
+            model = (model_txt.read_text(encoding="utf-8").splitlines()[0].strip()
+                     if model_txt.exists() else "all-mpnet-base-v2")
+            device = "cpu"
+            try:
+                import torch
+
+                device = "cuda" if torch.cuda.is_available() else "cpu"
+            except Exception:
+                pass
+            embedder = SentenceTransformerEmbedder(model, device=device)
         except Exception:
             vector = embedder = None
     return HybridRetriever(repos, bm25=bm25, vector=vector, embedder=embedder)
