@@ -18,6 +18,7 @@ from finqa_v2.normalize.units import unit_for
 _KIND_TO_TYPE = {
     "metric": EvidenceType.FINANCIAL_FACT,
     "ratio": EvidenceType.RATIO,
+    "valuation": EvidenceType.RATIO,
     "growth": EvidenceType.GROWTH,
     "cagr": EvidenceType.GROWTH,
     "comparison": EvidenceType.CALCULATION,

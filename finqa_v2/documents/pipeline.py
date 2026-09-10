@@ -20,10 +20,15 @@ _MONTHS = {m: i for i, m in enumerate(
      "september", "october", "november", "december"], start=1)}
 
 
+_CTRL = re.compile(r"[\x00-\x1f\x7f]|�")
+_DASHES = {ord(c): "-" for c in "‐‑‒–—―−"}
+
+
 def title_from_filename(name: str) -> str:
     stem = re.sub(r"\.pdf$", "", name, flags=re.I)
     stem = _TS_PREFIX.sub("", stem)
-    return _WS.sub(" ", stem.replace("_", " ")).strip()
+    stem = _CTRL.sub(" ", stem.translate(_DASHES))
+    return _WS.sub(" ", stem.replace("_", " ")).strip(" -")
 
 
 def document_type_of(title: str) -> str:

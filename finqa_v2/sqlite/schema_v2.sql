@@ -127,6 +127,23 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_segment_facts_grain
 CREATE INDEX IF NOT EXISTS ix_segment_facts_company ON segment_facts (company_id, metric);
 
 -- ---------------------------------------------------------------------------
+-- Share prices  (§11 valuation -- daily close per company, exchange EOD)
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS share_prices (
+    price_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+    company_id   INTEGER NOT NULL REFERENCES companies(company_id) ON DELETE CASCADE,
+    price_date   TEXT    NOT NULL,                 -- ISO date (trading day)
+    close        REAL,                             -- NULL = not traded / not reported; never 0-filled
+    vwap         REAL,
+    volume       REAL,
+    currency     TEXT    NOT NULL DEFAULT 'INR',
+    source_id    INTEGER REFERENCES sources(source_id) ON DELETE SET NULL,
+    UNIQUE (company_id, price_date)
+);
+CREATE INDEX IF NOT EXISTS ix_prices_company ON share_prices (company_id, price_date);
+
+-- ---------------------------------------------------------------------------
 -- Documents  (parent records only; chunk storage is Phase 5)
 -- ---------------------------------------------------------------------------
 

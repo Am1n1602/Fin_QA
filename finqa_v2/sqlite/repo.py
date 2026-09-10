@@ -18,6 +18,7 @@ from finqa_v2.models import (
     MappingConfidence,
     Segment,
     SegmentFact,
+    SharePrice,
     Source,
     StatementType,
 )
@@ -155,6 +156,18 @@ def _row_segment_fact(r: sqlite3.Row) -> SegmentFact:
         financial_year=r["financial_year"],
         quarter=r["quarter"],
         is_annual=_b(r["is_annual"]),
+        source_id=r["source_id"],
+    )
+
+
+def _row_price(r: sqlite3.Row) -> SharePrice:
+    return SharePrice(
+        company_id=r["company_id"],
+        price_date=_d(r["price_date"]),
+        close=r["close"],
+        vwap=r["vwap"],
+        volume=r["volume"],
+        currency=r["currency"] or "INR",
         source_id=r["source_id"],
     )
 
@@ -612,6 +625,69 @@ class SqliteSegmentRepository:
         return [_row_segment_fact(r) for r in rows]
 
 
+class SqliteSharePriceRepository:
+    _WINDOW_DAYS = 14          # how far back "on_or_before" will reach for a trading day
+
+    def __init__(self, conn: sqlite3.Connection) -> None:
+        self._c = conn
+
+    def add_prices(self, prices: Iterable[SharePrice]) -> int:
+        n = 0
+        for p in prices:
+            self._c.execute(
+                """INSERT INTO share_prices
+                       (company_id, price_date, close, vwap, volume, currency, source_id)
+                   VALUES (:company_id, :price_date, :close, :vwap, :volume, :currency, :source_id)
+                   ON CONFLICT (company_id, price_date) DO UPDATE SET
+                       close = excluded.close, vwap = excluded.vwap, volume = excluded.volume,
+                       currency = excluded.currency,
+                       source_id = COALESCE(excluded.source_id, share_prices.source_id)""",
+                {"company_id": p.company_id, "price_date": _ds(p.price_date), "close": p.close,
+                 "vwap": p.vwap, "volume": p.volume, "currency": p.currency,
+                 "source_id": p.source_id},
+            )
+            n += 1
+        return n
+
+    def on_or_before(self, company_id: int, on: date) -> Optional[SharePrice]:
+        row = self._c.execute(
+            """SELECT * FROM share_prices
+               WHERE company_id = ? AND close IS NOT NULL AND price_date <= ?
+               ORDER BY price_date DESC LIMIT 1""",
+            (company_id, _ds(on)),
+        ).fetchone()
+        if row is None:
+            return None
+        got = _row_price(row)
+        if (on - got.price_date).days > self._WINDOW_DAYS:
+            return None
+        return got
+
+    def range(self, company_id: int, *, start: Optional[date] = None,
+              end: Optional[date] = None) -> list[SharePrice]:
+        clauses = ["company_id = ?"]
+        params: list = [company_id]
+        if start is not None:
+            clauses.append("price_date >= ?")
+            params.append(_ds(start))
+        if end is not None:
+            clauses.append("price_date <= ?")
+            params.append(_ds(end))
+        rows = self._c.execute(
+            f"SELECT * FROM share_prices WHERE {' AND '.join(clauses)} ORDER BY price_date",
+            params,
+        ).fetchall()
+        return [_row_price(r) for r in rows]
+
+    def latest(self, company_id: int) -> Optional[SharePrice]:
+        row = self._c.execute(
+            """SELECT * FROM share_prices WHERE company_id = ? AND close IS NOT NULL
+               ORDER BY price_date DESC LIMIT 1""",
+            (company_id,),
+        ).fetchone()
+        return _row_price(row) if row else None
+
+
 class SqliteDocumentRepository:
     def __init__(self, conn: sqlite3.Connection) -> None:
         self._c = conn
@@ -754,6 +830,7 @@ class SqliteRepositories:
         self.sources = SqliteSourceRepository(self._conn)
         self.facts = SqliteFinancialFactRepository(self._conn)
         self.segments = SqliteSegmentRepository(self._conn)
+        self.prices = SqliteSharePriceRepository(self._conn)
         self.documents = SqliteDocumentRepository(self._conn)
 
     @property

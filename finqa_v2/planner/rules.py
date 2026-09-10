@@ -7,6 +7,7 @@ import re
 
 from finqa_v2.engine.ratios import SPECS as _RATIO_SPECS
 from finqa_v2.engine.ratios import resolve as _resolve_ratio
+from finqa_v2.engine.valuation import resolve as _resolve_valuation
 from finqa_v2.planner.models import Intent, QueryPlan
 
 _RATIO_NAMES = set(_RATIO_SPECS)
@@ -26,6 +27,13 @@ _METRIC_PHRASES: list[tuple[re.Pattern, str]] = [
     (re.compile(r"\basset turnover\b"), "asset_turnover"),
     (re.compile(r"\beffective tax rate\b|\btax rate\b"), "effective_tax_rate"),
     (re.compile(r"\bnet interest margin\b|\bnim\b"), "net_interest_margin"),
+    # valuation (§11, Phase 15) -- routed to ValuationEngine via get_ratio
+    (re.compile(r"\bp\s?/\s?e\b|\bpe ratio\b|\bprice[ -]?to[ -]?earnings\b|\bprice earnings\b"), "pe"),
+    (re.compile(r"\bp\s?/\s?b\b|\bpb ratio\b|\bprice[ -]?to[ -]?book\b"), "pb"),
+    (re.compile(r"\bev\s?/\s?ebitda\b|\benterprise value\b"), "ev_ebitda"),
+    (re.compile(r"\bmarket cap(italis|italiz)?(ation)?\b|\bm\s?cap\b"), "market_cap"),
+    (re.compile(r"\bearnings yield\b"), "earnings_yield"),
+    (re.compile(r"\bdividend yield\b|\bdiv yield\b"), "dividend_yield"),
     (re.compile(r"\bebitda\b"), "ebitda"),
     (re.compile(r"\brevenue\b|\bsales\b|\btop[ -]?line\b|\bturnover\b"), "revenue"),
     (re.compile(r"\bnet profit\b|\bpat\b|\bbottom[ -]?line\b|\bprofit after tax\b"), "net_profit"),
@@ -172,7 +180,7 @@ def _intent(question: str, companies: list[str], metrics: list[str]) -> Intent:
 
 
 def _tools_for(intent: Intent, metrics: list[str]) -> tuple[list[str], bool, bool]:
-    has_ratio = any((_resolve_ratio(m) in _RATIO_NAMES) for m in metrics)
+    has_ratio = any((_resolve_ratio(m) in _RATIO_NAMES) or _resolve_valuation(m) for m in metrics)
     if intent is Intent.NUMERIC_FACT:
         return (["get_ratio" if has_ratio else "get_metric"], False, False)
     if intent is Intent.TREND:

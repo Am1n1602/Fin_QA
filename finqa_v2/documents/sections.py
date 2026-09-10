@@ -20,6 +20,20 @@ _RULES: list[tuple[re.Pattern, str]] = [
     (re.compile(r"management\s+discussion\s+and\s+analysis", re.I), "mda"),
     (re.compile(r"risk\s+(factors|management)", re.I), "risk_factors"),
     (re.compile(r"outcome\s+of\s+(the\s+)?board\s+meeting", re.I), "board_meeting_outcome"),
+    # --- annual-report sections (Phase 15: for when annual reports / transcripts land) ---
+    (re.compile(r"(board'?s?|directors?'?)\s+report\b", re.I), "board_report"),
+    (re.compile(r"report\s+on\s+corporate\s+governance|corporate\s+governance\s+report", re.I),
+     "corporate_governance"),
+    (re.compile(r"business\s+responsibility\s+(and\s+sustainability\s+)?report|\bBRSR\b", re.I),
+     "brsr"),
+    (re.compile(r"notice\s+of\s+(the\s+)?(\w+\s+)?annual\s+general\s+meeting|\bnotice\s+is\s+hereby\s+given\b", re.I),
+     "notice"),
+    (re.compile(r"secretarial\s+audit\s+report", re.I), "secretarial_audit"),
+    (re.compile(r"(managing\s+director|chairman)'?s?\s+(message|statement|letter|review)", re.I),
+     "leadership_message"),
+    (re.compile(r"(analyst|earnings|investor|conference)\s+call\s+transcript|"
+                r"transcript\s+of\s+(the\s+)?(earnings|analyst|investor)\s+call", re.I),
+     "earnings_call"),
     (re.compile(r"annexure\b", re.I), "annexure"),
     (re.compile(r"\bsub\s*:", re.I), "cover_letter"),
 ]

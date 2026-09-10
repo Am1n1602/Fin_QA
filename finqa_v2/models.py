@@ -276,3 +276,25 @@ class SegmentFact:
     @property
     def is_missing(self) -> bool:
         return self.value is None
+
+
+@dataclass(frozen=True, slots=True)
+class SharePrice:
+    """One trading day's EOD price for a company (§11 valuation). `close is None`
+    means not traded / not reported -- never 0-filled."""
+
+    company_id: int
+    price_date: date
+    close: float | None
+    vwap: float | None = None
+    volume: float | None = None
+    currency: str = "INR"
+    source_id: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.price_date is None:
+            raise ValueError("SharePrice requires a price_date")
+
+    @property
+    def is_missing(self) -> bool:
+        return self.close is None

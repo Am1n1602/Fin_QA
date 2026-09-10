@@ -16,6 +16,7 @@ from .models import (
     IndexMembership,
     Segment,
     SegmentFact,
+    SharePrice,
     Source,
 )
 
@@ -134,6 +135,23 @@ class SegmentRepository(Protocol):
 
 
 @runtime_checkable
+class SharePriceRepository(Protocol):
+    def add_prices(self, prices: Iterable[SharePrice]) -> int:
+        """Upsert daily prices, keyed by (company_id, price_date). Returns count written."""
+
+    def on_or_before(self, company_id: int, on: date) -> Optional[SharePrice]:
+        """The most recent traded close on or before `on` (nearest earlier trading day),
+        or None if there is no price within a sane window."""
+
+    def range(
+        self, company_id: int, *, start: Optional[date] = None, end: Optional[date] = None
+    ) -> list[SharePrice]:
+        """Prices in [start, end], ascending by date."""
+
+    def latest(self, company_id: int) -> Optional[SharePrice]: ...
+
+
+@runtime_checkable
 class DocumentRepository(Protocol):
     def upsert(self, document: DocumentMeta) -> DocumentMeta: ...
 
@@ -169,6 +187,7 @@ class Repositories(Protocol):
     sources: SourceRepository
     facts: FinancialFactRepository
     segments: SegmentRepository
+    prices: SharePriceRepository
     documents: DocumentRepository
 
     def commit(self) -> None: ...

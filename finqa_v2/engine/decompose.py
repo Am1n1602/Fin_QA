@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from finqa_v2.engine import derive
+from finqa_v2.engine.ratios import top_line
 from finqa_v2.engine.records import PeriodRecord
 
 
@@ -10,7 +11,7 @@ def dupont_roe(rec: PeriodRecord) -> dict:
        = (net_profit/revenue) x (revenue/total_assets) x (total_assets/total_equity)
     """
     np = rec.get("net_profit")
-    rev = rec.get("revenue")
+    rev = top_line(rec)
     ta = rec.get("total_assets")
     te = rec.get("total_equity")
     comps: dict[str, float | None] = {
@@ -39,7 +40,7 @@ def dupont_roe(rec: PeriodRecord) -> dict:
 def net_margin_bridge(prev: PeriodRecord, curr: PeriodRecord) -> dict:
     """Change in net margin (pp) split into a revenue-growth effect and an
     expense-growth effect, holding the other side at the prior period."""
-    rp, rc = prev.get("revenue"), curr.get("revenue")
+    rp, rc = top_line(prev), top_line(curr)
     ep = prev.get("total_expenses")
     ec = curr.get("total_expenses")
     npp, npc = prev.get("net_profit"), curr.get("net_profit")

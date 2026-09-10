@@ -20,6 +20,14 @@ def _div(num, den, *, pct: bool):
     return r * 100 if pct else r
 
 
+def top_line(r: Rec):
+    """Revenue, falling back to total_income for banks / insurers that file no 'revenue'
+    line (IRDAI / RBI statement formats). `total_income` there is premium + investment
+    income (insurers) or interest + other income (banks)."""
+    v = r.get("revenue")
+    return v if v is not None else r.get("total_income")
+
+
 @dataclass(frozen=True, slots=True)
 class RatioSpec:
     name: str
@@ -70,7 +78,7 @@ SPECS: dict[str, RatioSpec] = {
                              "(pbt_before_exceptional + finance_costs) / revenue * 100", _ebit_margin),
     "net_profit_margin": RatioSpec("net_profit_margin", "pct", ("net_profit", "revenue"),
                                    "net_profit / revenue * 100",
-                                   lambda r: _div(r.get("net_profit"), r.get("revenue"), pct=True)),
+                                   lambda r: _div(r.get("net_profit"), top_line(r), pct=True)),
     "pbt_margin": RatioSpec("pbt_margin", "pct", ("pbt", "revenue"),
                             "pbt / revenue * 100",
                             lambda r: _div(r.get("pbt"), r.get("revenue"), pct=True)),
@@ -85,7 +93,7 @@ SPECS: dict[str, RatioSpec] = {
                                lambda r: _div(r.get("current_assets"), r.get("current_liabilities"), pct=False)),
     "asset_turnover": RatioSpec("asset_turnover", "x", ("revenue", "total_assets"),
                                 "revenue / total_assets",
-                                lambda r: _div(r.get("revenue"), r.get("total_assets"), pct=False)),
+                                lambda r: _div(top_line(r), r.get("total_assets"), pct=False)),
     "effective_tax_rate": RatioSpec("effective_tax_rate", "pct", ("tax_expense", "pbt"),
                                     "tax_expense / pbt * 100",
                                     lambda r: _div(r.get("tax_expense"), r.get("pbt"), pct=True)),

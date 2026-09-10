@@ -10,9 +10,11 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from finqa_v2.engine import decompose, derive, growth, ratios
+from finqa_v2.engine import valuation as _valuation
 from finqa_v2.engine.calculator import calculate as _calc
 from finqa_v2.engine.records import PeriodRecord, build_period_records
 from finqa_v2.engine.segments import SegmentEngine
+from finqa_v2.engine.valuation import ValuationEngine
 from finqa_v2.models import Basis
 from finqa_v2.normalize import metrics as _reg
 
@@ -71,6 +73,7 @@ class FinancialEngine:
         self._repos = repos
         self._cache: dict[tuple[int, str], list[PeriodRecord]] = {}
         self._segments = SegmentEngine(repos)
+        self._valuation = ValuationEngine(repos, self)
 
     # ------------------------------------------------------------------ #
     # infrastructure
@@ -148,7 +151,15 @@ class FinancialEngine:
             limitations=_flag_limits(rec, [i.metric for i in inputs]),
         )
 
+    def get_valuation(self, ticker: str, kind: str, *, basis="consolidated",
+                      period="latest_annual") -> EngineResult:
+        """P/E, P/B, EV/EBITDA, market cap, earnings / dividend yield (§11). Price-dependent."""
+        return self._valuation.get(ticker, kind, basis=basis, period=period)
+
     def get_ratio(self, ticker: str, ratio: str, *, basis="consolidated", period="latest") -> EngineResult:
+        if _valuation.resolve(ratio) is not None:
+            return self._valuation.get(ticker, ratio, basis=basis,
+                                       period="latest_annual" if period == "latest" else period)
         company = self._company(ticker)
         spec = ratios.get_spec(ratio)
         if spec is None:
@@ -269,7 +280,7 @@ class FinancialEngine:
                             components=comp)
 
     def compare_companies(self, metric: str, tickers, *, basis="consolidated", period="latest") -> dict:
-        is_ratio = ratios.get_spec(metric) is not None
+        is_ratio = ratios.get_spec(metric) is not None or _valuation.resolve(metric) is not None
         results, missing = [], []
         unit = None
         for t in tickers:
@@ -295,7 +306,7 @@ class FinancialEngine:
         records = self._records(company.company_id, basis)
         key = metric.strip().lower()
         if key in ("roe", "dupont"):
-            rec = self._select(records, period, lambda r: r.has_all("net_profit", "revenue", "total_assets", "total_equity"))
+            rec = self._select(records, period, lambda r: r.has_all("net_profit", "total_assets", "total_equity") and (r.has_all("revenue") or r.has_all("total_income")))
             if rec is None:
                 return EngineResult("decomposition", "dupont_roe", None, company=company.ticker,
                                     basis=Basis(basis).value,
@@ -307,8 +318,10 @@ class FinancialEngine:
                                 formula="npm x asset_turnover x equity_multiplier",
                                 components=d, limitations=_flag_limits(rec, ["net_profit", "revenue", "total_assets", "total_equity"]))
         if key in ("net_margin", "net_profit_margin", "margin"):
-            annual = [r for r in records if r.is_annual and r.has_all("revenue", "total_expenses", "net_profit")]
-            qtr = [r for r in records if r.is_single_quarter and r.has_all("revenue", "total_expenses", "net_profit")]
+            annual = [r for r in records if r.is_annual and r.has_all("total_expenses", "net_profit")
+                      and (r.has_all("revenue") or r.has_all("total_income"))]
+            qtr = [r for r in records if r.is_single_quarter and r.has_all("total_expenses", "net_profit")
+                   and (r.has_all("revenue") or r.has_all("total_income"))]
             seq = annual if len(annual) >= 2 else qtr
             if len(seq) < 2:
                 return EngineResult("decomposition", "net_margin_bridge", None, company=company.ticker,
