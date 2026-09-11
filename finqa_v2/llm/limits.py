@@ -113,3 +113,73 @@ class RateBudget:
             "requests_remaining": max(0, self.max_requests - self.requests_made),
             "tpd_remaining": max(0, self.tpd_limit - self.tokens_today),
         }
+
+
+# $ per 1M (input, output) tokens. Verify at https://claude.com/pricing before relying on
+# this for a large run -- pricing can change.
+ANTHROPIC_PRICING_PER_MTOK: dict[str, tuple[float, float]] = {
+    "claude-opus-5": (5.0, 25.0),
+    "claude-sonnet-5": (2.0, 10.0),
+    "claude-haiku-4-5-20251001": (1.0, 5.0),
+}
+
+
+@dataclass
+class CostBudget:
+    """Hard dollar cap for a paid provider (e.g. the Claude API) -- the analogue of
+    RateBudget for a per-request-billed key instead of a shared free tier. Estimates the
+    cost of a call BEFORE sending it and refuses (raises LLMBudgetExceededError) rather
+    than risk exceeding `max_cost_usd`; `record()` reconciles against the real usage the
+    API returns."""
+
+    max_cost_usd: float = 3.0
+    pricing: dict[str, tuple[float, float]] = field(
+        default_factory=lambda: dict(ANTHROPIC_PRICING_PER_MTOK))
+
+    spent_usd: float = 0.0
+    requests_made: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+
+    @classmethod
+    def from_env(cls, *, default_cap: float = 3.0) -> "CostBudget":
+        try:
+            cap = float(os.environ.get("FINQA_LLM_MAX_COST_USD", "") or default_cap)
+        except ValueError:
+            cap = default_cap
+        return cls(max_cost_usd=cap)
+
+    def _rate(self, model: str) -> tuple[float, float]:
+        return self.pricing.get(model, (0.0, 0.0))
+
+    def estimate_cost(self, model: str, prompt_tokens_est: int, max_tokens: int) -> float:
+        rate_in, rate_out = self._rate(model)
+        return prompt_tokens_est / 1e6 * rate_in + max_tokens / 1e6 * rate_out
+
+    def check_and_reserve(self, model: str, prompt_tokens_est: int, max_tokens: int) -> None:
+        est = self.estimate_cost(model, prompt_tokens_est, max_tokens)
+        if self.spent_usd + est > self.max_cost_usd:
+            raise LLMBudgetExceededError(
+                f"this call (~${est:.4f} est., worst case at max_tokens={max_tokens}) would "
+                f"exceed the cost cap (${self.spent_usd:.4f} spent + this > "
+                f"${self.max_cost_usd:.2f}). Raise FINQA_LLM_MAX_COST_USD or start a new run."
+            )
+
+    def record(self, model: str, prompt_tokens: int, completion_tokens: int) -> None:
+        rate_in, rate_out = self._rate(model)
+        self.spent_usd += prompt_tokens / 1e6 * rate_in + completion_tokens / 1e6 * rate_out
+        self.requests_made += 1
+        self.prompt_tokens += prompt_tokens or 0
+        self.completion_tokens += completion_tokens or 0
+
+    @property
+    def usage(self) -> dict:
+        return {
+            "requests_made": self.requests_made,
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
+            "total_tokens": self.prompt_tokens + self.completion_tokens,
+            "spent_usd": round(self.spent_usd, 4),
+            "cap_usd": self.max_cost_usd,
+            "remaining_usd": round(max(0.0, self.max_cost_usd - self.spent_usd), 4),
+        }

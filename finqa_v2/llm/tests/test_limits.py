@@ -4,7 +4,7 @@ from __future__ import annotations
 import unittest
 from unittest.mock import patch
 
-from finqa_v2.llm.limits import LLMBudgetExceededError, RateBudget, estimate_tokens
+from finqa_v2.llm.limits import CostBudget, LLMBudgetExceededError, RateBudget, estimate_tokens
 
 
 class FakeClock:
@@ -96,6 +96,43 @@ class TestUsageAndEnv(unittest.TestCase):
         self.assertLessEqual(b.tpm_limit, 8_000)
         self.assertLessEqual(b.tpd_limit, 200_000)
         self.assertLessEqual(b.rpm_limit, 30)
+
+
+class TestCostBudget(unittest.TestCase):
+    def test_estimate_and_record_match_pricing(self):
+        b = CostBudget(max_cost_usd=1.0, pricing={"m": (2.0, 10.0)})   # $2/$10 per MTok
+        est = b.estimate_cost("m", 1_000_000, 100_000)
+        self.assertAlmostEqual(est, 2.0 + 1.0)          # 1M in @ $2 + 100k out @ $10/MTok
+        b.record("m", 500_000, 100_000)
+        self.assertAlmostEqual(b.spent_usd, 1.0 + 1.0)
+        self.assertEqual(b.requests_made, 1)
+
+    def test_check_and_reserve_raises_before_exceeding_cap(self):
+        b = CostBudget(max_cost_usd=0.01, pricing={"m": (2.0, 10.0)})
+        with self.assertRaises(LLMBudgetExceededError):
+            b.check_and_reserve("m", 1_000_000, 1_000)   # ~$2 estimate >> $0.01 cap
+
+    def test_unknown_model_costs_zero(self):
+        b = CostBudget(max_cost_usd=0.0, pricing={})
+        b.check_and_reserve("unknown-model", 10_000, 10_000)   # never raises: 0-rated
+        b.record("unknown-model", 10_000, 10_000)
+        self.assertEqual(b.spent_usd, 0.0)
+
+    def test_usage_dict_reports_remaining(self):
+        b = CostBudget(max_cost_usd=1.0, pricing={"m": (1.0, 1.0)})
+        b.record("m", 100_000, 100_000)   # $0.1 + $0.1
+        u = b.usage
+        self.assertAlmostEqual(u["spent_usd"], 0.2)
+        self.assertAlmostEqual(u["remaining_usd"], 0.8)
+        self.assertEqual(u["cap_usd"], 1.0)
+
+    def test_from_env_reads_cap(self):
+        with patch.dict("os.environ", {"FINQA_LLM_MAX_COST_USD": "2.5"}):
+            self.assertEqual(CostBudget.from_env().max_cost_usd, 2.5)
+
+    def test_from_env_default_when_unset(self):
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(CostBudget.from_env(default_cap=3.0).max_cost_usd, 3.0)
 
 
 if __name__ == "__main__":
