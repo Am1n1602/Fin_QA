@@ -151,7 +151,10 @@ class ClaimGraphView:
     # ------------------------------------------------------------------ #
     # whole-graph export
     # ------------------------------------------------------------------ #
-    def to_graph(self) -> dict:
+    def to_graph(self, *, reachable_only: bool = False) -> dict:
+        """`reachable_only=True` drops evidence/calculation/source nodes the reasoning
+        pass gathered but no claim ever cites (§22/Phase-22: the public API endpoint uses
+        this so a causal answer's ~48-evidence workspace doesn't dump in full)."""
         nodes: list[dict] = []
         edges: list[dict] = []
         seen: set[str] = set()
@@ -189,10 +192,13 @@ class ClaimGraphView:
             for ci in cl.calculation_ids:
                 if ci in self._calcs:
                     edges.append({"from": cl.claim_id, "to": ci, "rel": "computed_by"})
-        return {"nodes": nodes, "edges": edges}
+        graph = {"nodes": nodes, "edges": edges}
+        if reachable_only:
+            graph = _filter_reachable(graph, start_ids={cl.claim_id for cl in self._g.claims})
+        return graph
 
-    def to_mermaid(self) -> str:
-        g = self.to_graph()
+    def to_mermaid(self, *, reachable_only: bool = False) -> str:
+        g = self.to_graph(reachable_only=reachable_only)
         ids = {n["id"]: f"n{i}" for i, n in enumerate(g["nodes"])}
         shape = {"claim": ('["', '"]'), "evidence": ('("', '")'),
                  "calculation": ('{{"', '"}}'), "source": ('[("', '")]')}
@@ -205,17 +211,47 @@ class ClaimGraphView:
                 lines.append(f'  {ids[e["from"]]} -->|{e["rel"]}| {ids[e["to"]]}')
         return "\n".join(lines)
 
-    def to_dict(self) -> dict:
+    def to_dict(self, *, reachable_only: bool = False) -> dict:
+        graph = self.to_graph(reachable_only=reachable_only)
+        kept = {n["id"] for n in graph["nodes"]}
+        sources = [self._source_node(c) for cid, c in self._sources.items()
+                  if not reachable_only or cid in kept]
+        if reachable_only:
+            by_type = {"evidence": 0, "calculation": 0}
+            for n in graph["nodes"]:
+                if n["type"] in by_type:
+                    by_type[n["type"]] += 1
+            counts = {"claims": len(self._g.claims), "evidence": by_type["evidence"],
+                     "calculations": by_type["calculation"], "sources": len(sources)}
+        else:
+            counts = {"claims": len(self._g.claims), "evidence": len(self._ws),
+                     "calculations": len(self._calcs), "sources": len(self._sources)}
         return {
             "overall_confidence": round(self._g.overall_confidence(), 4),
-            "counts": {
-                "claims": len(self._g.claims), "evidence": len(self._ws),
-                "calculations": len(self._calcs), "sources": len(self._sources),
-            },
+            "counts": counts,
             "claims": [self.explain(cl) for cl in self._g.claims],
-            "sources": [self._source_node(c) for c in self._sources.values()],
-            "graph": self.to_graph(),
+            "sources": sources,
+            "graph": graph,
         }
+
+
+def _filter_reachable(graph: dict, start_ids: set[str]) -> dict:
+    """Nodes/edges reachable by following edges forward from `start_ids` (claims)."""
+    adj: dict[str, list[str]] = {}
+    for e in graph["edges"]:
+        adj.setdefault(e["from"], []).append(e["to"])
+    keep: set[str] = set()
+    stack = list(start_ids)
+    while stack:
+        nid = stack.pop()
+        if nid in keep:
+            continue
+        keep.add(nid)
+        stack.extend(adj.get(nid, []))
+    return {
+        "nodes": [n for n in graph["nodes"] if n["id"] in keep],
+        "edges": [e for e in graph["edges"] if e["from"] in keep and e["to"] in keep],
+    }
 
 
 def _mermaid_escape(s: str) -> str:

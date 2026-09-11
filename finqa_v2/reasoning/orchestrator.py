@@ -51,7 +51,8 @@ class ReasoningOrchestrator:
         self._verifier = Verifier()
 
     # ------------------------------------------------------------------ #
-    def answer(self, question: str, *, use_llm: bool = True) -> ReasoningResult:
+    def answer(self, question: str, *, use_llm: bool = True,
+              claim_graph_reachable_only: bool = False) -> ReasoningResult:
         t0 = perf_counter()
         self._registry.reset_trace()
         plan = self._planner.plan(question, use_llm=use_llm)
@@ -86,7 +87,10 @@ class ReasoningOrchestrator:
         # workspace -- Phase 11/12 verdict prose carries derived figures, not fact values.
         verification = self._verifier.verify(response, ws, graph=graph,
                                              check_numbers=kind is None)
-        claim_graph = ClaimGraphView(graph).to_dict()   # §24 -- post-verification statuses
+        # §24, Phase-22: reachable_only=True (the public API's choice) drops evidence/
+        # sources no claim actually cites, so a causal answer's response doesn't dump the
+        # entire ~48-node reasoning workspace.
+        claim_graph = ClaimGraphView(graph).to_dict(reachable_only=claim_graph_reachable_only)
         return ReasoningResult(
             question=question, plan=plan.to_dict(), response=response,
             trace=[asdict(c) for c in self._registry.trace],

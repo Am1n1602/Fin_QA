@@ -33,11 +33,15 @@ _SCHEMA_PATH = Path(__file__).with_name("schema_v2.sql")
 # connection / bootstrap
 # --------------------------------------------------------------------------- #
 
-def connect(db_path: str | Path = DEFAULT_V2_DB_PATH) -> sqlite3.Connection:
+def connect(db_path: str | Path = DEFAULT_V2_DB_PATH, *, check_same_thread: bool = True) -> sqlite3.Connection:
+    """`check_same_thread=False` is for a long-lived server (finqa_v2/api/) that answers
+    each request on a different worker thread from one connection built at startup --
+    sqlite3.threadsafety == 3 ("serialized") on this build makes that safe without extra
+    locking. Every other caller keeps the default (single-threaded scripts/tests)."""
     db_path = Path(db_path)
     if db_path != Path(":memory:") and str(db_path) != ":memory:":
         db_path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(db_path))
+    conn = sqlite3.connect(str(db_path), check_same_thread=check_same_thread)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
@@ -822,8 +826,8 @@ class SqliteRepositories:
     """Opens finqa_v2.db (applying the schema), exposes every repository over one
     connection, and acts as a context manager."""
 
-    def __init__(self, db_path: str | Path = DEFAULT_V2_DB_PATH) -> None:
-        self._conn = connect(db_path)
+    def __init__(self, db_path: str | Path = DEFAULT_V2_DB_PATH, *, check_same_thread: bool = True) -> None:
+        self._conn = connect(db_path, check_same_thread=check_same_thread)
         init_db(self._conn)
         self.companies = SqliteCompanyRepository(self._conn)
         self.indices = SqliteIndexRepository(self._conn)

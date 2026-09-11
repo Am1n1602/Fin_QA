@@ -37,6 +37,7 @@ finqa = "fin_llm_platform.cli:main"
 finqa-pipeline = "fin_llm_platform.pipeline:main"
 finqa-setup = "fin_llm_platform.setup_scheduler:main"
 finqa-api = "api.main:run"
+finqa-api-v2 = "finqa_v2.api.main:run"
 
 [tool.setuptools.packages.find]
-include = ["fin_llm_platform*", "api*"]
+include = ["fin_llm_platform*", "api*", "finqa_v2*"]
