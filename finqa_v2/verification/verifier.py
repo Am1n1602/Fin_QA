@@ -4,6 +4,7 @@ possibly the answer + confidence) and returns a VerificationReport.
 """
 from __future__ import annotations
 
+from finqa_v2.observability.metrics import record_verification
 from finqa_v2.verification.checks import check_answer_numbers, check_calculation, check_claim
 from finqa_v2.verification.models import ClaimCheck, VerificationReport
 
@@ -94,4 +95,6 @@ class Verifier:
 
         response["confidence"] = round(conf, 4)
         response["limitations"] = list(dict.fromkeys(limitations))
-        return VerificationReport(checks=checks, abstained=abstain, adjustments=adjustments)
+        report = VerificationReport(checks=checks, abstained=abstain, adjustments=adjustments)
+        record_verification(report.status)
+        return report

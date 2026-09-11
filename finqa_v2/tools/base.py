@@ -12,6 +12,8 @@ from typing import Any, Callable
 
 from pydantic import BaseModel, ValidationError
 
+from finqa_v2.observability.metrics import record_tool_call
+
 logger = logging.getLogger("finqa.v2.tools")
 
 
@@ -116,6 +118,7 @@ class ToolRegistry:
         else:
             res = tool.call(**kwargs)
         self.trace.append(ToolCall(name, dict(kwargs), res.ok, res.latency_ms, res.error, _now()))
+        record_tool_call(name, res.ok, res.latency_ms)
         return res
 
     def reset_trace(self) -> None:

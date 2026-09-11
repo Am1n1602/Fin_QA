@@ -17,6 +17,8 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Callable
 
+from finqa_v2.observability.metrics import record_llm_usage
+
 
 class LLMBudgetExceededError(RuntimeError):
     """Raised when a hard cap (session request count or tokens-per-day) is hit."""
@@ -100,6 +102,8 @@ class RateBudget:
         self.completion_tokens += completion_tokens or 0
         self.tokens_today += total
         self._window.append((self.clock(), total or 1))
+        # RateBudget is only ever used for the Groq free-tier path (see module docstring).
+        record_llm_usage("groq", prompt_tokens=prompt_tokens or 0, completion_tokens=completion_tokens or 0)
 
     # ------------------------------------------------------------------ #
     @property
@@ -167,10 +171,14 @@ class CostBudget:
 
     def record(self, model: str, prompt_tokens: int, completion_tokens: int) -> None:
         rate_in, rate_out = self._rate(model)
-        self.spent_usd += prompt_tokens / 1e6 * rate_in + completion_tokens / 1e6 * rate_out
+        cost = prompt_tokens / 1e6 * rate_in + completion_tokens / 1e6 * rate_out
+        self.spent_usd += cost
         self.requests_made += 1
         self.prompt_tokens += prompt_tokens or 0
         self.completion_tokens += completion_tokens or 0
+        # CostBudget is only ever used for the Anthropic paid path (see class docstring).
+        record_llm_usage("anthropic", prompt_tokens=prompt_tokens or 0,
+                         completion_tokens=completion_tokens or 0, cost_usd=cost)
 
     @property
     def usage(self) -> dict:

@@ -183,6 +183,18 @@ class PgRepositories:
 
     def __init__(self, url: str | None = None) -> None:
         self._raw = connect_pg(url)
+        # Unlike sqlite3 (which only opens an implicit transaction on the first DML
+        # statement, never on a bare SELECT), psycopg3 under autocommit=False opens one
+        # for EVERY statement, reads included. A long-lived connection (the API; this
+        # class is also what the API uses) that never explicitly commits after a read
+        # leaves that transaction open indefinitely -- observed in practice as a
+        # multi-minute "idle in transaction" session holding locks that blocked an
+        # unrelated DDL statement elsewhere. Autocommit here means each statement is its
+        # own implicit transaction, matching how every Sqlite*Repository method (shared
+        # verbatim with this class, §17) already behaves. `migrate.py` calls
+        # `connect_pg()` directly (not through this class) specifically to keep its own
+        # one-big-transaction bulk copy atomic, so that path is unaffected.
+        self._raw.autocommit = True
         self._conn = _PgConn(self._raw)
         init_pg(self._conn)
         self.companies = SqliteCompanyRepository(self._conn)

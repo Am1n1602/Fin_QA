@@ -39,6 +39,16 @@ class DeterministicEndpoints(unittest.TestCase):
         self.assertTrue(r.json()["db_ready"])
         self.assertTrue(r.json()["engine_ready"])
 
+    def test_metrics_endpoint_records_real_requests(self):
+        self.client.get("/api/v2/companies/TCS/ratios?ratio=roe&period=FY2026")
+        r = self.client.get("/metrics")
+        self.assertEqual(r.status_code, 200)
+        body = r.text
+        # path is the route TEMPLATE, not the real ticker -- confirms no per-company cardinality blowup.
+        self.assertIn('path="/api/v2/companies/{ticker}/ratios"', body)
+        self.assertNotIn('path="/api/v2/companies/TCS/ratios"', body)
+        self.assertIn("finqa_tool_calls_total", body)
+
     def test_companies_list_get_peers(self):
         r = self.client.get("/api/v2/companies")
         self.assertEqual(r.status_code, 200)

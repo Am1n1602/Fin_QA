@@ -1,0 +1,57 @@
+{
+  "title": "Fin·QA v2 — Overview",
+  "uid": "finqa-v2-overview",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "time": { "from": "now-6h", "to": "now" },
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1, "title": "HTTP request rate by route", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [ { "expr": "sum by (path) (rate(finqa_http_requests_total[5m]))", "legendFormat": "{{path}}" } ]
+    },
+    {
+      "id": 2, "title": "HTTP p95 latency by route (s)", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [ { "expr": "histogram_quantile(0.95, sum by (le, path) (rate(finqa_http_request_duration_seconds_bucket[5m])))", "legendFormat": "{{path}}" } ]
+    },
+    {
+      "id": 3, "title": "HTTP 5xx rate", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [ { "expr": "sum(rate(finqa_http_requests_total{status=~\"5..\"}[5m]))", "legendFormat": "5xx/s" } ]
+    },
+    {
+      "id": 4, "title": "Tool call error rate by tool", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [ { "expr": "sum by (tool) (rate(finqa_tool_calls_total{status=\"error\"}[5m]))", "legendFormat": "{{tool}}" } ]
+    },
+    {
+      "id": 5, "title": "Tool call p95 latency by tool (s)", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [ { "expr": "histogram_quantile(0.95, sum by (le, tool) (rate(finqa_tool_call_duration_seconds_bucket[5m])))", "legendFormat": "{{tool}}" } ]
+    },
+    {
+      "id": 6, "title": "LLM requests by provider", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [ { "expr": "sum by (provider) (rate(finqa_llm_requests_total[15m]))", "legendFormat": "{{provider}}" } ]
+    },
+    {
+      "id": 7, "title": "LLM cost, cumulative USD (Anthropic)", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+      "targets": [ { "expr": "finqa_llm_cost_usd_total{provider=\"anthropic\"}", "legendFormat": "{{provider}}" } ]
+    },
+    {
+      "id": 8, "title": "Verification outcomes", "type": "piechart",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
+      "targets": [ { "expr": "sum by (status) (finqa_verification_status_total)", "legendFormat": "{{status}}" } ]
+    },
+    {
+      "id": 9, "title": "Pinned eval baseline accuracy", "type": "bargauge",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
+      "fieldConfig": { "defaults": { "min": 0, "max": 1, "unit": "percentunit" }, "overrides": [] },
+      "targets": [ { "expr": "finqa_eval_baseline_accuracy", "legendFormat": "{{metric}}" } ]
+    }
+  ]
+}

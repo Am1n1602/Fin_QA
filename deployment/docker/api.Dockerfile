@@ -9,12 +9,15 @@ WORKDIR /app
 
 COPY pyproject.toml ./
 COPY finqa_v2/ ./finqa_v2/
+# Just the pinned baseline JSON (not the rest of evaluation/) -- /metrics' eval-monitoring
+# gauges read this; see finqa_v2/api/config.py's FINQA_V2_EVAL_BASELINE_PATH.
+COPY evaluation/regression/baselines/ ./evaluation/regression/baselines/
 
 # CPU-only torch: the default PyPI wheel pulls the full NVIDIA CUDA runtime (several
 # GB of libraries this container, with no GPU, will never use) -- installing torch
 # from PyTorch's own CPU wheel index first means pip never considers the CUDA build.
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
-    && pip install --no-cache-dir ".[api,anthropic]"
+    && pip install --no-cache-dir ".[api,anthropic,observability]"
 
 ENV PYTHONUNBUFFERED=1 \
     FINQA_V2_API_HOST=0.0.0.0 \

@@ -12,6 +12,11 @@ plain module constants, no config framework). See docs/file-guide.md.
     FINQA_V2_NO_RETRIEVER         -- "1" to start without wiring BM25/vector (search &
                                      qa's document evidence degrade; deterministic
                                      endpoints unaffected).
+    FINQA_V2_LOG_JSON             -- "1" for one JSON log line per event (production);
+                                     default is plain text (easier in a dev terminal).
+    FINQA_V2_EVAL_BASELINE_PATH   -- pinned regression-gate baseline JSON to surface via
+                                     /metrics' eval-monitoring gauges (default: the
+                                     deterministic_v2.json this repo ships).
 """
 from __future__ import annotations
 
@@ -34,3 +39,5 @@ NO_RETRIEVER = os.environ.get("FINQA_V2_NO_RETRIEVER") == "1"
 DB_PATH = os.environ.get("FINQA_V2_DB_PATH") or None
 BM25_PATH = Path(os.environ.get("FINQA_V2_BM25_PATH") or (_DATA / "finqa_v2_bm25.pkl"))
 VECTOR_DIR = Path(os.environ.get("FINQA_V2_VECTOR_DIR") or (_DATA / "finqa_v2_vec"))
+EVAL_BASELINE_PATH = Path(os.environ.get("FINQA_V2_EVAL_BASELINE_PATH")
+                          or (_ROOT / "evaluation" / "regression" / "baselines" / "deterministic_v2.json"))

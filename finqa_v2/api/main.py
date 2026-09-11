@@ -10,10 +10,11 @@ Registry (deterministic endpoints) or the Phase-10 ReasoningOrchestrator (/qa, /
 from __future__ import annotations
 
 import logging
+import time
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -32,8 +33,17 @@ from finqa_v2.api.routers import (
     search,
     segments,
 )
+from finqa_v2.observability import (
+    configure_logging,
+    new_request_id,
+    record_http_request,
+    refresh_eval_baseline_gauges,
+    render_latest,
+    request_id_var,
+)
+from finqa_v2.observability.metrics import CONTENT_TYPE_LATEST
 
-logging.basicConfig(level=logging.INFO)
+configure_logging()
 logger = logging.getLogger("finqa.v2.api")
 
 
@@ -109,6 +119,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def observability_middleware(request: Request, call_next):
+    """Tags every log line emitted while handling this request with the same
+    request_id (Phase 25's "tracing" for a single-service deployment -- grep/query
+    one id to see a request's full path through the API, Tool Registry, and LLM
+    provider), and records HTTP-level Prometheus metrics keyed by the route's path
+    TEMPLATE (e.g. `/api/v2/companies/{ticker}`, not `/api/v2/companies/TCS`) so a
+    ticker doesn't become a distinct metric series per company."""
+    request_id = new_request_id()
+    token = request_id_var.set(request_id)
+    t0 = time.perf_counter()
+    status_code = 500
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        response.headers["X-Request-ID"] = request_id
+        return response
+    finally:
+        route = request.scope.get("route")
+        path = route.path if route is not None else request.url.path
+        record_http_request(request.method, path, status_code, time.perf_counter() - t0)
+        request_id_var.reset(token)
+
+
 install_exception_handlers(app)
 
 app.include_router(health.router)
@@ -122,6 +157,16 @@ app.include_router(documents.router)
 app.include_router(search.router)
 app.include_router(research.router)
 app.include_router(qa.router)
+
+
+@app.get("/metrics", include_in_schema=False)
+def metrics() -> Response:
+    """Prometheus scrape target: HTTP/tool/LLM/verification counters and histograms
+    recorded from the choke points they already flow through, plus the pinned
+    regression-gate baseline's accuracy numbers (refreshed from disk on every scrape,
+    so updating the pinned baseline shows up here without an API restart)."""
+    refresh_eval_baseline_gauges(api_config.EVAL_BASELINE_PATH)
+    return Response(content=render_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 def run() -> None:
