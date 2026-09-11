@@ -3,17 +3,17 @@ filing passages by section, and one citation's provenance detail (§13/§18), vi
 Phase-8 get_document_section/get_source tools."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Path, Query
 
-from finqa_v2.api.deps import call_tool, get_registry
+from finqa_v2.api.deps import TICKER_PATTERN, call_tool, get_registry
 
 router = APIRouter(prefix="/api/v2", tags=["documents"])
 
 
 @router.get("/companies/{ticker}/documents/{section}")
 def get_document_section(
-    ticker: str,
-    section: str,
+    ticker: str = Path(..., pattern=TICKER_PATTERN),
+    section: str = Path(...),
     financial_year: int | None = None,
     limit: int = Query(8, ge=1, le=40),
     registry=Depends(get_registry),

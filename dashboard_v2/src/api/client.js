@@ -1,4 +1,7 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8010";
+// `??` (not `||`) so an explicitly-empty string (the Docker build passes "" -- see
+// dashboard.Dockerfile -- meaning "same origin, let nginx reverse-proxy /api/*") isn't
+// overridden by the fallback; only a genuinely unset var (plain `npm run dev`) is.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8010";
 
 export class ApiError extends Error {
   constructor(status, error, detail) {

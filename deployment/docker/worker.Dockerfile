@@ -19,6 +19,14 @@ COPY finqa_v2/ ./finqa_v2/
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir ".[anthropic]"
 
+# Run as an unprivileged user (§26) -- see api.Dockerfile's comment. This one still
+# needs write access to the bind-mounted database/data/ and data_extraction/data/
+# (docker-compose.yml mounts those read-write for this service specifically), which
+# works because those are host bind mounts, not container-owned paths -- there's
+# nothing under /app itself for this container to write to.
+RUN groupadd -r finqa && useradd -r -g finqa -d /app finqa && chown -R finqa:finqa /app
+USER finqa
+
 ENV PYTHONUNBUFFERED=1
 
 CMD ["python", "-m", "finqa_v2.dataset.build"]

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Path, Query
 
-from finqa_v2.api.deps import call_tool, get_registry
+from finqa_v2.api.deps import TICKER_PATTERN, call_tool, get_registry
 from finqa_v2.api.models import Basis
 
 router = APIRouter(prefix="/api/v2/companies/{ticker}/ratios", tags=["ratios"])
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/v2/companies/{ticker}/ratios", tags=["ratios"])
 
 @router.get("")
 def get_ratio(
-    ticker: str,
+    ticker: str = Path(..., pattern=TICKER_PATTERN),
     ratio: str = Query(..., description="roe, roce, ebitda_margin, debt_to_equity, pe, pb, ..."),
     basis: Basis = "consolidated",
     # See financials.py: default is the latest ANNUAL period, not the engine's bare
@@ -28,7 +28,7 @@ def get_ratio(
 
 @router.get("/decompose")
 def decompose(
-    ticker: str,
+    ticker: str = Path(..., pattern=TICKER_PATTERN),
     metric: Literal["roe", "dupont", "net_margin", "net_profit_margin"] = "roe",
     basis: Basis = "consolidated",
     period: str = "latest_annual",

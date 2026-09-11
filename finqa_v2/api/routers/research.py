@@ -9,13 +9,14 @@ from finqa_v2.api.deps import (
     get_orchestrator,
     get_repos,
     rate_limit_qa,
-    require_api_key,
     resolve_company,
 )
 from finqa_v2.api.sanitize import strip_server_paths
 
+# API-key enforcement is global (security_middleware, main.py) -- this router only adds
+# its OWN, much stricter rate limit on top, since an LLM call here has real cost/latency.
 router = APIRouter(prefix="/api/v2/companies/{ticker}/research", tags=["research"],
-                    dependencies=[Depends(require_api_key), Depends(rate_limit_qa)])
+                    dependencies=[Depends(rate_limit_qa)])
 
 
 @router.get("")

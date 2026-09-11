@@ -19,6 +19,13 @@ COPY evaluation/regression/baselines/ ./evaluation/regression/baselines/
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir ".[api,anthropic,observability]"
 
+# Run as an unprivileged user (§26) -- the process serves untrusted HTTP input all day;
+# root inside a container is still a real privilege-escalation surface if any dependency
+# in this fairly large install ever has a container-breakout bug. Created after pip
+# install so the install itself (writing into /usr/local) still runs as root.
+RUN groupadd -r finqa && useradd -r -g finqa -d /app finqa && chown -R finqa:finqa /app
+USER finqa
+
 ENV PYTHONUNBUFFERED=1 \
     FINQA_V2_API_HOST=0.0.0.0 \
     FINQA_V2_API_PORT=8010

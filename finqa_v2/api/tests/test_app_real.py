@@ -147,7 +147,7 @@ class DeterministicEndpoints(unittest.TestCase):
 
 @unittest.skipUnless(DB.exists(), "finqa_v2.db not built")
 class RateLimitAndAuth(unittest.TestCase):
-    """require_api_key / rate_limit_qa read os.environ directly (not a cached config
+    """check_api_key / rate_limit_qa read os.environ directly (not a cached config
     constant), so patching the env here takes effect immediately -- no reload needed."""
 
     @classmethod
@@ -185,6 +185,42 @@ class RateLimitAndAuth(unittest.TestCase):
                                  json={"question": "What was TCS revenue in FY2026?", "use_llm": False},
                                  headers={"X-API-Key": "secret123"})
             self.assertEqual(r.status_code, 200)
+
+    def test_api_key_enforced_globally_not_just_qa_and_research(self):
+        # §26: the key used to only gate /qa and /research (Depends() on those two
+        # routers); it's now enforced on every route via security_middleware.
+        import os
+
+        with mock.patch.dict(os.environ, {"FINQA_V2_API_KEY": "secret123"}):
+            r = self.client.get("/api/v2/companies")
+            self.assertEqual(r.status_code, 401)
+            self.assertEqual(r.json()["error"], "unauthorized")
+            r = self.client.get("/api/v2/companies", headers={"X-API-Key": "secret123"})
+            self.assertEqual(r.status_code, 200)
+
+    def test_health_and_metrics_exempt_from_api_key(self):
+        import os
+
+        with mock.patch.dict(os.environ, {"FINQA_V2_API_KEY": "secret123"}):
+            self.assertEqual(self.client.get("/health").status_code, 200)
+            self.assertEqual(self.client.get("/metrics").status_code, 200)
+
+    def test_general_rate_limit_applies_to_a_non_qa_route(self):
+        import os
+
+        with mock.patch.dict(os.environ, {"FINQA_V2_RATE_LIMIT": "2"}):
+            statuses = [self.client.get("/api/v2/companies").status_code for _ in range(4)]
+        self.assertIn(429, statuses)
+
+    def test_invalid_ticker_format_is_422_before_any_tool_call(self):
+        r = self.client.get("/api/v2/companies/../../etc/passwd")
+        self.assertIn(r.status_code, (404, 422))   # path-traversal-shaped segment never reaches routing as one ticker
+        r = self.client.get("/api/v2/companies/" + "A" * 50)
+        self.assertEqual(r.status_code, 422)
+
+    def test_qa_question_too_long_is_422(self):
+        r = self.client.post("/api/v2/qa", json={"question": "x" * 2001, "use_llm": False})
+        self.assertEqual(r.status_code, 422)
 
 
 if __name__ == "__main__":

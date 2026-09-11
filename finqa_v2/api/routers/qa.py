@@ -8,12 +8,13 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from finqa_v2.api.deps import get_orchestrator, rate_limit_qa, require_api_key
+from finqa_v2.api.deps import get_orchestrator, rate_limit_qa
 from finqa_v2.api.models import QARequest
 from finqa_v2.api.sanitize import strip_server_paths
 
-router = APIRouter(prefix="/api/v2/qa", tags=["qa"],
-                    dependencies=[Depends(require_api_key), Depends(rate_limit_qa)])
+# API-key enforcement is global (security_middleware, main.py) -- this router only adds
+# its OWN, much stricter rate limit on top, since an LLM call here has real cost/latency.
+router = APIRouter(prefix="/api/v2/qa", tags=["qa"], dependencies=[Depends(rate_limit_qa)])
 
 
 @router.post("")

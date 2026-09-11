@@ -83,8 +83,9 @@ services:
     build:
       context: ../..
       dockerfile: deployment/docker/dashboard.Dockerfile
-      args:
-        VITE_API_BASE_URL: http://localhost:8010
+      # no VITE_API_BASE_URL override -- the Dockerfile's own default ("") is what we
+      # want here: same-origin calls that nginx.conf reverse-proxies to the api
+      # container internally, not the browser hitting the published host port.
     container_name: finqa-dashboard-v2
     depends_on:
       - api

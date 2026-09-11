@@ -33,6 +33,7 @@ from finqa_v2.api.routers import (
     search,
     segments,
 )
+from finqa_v2.api.deps import check_api_key, check_general_rate_limit
 from finqa_v2.observability import (
     configure_logging,
     new_request_id,
@@ -42,6 +43,12 @@ from finqa_v2.observability import (
     request_id_var,
 )
 from finqa_v2.observability.metrics import CONTENT_TYPE_LATEST
+
+# /health and /metrics are exempt from both checks below: a load balancer/orchestrator
+# polling /health, and Prometheus scraping /metrics from one fixed source every 15s,
+# are infrastructure, not API traffic -- neither should need a key or be able to trip a
+# per-IP abuse limit meant for the actual API surface.
+_SECURITY_EXEMPT_PATHS = {"/health", "/metrics"}
 
 configure_logging()
 logger = logging.getLogger("finqa.v2.api")
@@ -121,23 +128,51 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def observability_middleware(request: Request, call_next):
+async def observability_and_security_middleware(request: Request, call_next):
     """Tags every log line emitted while handling this request with the same
     request_id (Phase 25's "tracing" for a single-service deployment -- grep/query
     one id to see a request's full path through the API, Tool Registry, and LLM
-    provider), and records HTTP-level Prometheus metrics keyed by the route's path
-    TEMPLATE (e.g. `/api/v2/companies/{ticker}`, not `/api/v2/companies/TCS`) so a
-    ticker doesn't become a distinct metric series per company."""
+    provider), enforces the API key + a general per-IP rate limit on every route (§26 --
+    /qa and /research add their own, much stricter rate limit via `rate_limit_qa`, since
+    an LLM call there has real cost/latency), and records HTTP-level Prometheus metrics
+    keyed by the route's path TEMPLATE (e.g. `/api/v2/companies/{ticker}`, not
+    `/api/v2/companies/TCS`) so a ticker doesn't become a distinct metric series.
+
+    The security checks live here rather than as router-level `Depends()` (like
+    `rate_limit_qa` still is) because they apply uniformly to every route; the
+    alternative -- listing them on all ten routers -- is the same rule copy-pasted ten
+    times, one omission away from a silently-unprotected endpoint. They must return a
+    `JSONResponse` directly (not raise `ApiError`) because exceptions raised in
+    middleware BEFORE `call_next()` run outside FastAPI's own exception-handler
+    pipeline (`install_exception_handlers`, which only sees exceptions raised inside
+    route/dependency resolution) and would otherwise surface as a raw 500."""
     request_id = new_request_id()
     token = request_id_var.set(request_id)
     t0 = time.perf_counter()
     status_code = 500
     try:
+        if request.url.path not in _SECURITY_EXEMPT_PATHS:
+            auth_error = check_api_key(request)
+            # Only spend a rate-limit slot on an authenticated request -- an attacker
+            # probing with no/a wrong key shouldn't also be able to exhaust a real
+            # client's budget by sharing its IP (or get free feedback on how close the
+            # limit is) via a check that runs regardless of the auth outcome.
+            rate_error = None if auth_error else check_general_rate_limit(request)
+            if auth_error or rate_error:
+                status_code = 401 if auth_error else 429
+                code = "unauthorized" if auth_error else "rate_limited"
+                return JSONResponse(status_code=status_code, content={"error": code, "detail": auth_error or rate_error},
+                                    headers={"X-Request-ID": request_id})
         response = await call_next(request)
         status_code = response.status_code
         response.headers["X-Request-ID"] = request_id
         return response
     finally:
+        # `request.scope["route"]` is only set once routing has actually run (inside
+        # call_next()) -- a request rejected above (401/429) falls back to the raw URL
+        # path, so a blocked request CAN show up labelled by its literal ticker rather
+        # than the route template. Accepted as a minor, rare-path imperfection: fixing
+        # it would mean duplicating FastAPI's own route resolution before dispatch.
         route = request.scope.get("route")
         path = route.path if route is not None else request.url.path
         record_http_request(request.method, path, status_code, time.perf_counter() - t0)

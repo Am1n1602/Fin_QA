@@ -2,9 +2,9 @@
 Phase-8 get_metric tool. Never recomputed here."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Path, Query
 
-from finqa_v2.api.deps import call_tool, get_registry
+from finqa_v2.api.deps import TICKER_PATTERN, call_tool, get_registry
 from finqa_v2.api.models import Basis
 
 router = APIRouter(prefix="/api/v2/companies/{ticker}/financials", tags=["financials"])
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/api/v2/companies/{ticker}/financials", tags=["financ
 
 @router.get("")
 def get_financials(
-    ticker: str,
+    ticker: str = Path(..., pattern=TICKER_PATTERN),
     metric: str = Query(..., description="canonical or derived metric, e.g. revenue, ebitda"),
     basis: Basis = "consolidated",
     # Default is "latest_annual", not the engine's own "latest" (= the single most-recent

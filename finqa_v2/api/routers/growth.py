@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Path, Query
 
-from finqa_v2.api.deps import call_tool, get_registry
+from finqa_v2.api.deps import TICKER_PATTERN, call_tool, get_registry
 from finqa_v2.api.models import Basis
 
 router = APIRouter(prefix="/api/v2/companies/{ticker}/growth", tags=["growth"])
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/v2/companies/{ticker}/growth", tags=["growth"])
 
 @router.get("")
 def get_growth(
-    ticker: str,
+    ticker: str = Path(..., pattern=TICKER_PATTERN),
     metric: str = Query(..., description="canonical or derived metric, e.g. revenue, net_profit"),
     kind: Literal["yoy", "qoq"] = "yoy",
     basis: Basis = "consolidated",
@@ -25,7 +25,7 @@ def get_growth(
 
 @router.get("/cagr")
 def get_cagr(
-    ticker: str,
+    ticker: str = Path(..., pattern=TICKER_PATTERN),
     metric: str = Query(...),
     basis: Basis = "consolidated",
     years: float | None = None,

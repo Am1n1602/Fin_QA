@@ -9,9 +9,9 @@ from dataclasses import asdict
 from time import perf_counter
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Path, Query
 
-from finqa_v2.api.deps import call_tool, get_engine, get_registry
+from finqa_v2.api.deps import TICKER_PATTERN, call_tool, get_engine, get_registry
 from finqa_v2.api.models import Basis
 from finqa_v2.api.sanitize import strip_server_paths
 
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/api/v2/companies/{ticker}/segments", tags=["segments
 
 @router.get("")
 def get_segments(
-    ticker: str,
+    ticker: str = Path(..., pattern=TICKER_PATTERN),
     basis: Basis = "consolidated",
     period: str = "latest_annual",
     registry=Depends(get_registry),
@@ -30,7 +30,7 @@ def get_segments(
 
 @router.get("/growth")
 def segment_growth(
-    ticker: str,
+    ticker: str = Path(..., pattern=TICKER_PATTERN),
     basis: Basis = "consolidated",
     kind: Literal["yoy", "qoq"] = "yoy",
     engine=Depends(get_engine),
