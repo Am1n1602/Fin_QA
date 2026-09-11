@@ -169,7 +169,11 @@ class ReasoningOrchestrator:
         from the plan. Tools that can't be satisfied from the plan are skipped."""
         co = plan.companies[0] if plan.companies else None
         metric = plan.metrics[0] if plan.metrics else None
-        period = plan.periods[0] if plan.periods else "latest"
+        # A bare, unstated period defaults to the latest ANNUAL figure, not the engine's
+        # own "latest" (= the single most-recent period record, almost always a QUARTER
+        # for an actively-quarterly-filing company -- an unannualised ratio ~4x too small).
+        # A period the user actually named in the question (plan.periods) always wins.
+        period = plan.periods[0] if plan.periods else "latest_annual"
 
         for name in plan.tools:
             if name == "get_metric" and co:
@@ -182,7 +186,7 @@ class ReasoningOrchestrator:
                 yield name, {"ticker": co, "metric": metric or "revenue"}
             elif name == "compare_companies":
                 m = metric or ("roe" if plan.intent is Intent.RANKING else "revenue")
-                yield name, {"metric": m, "tickers": list(plan.companies)}
+                yield name, {"metric": m, "tickers": list(plan.companies), "period": period}
             elif name == "compare_periods" and co and len(plan.periods) >= 2:
                 yield name, {"ticker": co, "metrics": plan.metrics or ["revenue", "net_profit"],
                              "a": plan.periods[0], "b": plan.periods[1]}
@@ -190,7 +194,7 @@ class ReasoningOrchestrator:
                 yield name, {"ticker": co, "period": "latest_annual"}
             elif name == "decompose_metric" and co:
                 dm = "roe" if (metric in (None, "roe", "roce", "roa")) else "net_margin"
-                yield name, {"ticker": co, "metric": dm}
+                yield name, {"ticker": co, "metric": dm, "period": period}
             elif name == "search_documents":
                 a = {"query": plan.question, "k": 5}
                 if len(plan.companies) == 1:

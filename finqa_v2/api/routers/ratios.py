@@ -17,7 +17,10 @@ def get_ratio(
     ticker: str,
     ratio: str = Query(..., description="roe, roce, ebitda_margin, debt_to_equity, pe, pb, ..."),
     basis: Basis = "consolidated",
-    period: str = "latest",
+    # See financials.py: default is the latest ANNUAL period, not the engine's bare
+    # "latest" (usually a quarter), so an omitted period doesn't silently understate a
+    # ratio like ROE by ~4x.
+    period: str = "latest_annual",
     registry=Depends(get_registry),
 ):
     return call_tool(registry, "get_ratio", ticker=ticker, ratio=ratio, basis=basis, period=period)
@@ -28,7 +31,7 @@ def decompose(
     ticker: str,
     metric: Literal["roe", "dupont", "net_margin", "net_profit_margin"] = "roe",
     basis: Basis = "consolidated",
-    period: str = "latest",
+    period: str = "latest_annual",
     registry=Depends(get_registry),
 ):
     return call_tool(registry, "decompose_metric", ticker=ticker, metric=metric, basis=basis, period=period)

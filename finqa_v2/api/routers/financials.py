@@ -15,7 +15,10 @@ def get_financials(
     ticker: str,
     metric: str = Query(..., description="canonical or derived metric, e.g. revenue, ebitda"),
     basis: Basis = "consolidated",
-    period: str = Query("latest", description="'latest' | 'latest_annual' | 'FY2026' | 'FY2026Q1'"),
+    # Default is "latest_annual", not the engine's own "latest" (= the single most-recent
+    # period record, almost always a QUARTER for an actively-quarterly-filing company --
+    # an unannualised figure that looks plausible but is wrong for anyone who omits period).
+    period: str = Query("latest_annual", description="'latest_annual' | 'latest' | 'FY2026' | 'FY2026Q1'"),
     registry=Depends(get_registry),
 ):
     return call_tool(registry, "get_metric", ticker=ticker, metric=metric, basis=basis, period=period)

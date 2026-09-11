@@ -21,7 +21,12 @@ SYSTEM = (
 )
 
 _FACTLIKE = (EvidenceType.FINANCIAL_FACT, EvidenceType.RATIO, EvidenceType.GROWTH,
-             EvidenceType.SEGMENT, EvidenceType.CALCULATION)
+             EvidenceType.SEGMENT, EvidenceType.CALCULATION, EvidenceType.COMPARISON)
+# Evidence whose own `text` is already a full, self-contained descriptive sentence
+# (segment name, or "<ticker> ranked #N on <metric>") -- genericizing it to
+# "{company} {metric} = {value}" would show identical, nameless rows for every segment
+# or every ranked company (see evidence/build.py).
+_DESCRIPTIVE = (EvidenceType.SEGMENT, EvidenceType.COMPARISON)
 
 
 def _fmt_value(v, unit) -> str:
@@ -38,10 +43,14 @@ def render_workspace(workspace) -> str:
     if facts:
         lines.append("FACTS & CALCULATIONS:")
         for e in facts:
-            head = " ".join(x for x in (e.company, e.metric or e.type.value,
-                                        f"({e.period})" if e.period else "") if x)
-            tail = f"  [{e.formula}]" if e.formula else ""
-            lines.append(f"  ({e.evidence_id}) {head} = {_fmt_value(e.value, e.unit)}{tail}")
+            if e.type in _DESCRIPTIVE:
+                period = f" ({e.period})" if e.period else ""
+                lines.append(f"  ({e.evidence_id}) {e.text}{period}".strip())
+            else:
+                head = " ".join(x for x in (e.company, e.metric or e.type.value,
+                                            f"({e.period})" if e.period else "") if x)
+                tail = f"  [{e.formula}]" if e.formula else ""
+                lines.append(f"  ({e.evidence_id}) {head} = {_fmt_value(e.value, e.unit)}{tail}")
             for lim in e.limitations:
                 lines.append(f"      note: {lim}")
     if docs:
@@ -121,16 +130,38 @@ def deterministic_answer(question: str, plan, workspace, *, analysis=None) -> di
     """
     if analysis is not None:
         return _deterministic_analysis_answer(analysis)
-    facts = [e for e in workspace if e.type in _FACTLIKE and e.value is not None]
+    all_factlike = [e for e in workspace if e.type in _FACTLIKE]
+    facts = [e for e in all_factlike if e.value is not None]
+    # A requested metric/period the engine couldn't resolve (e.g. a period outside the
+    # data's coverage) still carries a specific, honest reason on the evidence itself
+    # (e.g. "dividend_yield: ... not all available for TCS at period=FY2021") -- surface
+    # that instead of only a generic "insufficient evidence" with no explanation.
+    missing = [e for e in all_factlike if e.value is None]
+    # Descriptive evidence (segments, comparison/ranking rows) is rendered separately
+    # from the other facts, and in full: each row is its own named entity (see
+    # evidence/build.py's e.text), not a value competing with unrelated metrics for a
+    # spot in the top-6 -- a company brief should list every segment, and a comparison
+    # every ranked company, not silently drop some because other facts were fetched first.
+    descriptive_facts = [e for e in facts if e.type in _DESCRIPTIVE]
+    other_facts = [e for e in facts if e.type not in _DESCRIPTIVE]
     docs = workspace.documents()
     sentences = []
     claims = []
-    for e in facts[:6]:
+    for e in other_facts[:6]:
         head = " ".join(x for x in (e.company, (e.metric or e.type.value).replace("_", " "),
                                     f"in {e.period}" if e.period else "") if x)
         sentences.append(f"{head} was {_fmt_value(e.value, e.unit)}.")
         claims.append({"text": sentences[-1], "kind": "numeric", "evidence_ids": [e.evidence_id]})
+    for e in descriptive_facts:
+        period = f" in {e.period}" if e.period else ""
+        sentence = f"{e.text}{period}.".strip()
+        sentences.append(sentence)
+        claims.append({"text": sentence, "kind": "numeric", "evidence_ids": [e.evidence_id]})
     limitations = ["Answer assembled directly from retrieved evidence; no LLM synthesis was run."]
+    for e in missing:
+        for lim in e.limitations:
+            if lim not in limitations:
+                limitations.append(lim)
     if plan.intent.value in ("causal", "cross_validation") and not docs:
         limitations.append("No supporting document passages were retrieved, so the cause is not established.")
     if not sentences:

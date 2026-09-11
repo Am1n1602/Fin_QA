@@ -15,7 +15,10 @@ def rankings(
     metric: str = Query(..., description="a metric or ratio name, e.g. roe, revenue"),
     tickers: str = Query(..., description="comma-separated NSE tickers"),
     basis: Basis = "consolidated",
-    period: str = "latest",
+    # See financials.py: default is the latest ANNUAL period, not the engine's bare
+    # "latest" (usually a quarter), so an omitted period doesn't silently understate a
+    # ratio like ROE by ~4x.
+    period: str = "latest_annual",
     registry=Depends(get_registry),
 ):
     ticker_list = [t.strip() for t in tickers.split(",") if t.strip()]

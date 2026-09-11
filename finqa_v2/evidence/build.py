@@ -144,21 +144,54 @@ def evidence_from_retrieved_chunk(hit, *, repos=None, company: str | None = None
 
 
 # --------------------------------------------------------------------------- #
+# Company comparison / ranking
+# --------------------------------------------------------------------------- #
+
+def evidence_from_compare_result(res: dict, *, workspace=None) -> list[Evidence]:
+    """Adapter for FinancialEngine.compare_companies' return dict -- a ranking across
+    several tickers, not a single EngineResult, so evidence_from_engine_result doesn't
+    apply. Without this, a comparison/ranking answer had NO evidence at all (the tool
+    registration used to hand back an empty evidence list), so the deterministic
+    synthesizer and the LLM prompt both had nothing to cite and silently fell back to
+    whatever other single-company tool happened to also be planned."""
+    out: list[Evidence] = []
+    ev_type = EvidenceType.COMPARISON
+    metric_label = (res.get("metric") or "").replace("_", " ")
+    unit = res.get("unit")
+    for row in res.get("results", []):
+        period = row.get("period") or res.get("period")
+        text = (f"{row['ticker']} ranked #{row['rank']} on {metric_label}: "
+                f"{row['value']}" + (f" {unit}" if unit else ""))
+        ev = Evidence(
+            evidence_id=_id("cmp"),
+            type=ev_type,
+            text=text, company=row["ticker"], metric=res.get("metric"),
+            period=period, value=row["value"], unit=unit,
+            confidence=evidence_confidence_for_type(ev_type),
+        )
+        out.append(ev)
+        if workspace is not None:
+            workspace.add(ev)
+    return out
+
+
+# --------------------------------------------------------------------------- #
 # Segments
 # --------------------------------------------------------------------------- #
 
 def evidence_from_segment_result(res, *, workspace=None) -> list[Evidence]:
     out: list[Evidence] = []
     for row in res.rows:
+        company = f"{res.company} " if res.company else ""
         if hasattr(row, "contribution_pct"):          # SegmentRow (level)
-            text = (f"{row.segment}: revenue {row.revenue:,.0f} INR"
+            text = (f"{company}{row.segment}: revenue {row.revenue:,.0f} INR"
                     + (f", {row.contribution_pct:.1f}% of total" if row.contribution_pct is not None else ""))
             value = row.revenue
         else:                                          # SegmentGrowthRow (change)
             share = (f", {row.share_of_total_change_pct:+.0f}% of the total change"
                      if row.share_of_total_change_pct is not None else "")
             gp = f" ({row.growth_pct:+.1f}%)" if row.growth_pct is not None else ""
-            text = f"{row.segment}: revenue change {row.abs_change:+,.0f} INR{gp}{share}"
+            text = f"{company}{row.segment}: revenue change {row.abs_change:+,.0f} INR{gp}{share}"
             value = row.abs_change
         ev = Evidence(
             evidence_id=_id("seg"),

@@ -70,7 +70,9 @@ _OVERVIEW = re.compile(r"\boverview\b|\bfundamental(s)?\b|\btell me about\b|\bsu
 
 _FY_RE = re.compile(r"\bFY\s?'?(\d{2}(?:\d{2})?)(?:\s?Q([1-4]))?\b", re.I)
 _FYRANGE_RE = re.compile(r"\b(20\d{2})[-/](\d{2})\b")
-_YEAR_RE = re.compile(r"\b(?:in|for|during|ended)\s+(20\d{2})\b", re.I)
+_YEAR_RE = re.compile(
+    r"\b(?:in|for|during|ended)\s+(?:the\s+)?(?:financial\s+)?(?:year\s+)?(?:ended\s+)?"
+    r"(?:\d{1,2}\s+\w+\s+)?(20\d{2})(?!-\d{2})\b", re.I)
 _LAST_N = re.compile(r"\b(?:last|past)\s+(one|two|three|four|five|\d+)\s+years?\b", re.I)
 _LATEST = re.compile(r"\b(latest|most recent|current|now|today)\b", re.I)
 _WORDS_N = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}

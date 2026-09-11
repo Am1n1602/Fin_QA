@@ -58,7 +58,7 @@ def evidence_confidence_for_type(ev_type: EvidenceType, **kw) -> float:
         return fact_confidence(**{k: kw[k] for k in ("derived", "review_flagged") if k in kw})
     if ev_type in (EvidenceType.RATIO, EvidenceType.GROWTH):
         return ratio_confidence(**{k: kw[k] for k in ("review_flagged", "missing_optional") if k in kw})
-    if ev_type is EvidenceType.SEGMENT:
+    if ev_type in (EvidenceType.SEGMENT, EvidenceType.COMPARISON):
         return 0.9
     if ev_type is EvidenceType.DOCUMENT:
         return document_confidence(**{k: kw[k] for k in

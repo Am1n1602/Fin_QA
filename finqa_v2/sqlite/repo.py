@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import sqlite3
+import threading
 from datetime import date, datetime
 from pathlib import Path
 from typing import Iterable, Optional
@@ -33,18 +34,92 @@ _SCHEMA_PATH = Path(__file__).with_name("schema_v2.sql")
 # connection / bootstrap
 # --------------------------------------------------------------------------- #
 
+class _MaterializedCursor:
+    """Replays rows fetched while `_ThreadSafeConnection`'s lock was held. `fetchone`/
+    `fetchall`/`fetchmany` afterward touch only this list, never the shared connection, so
+    they need no lock of their own."""
+
+    def __init__(self, rows: list, lastrowid, rowcount: int):
+        self._rows = rows
+        self._pos = 0
+        self.lastrowid = lastrowid
+        self.rowcount = rowcount
+
+    def fetchone(self):
+        if self._pos >= len(self._rows):
+            return None
+        row = self._rows[self._pos]
+        self._pos += 1
+        return row
+
+    def fetchall(self) -> list:
+        rows = self._rows[self._pos:]
+        self._pos = len(self._rows)
+        return rows
+
+    def fetchmany(self, size: int = 1) -> list:
+        rows = self._rows[self._pos:self._pos + size]
+        self._pos += len(rows)
+        return rows
+
+    def __iter__(self):
+        return iter(self.fetchall())
+
+
+class _ThreadSafeConnection:
+    """A minimal sqlite3.Connection proxy for `check_same_thread=False` callers (the API):
+    serializes every `execute`/`executescript`/`commit` behind a lock. Despite
+    `sqlite3.threadsafety == 3` ("serialized" at the C library level), Python's sqlite3
+    module does NOT guarantee one connection object is safe to use from multiple threads at
+    once -- observed in practice as `InterfaceError: bad parameter or other API misuse` and
+    wrong rows back (e.g. `EngineError: unknown company: 'TCS'`) under finqa_v2/api/'s
+    thread-pooled request handling. An earlier version of this proxy locked only the
+    `execute()` call and let `fetchone()`/`fetchall()` run afterward unlocked, on the
+    assumption that a `Cursor` holds its own prepared-statement state once created -- that
+    assumption was wrong: cursors from the same connection share connection-level state
+    (e.g. the statement cache), so concurrent fetches could still corrupt each other, and
+    the same symptoms kept recurring under real load. Fix: `execute()` now fetches all rows
+    itself while still holding the lock and hands back a `_MaterializedCursor` replaying
+    them -- no code path touches the shared connection after the lock is released."""
+
+    def __init__(self, conn: sqlite3.Connection):
+        self._conn = conn
+        self._lock = threading.Lock()
+
+    def execute(self, *args, **kwargs) -> _MaterializedCursor:
+        with self._lock:
+            cur = self._conn.execute(*args, **kwargs)
+            rows = cur.fetchall()
+            return _MaterializedCursor(rows, cur.lastrowid, cur.rowcount)
+
+    def executescript(self, *args, **kwargs):
+        with self._lock:
+            return self._conn.executescript(*args, **kwargs)
+
+    def commit(self):
+        with self._lock:
+            return self._conn.commit()
+
+    def close(self):
+        return self._conn.close()
+
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+
+
 def connect(db_path: str | Path = DEFAULT_V2_DB_PATH, *, check_same_thread: bool = True) -> sqlite3.Connection:
     """`check_same_thread=False` is for a long-lived server (finqa_v2/api/) that answers
-    each request on a different worker thread from one connection built at startup --
-    sqlite3.threadsafety == 3 ("serialized") on this build makes that safe without extra
-    locking. Every other caller keeps the default (single-threaded scripts/tests)."""
+    each request on a different worker thread from one connection built at startup -- the
+    connection comes back wrapped in `_ThreadSafeConnection` so concurrent requests can't
+    corrupt it. Every other caller keeps the default (single-threaded scripts/tests),
+    getting the raw, unwrapped connection exactly as before."""
     db_path = Path(db_path)
     if db_path != Path(":memory:") and str(db_path) != ":memory:":
         db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(db_path), check_same_thread=check_same_thread)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+    return _ThreadSafeConnection(conn) if not check_same_thread else conn
 
 
 def init_db(conn: sqlite3.Connection) -> None:

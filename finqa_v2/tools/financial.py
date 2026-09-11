@@ -7,7 +7,12 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from finqa_v2.evidence import EvidenceSet, evidence_from_engine_result, evidence_from_segment_result
+from finqa_v2.evidence import (
+    EvidenceSet,
+    evidence_from_compare_result,
+    evidence_from_engine_result,
+    evidence_from_segment_result,
+)
 
 _Basis = Literal["consolidated", "standalone"]
 
@@ -95,7 +100,7 @@ def register(reg, engine) -> None:
             _Cagr, lambda m: _payload(engine.get_cagr(m.ticker, m.metric, basis=m.basis, years=m.years)))
     reg.add("compare_companies", "Rank a set of companies on one metric/ratio for a period.",
             _CompareCompanies,
-            lambda m: (engine.compare_companies(m.metric, m.tickers, basis=m.basis, period=m.period), []))
+            lambda m: _compare_payload(engine.compare_companies(m.metric, m.tickers, basis=m.basis, period=m.period)))
     reg.add("compare_periods", "Compare metrics for one company across two periods.",
             _ComparePeriods,
             lambda m: _payload(engine.compare_periods(m.ticker, m.metrics, basis=m.basis, a=m.a, b=m.b)))
@@ -103,6 +108,12 @@ def register(reg, engine) -> None:
             _Segment, lambda m: _segment_payload(engine.get_segment_data(m.ticker, basis=m.basis, period=m.period)))
     reg.add("decompose_metric", "Decompose ROE (DuPont) or the net-margin change between two periods.",
             _Decompose, lambda m: _payload(engine.decompose_metric(m.ticker, m.metric, basis=m.basis, period=m.period)))
+
+
+def _compare_payload(res: dict) -> tuple[dict, list[dict]]:
+    ws = EvidenceSet()
+    evidence_from_compare_result(res, workspace=ws)
+    return res, ws.to_list()
 
 
 def _segment_payload(res) -> tuple[dict, list[dict]]:

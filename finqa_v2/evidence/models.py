@@ -14,6 +14,7 @@ class EvidenceType(str, Enum):
     SEGMENT = "segment"                 # segment-level revenue / contribution
     DOCUMENT = "document"               # a retrieved passage from a filing
     CALCULATION = "calculation"         # the output of an explicit calculation
+    COMPARISON = "comparison"           # one company's row in a compare_companies ranking
 
 
 class ClaimStatus(str, Enum):
