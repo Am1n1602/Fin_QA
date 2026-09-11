@@ -39,17 +39,20 @@ logger = logging.getLogger("finqa.v2.api")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from finqa_v2.db import repositories_from_env
     from finqa_v2.engine import FinancialEngine
     from finqa_v2.llm import provider_from_env
     from finqa_v2.reasoning import ReasoningOrchestrator
-    from finqa_v2.sqlite import DEFAULT_V2_DB_PATH, SqliteRepositories
     from finqa_v2.tools import build_default_registry
 
-    db_path = api_config.DB_PATH or DEFAULT_V2_DB_PATH
-    logger.info("Opening finqa_v2.db at %s ...", db_path)
-    # one connection built here is reused across every request's worker thread --
-    # sqlite3.threadsafety == 3 (serialized) makes that safe; see repo.py's connect().
-    repos = SqliteRepositories(db_path, check_same_thread=False)
+    # FINQA_PG_URL/DATABASE_URL in the environment switches this to PostgreSQL
+    # (finqa_v2/postgres/repo.py) with no code change -- production deployments run
+    # Postgres as its own service; local dev defaults to the bundled SQLite file.
+    # Either backend answers each request on a different worker thread from one
+    # connection built here, so both wrap that connection in their own internal lock
+    # (_ThreadSafeConnection / _PgConn) rather than opening one per request.
+    repos = repositories_from_env(sqlite_path=api_config.DB_PATH, check_same_thread=False)
+    logger.info("Repositories ready (%s).", type(repos).__name__)
     engine = FinancialEngine(repos)
 
     retriever = None

@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-QA_ROUTER_DIR = ROOT / "qa_router"
+QA_ROUTER_DIR = ROOT / "archive" / "qa_router"          # v1 moved into archive/
 REPORTS_DIR = ROOT / "evaluation" / "reports"
 
 

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import os
 import re
+import threading
 from pathlib import Path
 
 import psycopg
@@ -95,52 +96,70 @@ def _row_factory(cursor):
 
 
 class _PgCursor:
+    """Materializes its full result set at construction time -- called from inside
+    _PgConn.execute() while its lock is held, so fetchone()/fetchall() afterward
+    touch only this object, never the shared psycopg connection. Mirrors
+    finqa_v2/sqlite/repo.py's `_MaterializedCursor` fix for the identical bug class:
+    a DB-API connection (sqlite3 or psycopg3 alike) is not safe for concurrent use
+    across threads even via separate cursors, since cursors from the same connection
+    share connection-level (wire-protocol) state."""
+
     def __init__(self, cur):
-        self._cur = cur
         self.lastrowid = None
         if cur.description and cur.rowcount != 0:
             try:
-                first = cur.fetchone()
+                rows = cur.fetchall()
             except psycopg.ProgrammingError:
-                first = None
-            self._buffer = [first] if first is not None else []
-            if first is not None and len(first) == 1:
-                self.lastrowid = first[0]
+                rows = []
         else:
-            self._buffer = []
+            rows = []
+        self._buffer = list(rows)
+        if self._buffer and len(self._buffer[0]) == 1:
+            self.lastrowid = self._buffer[0][0]
 
     def fetchone(self):
         if self._buffer:
             return self._buffer.pop(0)
-        return self._cur.fetchone()
+        return None
 
     def fetchall(self):
-        rest = self._cur.fetchall()
-        out, self._buffer = self._buffer + list(rest), []
+        out, self._buffer = self._buffer, []
         return out
+
+    def __iter__(self):
+        return iter(self.fetchall())
 
     def __iter__(self):
         return iter(self.fetchall())
 
 
 class _PgConn:
-    """Minimal sqlite3.Connection-shaped adapter over a psycopg3 connection."""
+    """Minimal sqlite3.Connection-shaped adapter over a psycopg3 connection.
+    Serializes every execute()/executescript()/commit() behind a lock -- psycopg3
+    connections, like sqlite3 connections, are not safe for concurrent use from
+    multiple threads (finqa_v2/api's thread-pooled request handling is exactly this
+    case). `execute()` holds the lock through the full cursor-create + run + fetch
+    cycle (see `_PgCursor`), not just the `.execute()` call itself."""
 
     def __init__(self, conn: psycopg.Connection):
         self._conn = conn
+        self._lock = threading.Lock()
 
     def execute(self, sql: str, params=None):
-        cur = self._conn.cursor(row_factory=_row_factory)
-        cur.execute(_translate(sql), params if params is not None else None)
-        return _PgCursor(cur)
+        with self._lock:
+            cur = self._conn.cursor(row_factory=_row_factory)
+            cur.execute(_translate(sql), params if params is not None else None)
+            return _PgCursor(cur)
 
     def executescript(self, sql: str) -> None:
-        with self._conn.cursor() as cur:
-            cur.execute(sql)
-        self._conn.commit()
+        with self._lock:
+            with self._conn.cursor() as cur:
+                cur.execute(sql)
+            self._conn.commit()
 
     def commit(self) -> None:
-        self._conn.commit()
+        with self._lock:
+            self._conn.commit()
 
     def close(self) -> None:
         self._conn.close()

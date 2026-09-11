@@ -1,0 +1,21 @@
+# Keep the build context small -- these never need to reach a container image.
+.git/
+venv/
+node_modules/
+__pycache__/
+*.pyc
+*.egg-info/
+archive/
+data/
+Claude outputs/
+.claude/
+
+# database/data/ and data_extraction/data/ are mounted as volumes at runtime
+# (see deployment/compose/docker-compose.yml), never baked into an image.
+database/data/
+data_extraction/data/
+
+dashboard_v2/node_modules/
+dashboard_v2/dist/
+
+evaluation/reports/*.json

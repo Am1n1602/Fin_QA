@@ -31,13 +31,16 @@ dependencies = [
 anthropic = ["anthropic>=0.39"]
 api = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
 ocr = ["pytesseract", "pillow"]
+storage = ["boto3>=1.34"]
 
 [project.scripts]
-finqa = "fin_llm_platform.cli:main"
-finqa-pipeline = "fin_llm_platform.pipeline:main"
-finqa-setup = "fin_llm_platform.setup_scheduler:main"
-finqa-api = "api.main:run"
+# fin_llm_platform/ and api/ (v1) moved into archive/ -- still installable/runnable,
+# just no longer the primary system. finqa_v2 is unaffected either way.
+finqa = "archive.fin_llm_platform.cli:main"
+finqa-pipeline = "archive.fin_llm_platform.pipeline:main"
+finqa-setup = "archive.fin_llm_platform.setup_scheduler:main"
+finqa-api = "archive.api.main:run"
 finqa-api-v2 = "finqa_v2.api.main:run"
 
 [tool.setuptools.packages.find]
-include = ["fin_llm_platform*", "api*", "finqa_v2*"]
+include = ["archive", "archive.fin_llm_platform*", "archive.api*", "finqa_v2*"]

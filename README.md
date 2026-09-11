@@ -89,7 +89,7 @@ evaluation/           The internal benchmark, evaluators, baseline comparison, r
 deployment/           PostgreSQL + pgvector compose setup (an alternative to SQLite).
 ```
 
-A separate, earlier iteration of this project (`data_extraction/`, `data_analysis/`, `database/`, `rag/`, `qa_router/`, `llm_router/`, `orchestrator/`, `fin_llm_platform/`, top-level `api/`, top-level `dashboard/`) still exists on disk and still runs — it was the first working version and is kept frozen as a stable reference point rather than deleted. `finqa_v2/` and `dashboard_v2/` are additive: nothing above is a rewrite *of* that code, and nothing in this project modifies it.
+A separate, earlier iteration of this project — `data_analysis/`, `rag/`, `qa_router/`, `llm_router/`, `orchestrator/`, `fin_llm_platform/`, and its own `api/`/`dashboard/` — was the first working version and is kept as a stable, still-runnable reference point under `archive/`, rather than deleted (its console commands, `finqa`/`finqa-pipeline`/`finqa-setup`/`finqa-api`, still work from there). The `data_extraction/data/` and `database/data/` folders it also used are the two exceptions: they stayed at the repo root because `finqa_v2/`'s own dataset-rebuild pipeline reads from them directly. `finqa_v2/` and `dashboard_v2/` are additive: nothing above is a rewrite *of* that earlier code, and nothing in this project modifies it.
 
 ---
 
