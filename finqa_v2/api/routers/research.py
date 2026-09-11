@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from finqa_v2.api.deps import (
     get_orchestrator,
     get_repos,
+    get_research_cache,
     rate_limit_qa,
     resolve_company,
 )
@@ -25,8 +26,13 @@ def research(
     use_llm: bool = Query(True, description="False forces the deterministic (no-LLM) synthesis path."),
     repos=Depends(get_repos),
     orchestrator=Depends(get_orchestrator),
+    cache=Depends(get_research_cache),
 ):
     company = resolve_company(repos, ticker)
-    question = f"Give a fundamental overview of {company.ticker}."
-    result = orchestrator.answer(question, use_llm=use_llm, claim_graph_reachable_only=True)
-    return strip_server_paths(result.to_dict())
+
+    def compute():
+        question = f"Give a fundamental overview of {company.ticker}."
+        result = orchestrator.answer(question, use_llm=use_llm, claim_graph_reachable_only=True)
+        return strip_server_paths(result.to_dict())
+
+    return cache.get_or_compute((company.ticker, use_llm), compute)

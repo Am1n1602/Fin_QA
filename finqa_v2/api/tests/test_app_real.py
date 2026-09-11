@@ -131,6 +131,33 @@ class DeterministicEndpoints(unittest.TestCase):
         self.assertEqual(r.status_code, 404)
         self.assertEqual(r.json()["error"], "company_not_found")
 
+    def test_qa_and_research_answers_are_cached_across_identical_requests(self):
+        # Phase 27: an identical (question, use_llm) or (ticker, use_llm) request should
+        # not re-run the full orchestrator pipeline -- wrap the real .answer so we can
+        # count invocations without faking the computation itself.
+        orchestrator = self._app.state.orchestrator
+        real_answer = orchestrator.answer
+        calls = {"n": 0}
+
+        def counting_answer(*args, **kwargs):
+            calls["n"] += 1
+            return real_answer(*args, **kwargs)
+
+        with mock.patch.object(orchestrator, "answer", side_effect=counting_answer):
+            r1 = self.client.post("/api/v2/qa", json={"question": "What was Infosys revenue in FY2026?",
+                                                       "use_llm": False})
+            r2 = self.client.post("/api/v2/qa", json={"question": "What was Infosys revenue in FY2026?",
+                                                       "use_llm": False})
+            self.assertEqual(r1.status_code, r2.status_code, 200)
+            self.assertEqual(r1.json(), r2.json())
+            self.assertEqual(calls["n"], 1)
+
+            calls["n"] = 0
+            r3 = self.client.get("/api/v2/companies/WIPRO/research?use_llm=false")
+            r4 = self.client.get("/api/v2/companies/WIPRO/research?use_llm=false")
+            self.assertEqual(r3.json(), r4.json())
+            self.assertEqual(calls["n"], 1)
+
     def test_claim_graph_is_reachable_only_in_the_api(self):
         r = self.client.post("/api/v2/qa", json={"question": "Why did HCLTECH profitability decline?",
                                                   "use_llm": False})

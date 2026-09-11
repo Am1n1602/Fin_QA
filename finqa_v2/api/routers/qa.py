@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from finqa_v2.api.deps import get_orchestrator, rate_limit_qa
+from finqa_v2.api.deps import get_orchestrator, get_qa_cache, rate_limit_qa
 from finqa_v2.api.models import QARequest
 from finqa_v2.api.sanitize import strip_server_paths
 
@@ -18,6 +18,9 @@ router = APIRouter(prefix="/api/v2/qa", tags=["qa"], dependencies=[Depends(rate_
 
 
 @router.post("")
-def ask(body: QARequest, orchestrator=Depends(get_orchestrator)):
-    result = orchestrator.answer(body.question, use_llm=body.use_llm, claim_graph_reachable_only=True)
-    return strip_server_paths(result.to_dict())
+def ask(body: QARequest, orchestrator=Depends(get_orchestrator), cache=Depends(get_qa_cache)):
+    def compute():
+        result = orchestrator.answer(body.question, use_llm=body.use_llm, claim_graph_reachable_only=True)
+        return strip_server_paths(result.to_dict())
+
+    return cache.get_or_compute((body.question, body.use_llm), compute)

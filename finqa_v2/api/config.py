@@ -17,6 +17,18 @@ plain module constants, no config framework). See docs/file-guide.md.
     FINQA_V2_NO_RETRIEVER         -- "1" to start without wiring BM25/vector (search &
                                      qa's document evidence degrade; deterministic
                                      endpoints unaffected).
+    FINQA_V2_RERANK               -- "1" to wire the real cross-encoder reranker (§16,
+                                     `finqa_v2/retrieval/rerank.py`). OFF by default:
+                                     measured against the FinQA-India cross_document set
+                                     (50 real questions) it added ~265-300ms per search
+                                     call (candidate_k=40 passages through the model) for
+                                     an inconclusive quality effect -- a small recall@5
+                                     gain on lexical, a small MRR loss on hybrid (the
+                                     production default mode), both within noise at this
+                                     sample size. Kept off by the same "don't flip a
+                                     default on inconclusive evidence" reasoning Phase 27
+                                     used for the lexical-vs-hybrid mode choice -- flip it
+                                     on if a bigger eval run ever shows a real win.
     FINQA_V2_LOG_JSON             -- "1" for one JSON log line per event (production);
                                      default is plain text (easier in a dev terminal).
     FINQA_V2_EVAL_BASELINE_PATH   -- pinned regression-gate baseline JSON to surface via
@@ -42,6 +54,7 @@ CORS_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 # deps.rate_limit_qa (not cached here as constants) so a test can patch os.environ and
 # see the effect immediately, with no module-reload dance.
 NO_RETRIEVER = os.environ.get("FINQA_V2_NO_RETRIEVER") == "1"
+RERANK = os.environ.get("FINQA_V2_RERANK") == "1"
 DB_PATH = os.environ.get("FINQA_V2_DB_PATH") or None
 BM25_PATH = Path(os.environ.get("FINQA_V2_BM25_PATH") or (_DATA / "finqa_v2_bm25.pkl"))
 VECTOR_DIR = Path(os.environ.get("FINQA_V2_VECTOR_DIR") or (_DATA / "finqa_v2_vec"))

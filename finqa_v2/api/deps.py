@@ -47,6 +47,15 @@ def get_orchestrator(request: Request):
                  "The reasoning engine has not finished initialising yet -- try again shortly.")
 
 
+def get_qa_cache(request: Request):
+    return _state(request, "qa_cache", "The answer cache has not finished initialising yet -- try again shortly.")
+
+
+def get_research_cache(request: Request):
+    return _state(request, "research_cache",
+                 "The answer cache has not finished initialising yet -- try again shortly.")
+
+
 def get_retriever(request: Request):
     """May legitimately be None (FINQA_V2_NO_RETRIEVER=1, or no BM25 index built) --
     callers that need one raise their own error; /search does."""

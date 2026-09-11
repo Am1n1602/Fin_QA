@@ -83,8 +83,24 @@ def evaluate(retriever: HybridRetriever, repos, cases: list[dict], *,
     return report
 
 
-def build_retriever(repos, *, bm25_path: Path, vector_dir: Path) -> HybridRetriever:
+def _device() -> str:
+    try:
+        import torch
+
+        return "cuda" if torch.cuda.is_available() else "cpu"
+    except Exception:
+        return "cpu"
+
+
+def build_retriever(repos, *, bm25_path: Path, vector_dir: Path,
+                    use_reranker: bool = False) -> HybridRetriever:
+    """`use_reranker=False` by default so every existing caller (tests, ad hoc eval runs)
+    keeps its current fast, network-free behavior unchanged -- a real `CrossEncoderReranker`
+    lazily downloads/loads a model on first use, same as `SentenceTransformerEmbedder`.
+    The API (`finqa_v2/api/main.py`) explicitly opts in and warms it at boot (Phase 27's
+    embedder warm-up pattern) so that cost never lands on a real request either."""
     bm25 = BM25Index.load(bm25_path) if bm25_path.exists() else BM25Index.build(repos)
+    device = _device()
     vector = embedder = None
     if vector_dir.exists():
         try:
@@ -95,17 +111,18 @@ def build_retriever(repos, *, bm25_path: Path, vector_dir: Path) -> HybridRetrie
             model_txt = vector_dir / "model.txt"
             model = (model_txt.read_text(encoding="utf-8").splitlines()[0].strip()
                      if model_txt.exists() else "all-mpnet-base-v2")
-            device = "cpu"
-            try:
-                import torch
-
-                device = "cuda" if torch.cuda.is_available() else "cpu"
-            except Exception:
-                pass
             embedder = SentenceTransformerEmbedder(model, device=device)
         except Exception:
             vector = embedder = None
-    return HybridRetriever(repos, bm25=bm25, vector=vector, embedder=embedder)
+    reranker = None
+    if use_reranker:
+        try:
+            from finqa_v2.retrieval.rerank import CrossEncoderReranker
+
+            reranker = CrossEncoderReranker(device=device)
+        except Exception:
+            reranker = None
+    return HybridRetriever(repos, bm25=bm25, vector=vector, embedder=embedder, reranker=reranker)
 
 
 def main() -> int:
@@ -116,6 +133,7 @@ def main() -> int:
     ap.add_argument("--vector-dir", type=Path, default=_VEC)
     ap.add_argument("--modes", default="lexical")
     ap.add_argument("--filter-company", action="store_true")
+    ap.add_argument("--rerank", action="store_true", help="wire the real CrossEncoderReranker (default off: no network/model load)")
     args = ap.parse_args()
 
     if not args.v2_db.exists():
@@ -123,7 +141,8 @@ def main() -> int:
     cases = load_cases(args.cases)
     repos = SqliteRepositories(args.v2_db)
     try:
-        retr = build_retriever(repos, bm25_path=args.bm25, vector_dir=args.vector_dir)
+        retr = build_retriever(repos, bm25_path=args.bm25, vector_dir=args.vector_dir,
+                               use_reranker=args.rerank)
         rep = evaluate(retr, repos, cases,
                        modes=tuple(m.strip() for m in args.modes.split(",")),
                        filter_company=args.filter_company)

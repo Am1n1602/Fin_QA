@@ -108,10 +108,10 @@ A separate, earlier iteration of this project — `data_analysis/`, `rag/`, `qa_
 
 ### Prerequisites
 
-- **Python 3.11+** and **Node 18+** (for the dashboard)
+- **Python 3.11+** — always needed, at least once, to build the local dataset (`finqa_v2.db`) that everything else reads from.
+- **Node 18+**, *unless* you run the dashboard via Docker Compose instead (see [Run everything with Docker Compose](#run-everything-with-docker-compose-fastest) below) — Docker also covers the API, PostgreSQL, and monitoring, so Node is the only thing it actually saves you from installing.
 - A **Groq API key** (free tier) — the default LLM provider. An **Anthropic API key** works too, with a configurable hard spend cap.
 - *Optional:* a CUDA GPU for faster embedding/reranking during document ingestion; the default install is CPU-only.
-- *Optional:* Docker, if you want to run against PostgreSQL + pgvector instead of the default SQLite file.
 
 ### Install
 
@@ -156,7 +156,41 @@ The first command imports company/index metadata, normalizes XBRL facts, extract
 
 ## Running it
 
-### API
+### Run everything with Docker Compose (fastest)
+
+No local Node install needed, and no manually running the API/dashboard/Postgres/monitoring
+yourself — they all run as containers. (You still need the local Python venv from
+[Install](#install) and a built `finqa_v2.db` from
+[Build the database](#build-the-database-document-index-and-search-index) once, to load
+data into the containerized Postgres below — that one step isn't containerized.)
+
+```bash
+cd deployment/compose
+docker compose up -d --build postgres minio minio-init api dashboard prometheus grafana
+```
+
+| Service | URL | What it is |
+|---|---|---|
+| Dashboard | http://localhost:5174 | the full web UI |
+| API | http://localhost:8010 (docs at `/docs`) | REST API, reverse-proxied by the dashboard's nginx too |
+| Prometheus | http://localhost:9090 | raw `finqa_*` metrics |
+| Grafana | http://localhost:3000 (login `admin` / `finqa12345`) | the pre-built "Fin·QA v2 — Overview" dashboard |
+
+One-time, once `postgres` is healthy, load your local dataset into it:
+
+```bash
+export FINQA_PG_URL=postgresql://finqa:finqa@localhost:55432/finqa   # Windows: set FINQA_PG_URL=...
+python -m finqa_v2.postgres.migrate
+```
+
+`GROQ_API_KEY`/`ANTHROPIC_API_KEY` are read from your shell environment or a `.env` file
+in `deployment/compose/`. `docker compose down` stops everything (add `-v` to also wipe
+the Postgres/MinIO volumes). Full detail, including the security/rate-limit env vars and
+what each Prometheus metric is wired from, in [`deployment/README.md`](deployment/README.md).
+
+### Run components individually (no Docker)
+
+#### API
 
 ```bash
 finqa-api-v2
@@ -171,9 +205,9 @@ Interactive docs at `/docs`. Key endpoints:
 - `GET /api/v2/companies/{ticker}/research` — a full evidence-grounded company brief
 - `POST /api/v2/qa` — free-form, evidence-grounded question answering
 
-Configuration is environment-driven: `FINQA_V2_API_HOST/PORT/CORS_ORIGINS`, `FINQA_V2_API_KEY` (optional bearer key), `FINQA_V2_QA_RATE_LIMIT`, `FINQA_V2_DB_PATH`. See `finqa_v2/api/config.py` for the full list.
+Configuration is environment-driven: `FINQA_V2_API_HOST/PORT/CORS_ORIGINS`, `FINQA_V2_API_KEY` (optional bearer key, required on every route except `/health` and `/metrics` once set), `FINQA_V2_RATE_LIMIT` (general, default 120/min/IP), `FINQA_V2_QA_RATE_LIMIT` (stricter, `/qa` + `/research` only, default 10/min/IP), `FINQA_V2_DB_PATH`. See `finqa_v2/api/config.py` for the full list.
 
-### Dashboard
+#### Dashboard
 
 ```bash
 cd dashboard_v2
@@ -218,7 +252,7 @@ The internal benchmark spans factual, numerical, comparison, multi-step, causal 
 - **Historical depth**: the ingested data currently covers the most recent annual and quarterly filings only (not multiple years back) — a question about an older period gets an honest "not available," never a wrong year's figure.
 - **Segment margin is never shown**, only segment revenue — filings disclose one but not the other, and the system doesn't approximate it.
 - **The dashboard's consolidated/standalone toggle is manual** by design — a company that files only one basis won't have the other silently substituted in.
-- **PostgreSQL + pgvector support exists and is tested**, but the dashboard/API run against SQLite by default; switching backends is a configuration change, not a code change.
+- **PostgreSQL + pgvector support exists and is tested**, but running components individually (not via Docker Compose) defaults to SQLite; switching backends is a configuration change (`FINQA_PG_URL`), not a code change.
 
 ---
 

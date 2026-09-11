@@ -68,6 +68,10 @@ if _AVAILABLE:
         "finqa_eval_baseline_info", "1, labelled with the pinned baseline's label/git_commit/generated_at",
         ["label", "git_commit", "generated_at"], registry=REGISTRY,
     )
+    CACHE_EVENTS = Counter(
+        "finqa_answer_cache_events_total", "In-process /qa and /research answer-cache lookups by outcome",
+        ["cache", "outcome"], registry=REGISTRY,
+    )
 
 
 def record_tool_call(tool: str, ok: bool, latency_ms: float) -> None:
@@ -86,6 +90,12 @@ def record_llm_usage(provider: str, *, prompt_tokens: int, completion_tokens: in
     LLM_TOKENS.labels(provider=provider, kind="completion").inc(max(0, completion_tokens or 0))
     if cost_usd:
         LLM_COST_USD.labels(provider=provider).inc(cost_usd)
+
+
+def record_cache_event(cache: str, hit: bool) -> None:
+    if not _AVAILABLE:
+        return
+    CACHE_EVENTS.labels(cache=cache, outcome="hit" if hit else "miss").inc()
 
 
 def record_verification(status: str) -> None:

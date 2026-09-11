@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from finqa_v2.observability.logging_config import configure_logging, new_request_id, request_id_var
 from finqa_v2.observability.metrics import (
+    record_cache_event,
     record_http_request,
     record_llm_usage,
     record_tool_call,
@@ -15,6 +16,7 @@ __all__ = [
     "configure_logging",
     "new_request_id",
     "request_id_var",
+    "record_cache_event",
     "record_http_request",
     "record_llm_usage",
     "record_tool_call",

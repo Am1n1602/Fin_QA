@@ -56,6 +56,7 @@ logger = logging.getLogger("finqa.v2.api")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from finqa_v2.api.cache import LruCache
     from finqa_v2.db import repositories_from_env
     from finqa_v2.engine import FinancialEngine
     from finqa_v2.llm import provider_from_env
@@ -78,7 +79,24 @@ async def lifespan(app: FastAPI):
             from finqa_v2.retrieval.evaluate import build_retriever
 
             retriever = build_retriever(repos, bm25_path=api_config.BM25_PATH,
-                                        vector_dir=api_config.VECTOR_DIR)
+                                        vector_dir=api_config.VECTOR_DIR,
+                                        use_reranker=api_config.RERANK)
+            if "vector" in retriever.modes:
+                # SentenceTransformerEmbedder loads its model lazily on first .encode()
+                # call (Phase 16) -- measured at ~0.1-60s depending on whether the OS
+                # file cache is warm, versus ~150-250ms for every subsequent call. Left
+                # lazy, that cost lands on whichever real user's question first touches
+                # vector/hybrid search_documents. Paying it once here, at boot, instead
+                # (Phase 27 perf).
+                t0 = time.perf_counter()
+                retriever._embedder.encode(["warmup"])
+                logger.info("Embedder warmed in %.1fs.", time.perf_counter() - t0)
+            if getattr(retriever, "_reranker", None) is not None and not getattr(retriever._reranker, "trivial", True):
+                # Same lazy-model-load pattern as the embedder above -- warm it here
+                # instead of on a real search_documents call.
+                t0 = time.perf_counter()
+                retriever._reranker.score("warmup", ["warmup passage"])
+                logger.info("Reranker warmed in %.1fs.", time.perf_counter() - t0)
             logger.info("Retriever ready, modes=%s", retriever.modes)
         except Exception:
             logger.exception("Could not build the retriever -- /search and document "
@@ -95,6 +113,11 @@ async def lifespan(app: FastAPI):
     app.state.registry = registry
     app.state.provider = provider
     app.state.orchestrator = orchestrator
+    # Fresh per boot, like everything else on app.state -- a real data update needs a
+    # restart anyway (see cache.py), and this keeps each TestClient lifespan cycle in
+    # the test suite isolated instead of leaking cached answers across test classes.
+    app.state.qa_cache = LruCache("qa")
+    app.state.research_cache = LruCache("research")
     logger.info("finqa_v2 API ready (llm_provider=%s).", getattr(provider, "name", "null"))
 
     try:

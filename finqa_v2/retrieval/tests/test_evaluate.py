@@ -2,12 +2,34 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
 from finqa_v2.retrieval.evaluate import build_retriever, evaluate, load_cases
 from finqa_v2.retrieval.lexical import BM25Index
+from finqa_v2.retrieval.rerank import CrossEncoderReranker, IdentityReranker
 from finqa_v2.retrieval.retriever import HybridRetriever
 from finqa_v2.retrieval.tests._fixture import seed
 from finqa_v2.sqlite import DEFAULT_V2_DB_PATH, SqliteRepositories
+
+
+class TestBuildRetrieverReranker(unittest.TestCase):
+    """`use_reranker` construction only -- never calls `.score()`, so no network/model
+    load happens in this fast unit test (CrossEncoderReranker's model is lazy)."""
+
+    def setUp(self):
+        self.repos = SqliteRepositories(":memory:")
+        self.addCleanup(self.repos.close)
+        seed(self.repos)
+
+    def test_default_is_no_reranker(self):
+        r = build_retriever(self.repos, bm25_path=Path("/nonexistent"), vector_dir=Path("/nonexistent"))
+        self.assertIsInstance(r._reranker, IdentityReranker)
+
+    def test_use_reranker_true_wires_a_real_cross_encoder(self):
+        r = build_retriever(self.repos, bm25_path=Path("/nonexistent"), vector_dir=Path("/nonexistent"),
+                            use_reranker=True)
+        self.assertIsInstance(r._reranker, CrossEncoderReranker)
+        self.assertIsNone(r._reranker._model)  # constructed, not loaded
 
 
 class TestEvaluateMath(unittest.TestCase):
