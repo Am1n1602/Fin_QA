@@ -150,6 +150,73 @@ FINQA_PG_URL=... python -m unittest finqa_v2.postgres.tests.test_postgres
 
 The gated test suite skips itself when `FINQA_PG_URL` is unset.
 
+## Public demo (Render)
+
+A separate, deliberately smaller deployment target for an actual public URL — two free
+Render services, defined in `render.yaml` at the repo root. This is **not** the same
+stack as the sections above: no Postgres, no MinIO, no Prometheus/Grafana, and no dense
+retrieval, all for the same underlying reason (a free host has no persistent disk and
+limited RAM, and this system's normal retrieval path pulls in torch).
+
+**What's different from the local stack, and why:**
+
+- **A curated ~10-15 company subset, not all 50.** `deployment/scripts/build_public_dataset.py`
+  copies a chosen ticker list out of the real `finqa_v2.db` into
+  `deployment/docker/public_data/` (gitignored, rebuild locally any time). A first attempt
+  baked in the *full* 50-company dataset and measured **~680MB** resident memory in the
+  running container — almost entirely `rank_bm25`'s per-document term-frequency
+  dictionaries for the full 32k-chunk corpus — comfortably over a typical free tier's
+  ~512MB ceiling. The current 12-company set (`TCS, INFY, HCLTECH, WIPRO, RELIANCE, ONGC,
+  HDFCBANK, ICICIBANK, SBIN, ITC, M&M, SBILIFE` — picked for sector diversity and so every
+  example question in this README and the dashboard's own example chips resolves)
+  measured **~250-320MB** resident / ~490MB including reclaimable page cache. **Always
+  re-measure with `docker stats` + `docker exec <container> cat /proc/1/status` after
+  changing `TICKERS`** — this is empirical, not something to assume scales safely.
+- **Lexical-only retrieval, no torch loaded at all.** `deployment/docker/api.public.Dockerfile`
+  bakes in `finqa_v2.db` + `finqa_v2_bm25.pkl` but not `finqa_v2_vec/` (the dense vector
+  index). `finqa_v2/retrieval/evaluate.py`'s `build_retriever()` only imports
+  `SentenceTransformerEmbedder`/`VectorIndex`/faiss `if vector_dir.exists()` — so omitting
+  that directory means `torch` is never imported at runtime (verified: `python -c "import
+  sys; print('torch' in sys.modules)"` inside the running container prints `False`), which
+  is what actually avoids the OOM failure mode that killed the abandoned `demo-v1` branch
+  on this same class of free host. This costs dense/hybrid retrieval, not much else —
+  Phase 16/27's own measurements found lexical competitive with hybrid on this dataset.
+- **SQLite, no Postgres.** `finqa_v2/db.py:repositories_from_env()` already falls back to
+  `SqliteRepositories` with no `FINQA_PG_URL` set — nothing to configure.
+- **Two independent Render services, not one.** A free *static site* never sleeps; a free
+  *web service* does (spins down after inactivity, ~30-60s cold start on the next
+  request). Splitting them means the dashboard shell loads instantly and only the API
+  needs a "waking up" experience — `dashboard_v2/src/components/WakeGate.jsx` polls
+  `GET /health` and shows a friendly wait screen until the API answers, instead of the
+  app rendering with everything failing.
+
+**Deploy flow:**
+
+```bash
+# 1. Build the curated dataset + image, push it to a registry (needs your own
+#    `docker login ghcr.io` first — this step isn't run for you, it needs your account)
+deployment/scripts/build_and_push_public_image.sh ghcr.io/YOUR_GITHUB_USERNAME/finqa-api-public:latest
+
+# 2. Edit render.yaml's image.url to match what you just pushed.
+
+# 3. In the Render dashboard: New -> Blueprint -> connect this repo -> it creates
+#    finqa-api-public (from the image) and finqa-dashboard-public (built from
+#    dashboard_v2/ source, auto-redeploys on push) from render.yaml.
+
+# 4. Set GROQ_API_KEY on finqa-api-public in the Render dashboard (marked `sync: false`
+#    in render.yaml specifically so it's never in git).
+```
+
+Re-run step 1 (which re-runs `build_public_dataset.py` first) whenever the curated
+dataset should be refreshed from a newer local `finqa_v2.db` — this deploy target is a
+frozen snapshot, not a live pipeline, same "historical depth" caveat as the rest of the
+project.
+
+**Not covered by CI.** `.github/workflows/ci.yml` runs the test suites and the regression
+gate; it does not build or push the public image — that stays a manual step (it needs
+registry credentials this repo's CI doesn't have configured, and the dataset shouldn't be
+rebuilt on every commit anyway).
+
 ## Notes
 
 - Dates/datetimes are stored as ISO **TEXT** and booleans as **INTEGER 0/1** — identical

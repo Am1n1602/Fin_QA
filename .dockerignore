@@ -10,8 +10,11 @@ data/
 Claude outputs/
 .claude/
 
-# database/data/ and data_extraction/data/ are mounted as volumes at runtime
-# (see deployment/compose/docker-compose.yml), never baked into an image.
+# database/data/ and data_extraction/data/ are mounted as volumes at runtime for the
+# local stack (see deployment/compose/docker-compose.yml), never baked into that image.
+# The public demo image (api.public.Dockerfile) bakes in a small curated snapshot instead,
+# from deployment/docker/public_data/ (built by deployment/scripts/build_public_dataset.py)
+# -- a separate, much smaller path, not this one.
 database/data/
 data_extraction/data/
 

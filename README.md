@@ -1,5 +1,7 @@
 # Fin·QA
 
+<!-- TODO: live demo URL once deployed -- see deployment/README.md's "Public demo (Render)" -->
+
 Financial research API and dashboard for the NIFTY 50 universe. Ask it things like *"What
 was TCS's ROE?"*, *"Compare RELIANCE and ONGC on leverage"*, or *"Why did HCLTECH's
 profitability decline?"* and it answers with the calculation behind every number and the

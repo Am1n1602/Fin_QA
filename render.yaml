@@ -1,0 +1,42 @@
+# Render Blueprint for the Fin·QA v2 PUBLIC DEMO -- two free services, no Postgres/MinIO/
+# Grafana (see deployment/README.md's "Public demo (Render)" section for why). Connect
+# this repo in the Render dashboard ("New +" -> "Blueprint") and it creates both services
+# below from this file.
+#
+# NOTE: double-check this against Render's current Blueprint schema when you actually set
+# this up (https://render.com/docs/blueprint-spec) -- I can't test it against a live
+# Render account from here, so treat the shape (keys/values) as best-effort, not verified.
+#
+# Fixed service names below (finqa-api-public / finqa-dashboard-public) so their
+# *.onrender.com URLs are predictable and can reference each other (CORS origin,
+# VITE_API_BASE_URL) without a chicken-and-egg problem.
+
+services:
+  # API -- deployed from a PRE-BUILT image, not built from source, because the dataset it
+  # needs (deployment/docker/public_data/) is gitignored and this repo has no persistent
+  # disk on the free tier to populate at runtime. Build + push it yourself first:
+  #   deployment/scripts/build_and_push_public_image.sh <your-registry>/finqa-api-public:latest
+  - type: web
+    name: finqa-api-public
+    runtime: image
+    image:
+      url: ghcr.io/YOUR_GITHUB_USERNAME/finqa-api-public:latest
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: FINQA_V2_API_CORS_ORIGINS
+        value: https://finqa-dashboard-public.onrender.com
+      - key: GROQ_API_KEY
+        sync: false   # set manually in the Render dashboard -- never in git
+
+  # Dashboard -- built from source (dashboard_v2/ has no gitignored-data problem), so this
+  # half auto-redeploys on every push to the connected branch.
+  - type: web
+    name: finqa-dashboard-public
+    runtime: static
+    rootDir: dashboard_v2
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://finqa-api-public.onrender.com

@@ -474,6 +474,54 @@ button:disabled {
   font-weight: 600;
 }
 
+/* wake gate (public demo cold-start) -------------------------------------- */
+.wake-gate {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.wake-gate-card {
+  max-width: 420px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 2rem 1.8rem;
+}
+.wake-gate-brand {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent-strong);
+  margin: 0 0 1rem;
+}
+.wake-gate-message {
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+.wake-gate-note {
+  color: var(--ink-faint);
+  font-size: 0.88rem;
+  margin: 0;
+}
+.wake-gate-spinner {
+  width: 28px;
+  height: 28px;
+  margin: 0 auto 1rem;
+  border: 3px solid var(--rule);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: wake-gate-spin 0.9s linear infinite;
+}
+@keyframes wake-gate-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* evidence-aware answer / claims ----------------------------------------- */
 .evidence-answer {
   display: flex;
