@@ -35,12 +35,14 @@ storage = ["boto3>=1.34"]
 observability = ["prometheus-client>=0.20"]
 
 [project.scripts]
-# fin_llm_platform/ and api/ (v1) moved into archive/ -- still installable/runnable,
-# just no longer the primary system. finqa_v2 is unaffected either way.
-finqa = "archive.fin_llm_platform.cli:main"
-finqa-pipeline = "archive.fin_llm_platform.pipeline:main"
-finqa-setup = "archive.fin_llm_platform.setup_scheduler:main"
-finqa-api = "archive.api.main:run"
+# fin_llm_platform/ and api/ (v1) moved into archive/ -- still installable/runnable, just
+# no longer the primary system. Suffixed "-v1" (unlike the original bare `finqa`/
+# `finqa-api`) so the unprefixed, most-obvious-looking command never silently lands
+# someone in the retired system instead of the live one below.
+finqa-v1 = "archive.fin_llm_platform.cli:main"
+finqa-v1-pipeline = "archive.fin_llm_platform.pipeline:main"
+finqa-v1-setup = "archive.fin_llm_platform.setup_scheduler:main"
+finqa-v1-api = "archive.api.main:run"
 finqa-api-v2 = "finqa_v2.api.main:run"
 
 [tool.setuptools.packages.find]
