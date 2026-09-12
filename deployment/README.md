@@ -23,19 +23,32 @@ This starts, as separate containers on one Docker network:
 | `api` | `finqa_v2` FastAPI app, talking to `postgres` over the compose network | 8010 |
 | `dashboard` | `dashboard_v2`, built static and served by nginx | 5174 |
 | `prometheus` | Scrapes `api`'s `/metrics` every 15s | 9090 |
-| `grafana` | Pre-provisioned "Fin·QA v2 — Overview" dashboard over Prometheus | 3000 (log in with admin/finqa12345) |
+| `grafana` | Pre-provisioned "Fin·QA v2 — Overview" dashboard over Prometheus | 3000 (see below for the admin password) |
 
 `GROQ_API_KEY`/`ANTHROPIC_API_KEY` are read from your shell environment (or a `.env`
 file in `deployment/compose/`, which `docker compose` loads automatically) and passed
 into the `api` container.
 
+**Grafana, Postgres, and MinIO all have no default password.** Copy
+`deployment/compose/.env.example` to `deployment/compose/.env` and set
+`GRAFANA_ADMIN_PASSWORD`, `POSTGRES_PASSWORD`, and `MINIO_ROOT_PASSWORD` before running
+`docker compose up` — without any one of them, `docker compose` fails fast with a clear
+error naming the missing variable instead of starting that service with a guessable
+password (`finqa`/`finqa12345` used to be baked into this file; they no longer are).
+Usernames/DB name (`GRAFANA_ADMIN_USER`, `POSTGRES_USER`, `POSTGRES_DB`,
+`MINIO_ROOT_USER`) default to `admin`/`finqa`/`finqa`/`finqa` if left unset — only the
+passwords are required. (Grafana anonymous access was also tried in Phase 25 and
+removed — see the Phase 25 write-up in `docs/file-guide.md` — so a real login is
+required there either way.)
+
 ### One-time: load data into the containerized Postgres
 
 The `postgres` container starts empty. Load it from your existing local `finqa_v2.db`
-(run from the repo root, using your normal dev venv — not inside a container):
+(run from the repo root, using your normal dev venv — not inside a container), using the
+same `POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB` you set in `.env`:
 
 ```bash
-export FINQA_PG_URL=postgresql://finqa:finqa@localhost:55432/finqa   # Windows: set FINQA_PG_URL=...
+export FINQA_PG_URL=postgresql://finqa:<POSTGRES_PASSWORD>@localhost:55432/finqa   # Windows: set FINQA_PG_URL=...
 python -m finqa_v2.postgres.migrate
 ```
 
@@ -69,7 +82,7 @@ container mounts `database/data/` read-only — it never writes to the dataset).
 ```bash
 pip install boto3   # or: pip install -e ".[storage]"
 python deployment/scripts/sync_pdfs_to_object_storage.py \
-    --endpoint-url http://localhost:9000 --access-key finqa --secret-key finqa12345
+    --endpoint-url http://localhost:9000 --access-key finqa --secret-key <MINIO_ROOT_PASSWORD>
 ```
 
 Uploads every PDF under `data_extraction/data/raw/<TICKER>/` into the `filing-pdfs`
@@ -115,9 +128,12 @@ docker compose down -v         # also delete the named volumes
 
 ## PostgreSQL + pgvector alone (Phase 17, still works standalone)
 
+Needs the same `POSTGRES_PASSWORD` (in `deployment/compose/.env`, see `.env.example`) as
+the full stack above — this compose file is picked up from the same directory.
+
 ```bash
 docker compose -f deployment/compose/pgvector.yml up -d
-export FINQA_PG_URL=postgresql://finqa:finqa@localhost:55432/finqa   # Windows: set FINQA_PG_URL=...
+export FINQA_PG_URL=postgresql://finqa:<POSTGRES_PASSWORD>@localhost:55432/finqa   # Windows: set FINQA_PG_URL=...
 ```
 
 Everything else is unchanged — the repository Protocols (`finqa_v2/repositories.py`) are

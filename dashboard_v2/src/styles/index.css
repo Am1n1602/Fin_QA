@@ -312,12 +312,16 @@ button:disabled {
 }
 
 /* tabs --------------------------------------------------------------- */
+.tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--rule);
+  margin: 1rem 0 0;
+}
 .tab-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.3rem;
-  border-bottom: 1px solid var(--rule);
-  margin: 1rem 0 0;
 }
 .tab-button {
   background: transparent;
@@ -510,7 +514,7 @@ button:disabled {
 .claim-list {
   margin-top: 0.6rem;
 }
-.claim-list h3 {
+.claim-list h2 {
   font-size: 0.95rem;
   margin: 0 0 0.5rem;
 }
@@ -561,7 +565,7 @@ button:disabled {
 .claim-section {
   margin-top: 0.7rem;
 }
-.claim-section h4 {
+.claim-section h3 {
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;

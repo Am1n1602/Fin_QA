@@ -17,6 +17,11 @@ plainly — with zero model calls and $0 spend.
 variable, the API and metrics reference, deployment, and known limitations. This README is
 the short version.
 
+> **Two systems live in this repo.** Everything from here on — the architecture, the
+> features, `finqa_v2/` + `dashboard_v2/` — describes the one that's live. An earlier
+> iteration is kept untouched under `archive/` as a runnable reference, not part of what's
+> running or described below; see [Project layout](#project-layout) for what's in it.
+
 ## Architecture
 
 ```
@@ -101,13 +106,17 @@ finqa_v2/            The system described above.
 dashboard_v2/         React (Vite) frontend
 evaluation/           Internal benchmark, evaluators, baseline comparisons
 deployment/           Docker Compose stack (API, Postgres, dashboard, Prometheus, Grafana)
+
+archive/              NOT LIVE — an earlier iteration (data_analysis/, rag/, qa_router/,
+                      llm_router/, orchestrator/, fin_llm_platform/, its own api/ and
+                      dashboard/), kept untouched as a runnable reference rather than
+                      deleted. Nothing above depends on it or modifies it.
 ```
 
-An earlier iteration of this project — `data_analysis/`, `rag/`, `qa_router/`,
-`llm_router/`, `orchestrator/`, `fin_llm_platform/`, its own `api/`/`dashboard/` — is kept
-untouched under `archive/` as a runnable reference point rather than deleted. Nothing in
-`finqa_v2/` depends on it or modifies it; they share only the raw XBRL/PDF inputs under
-`data_extraction/data/` and `database/data/`.
+`finqa_v2/` and `archive/` share only the raw XBRL/PDF inputs under
+`data_extraction/data/` and `database/data/` — `finqa_v2` writes its own `finqa_v2.db`,
+separate from `archive`'s `financial_intelligence.db`. See
+[`MANUAL.md §2`](MANUAL.md#2-repository-layout) for the full per-file breakdown.
 
 ## Design principles
 
@@ -191,12 +200,17 @@ docker compose up -d --build postgres minio minio-init api dashboard prometheus 
 | Dashboard | http://localhost:5174 | |
 | API | http://localhost:8010 (`/docs` for interactive schema) | |
 | Prometheus | http://localhost:9090 | |
-| Grafana | http://localhost:3000 | login `admin` / `finqa12345` |
+| Grafana | http://localhost:3000 | login with your own `GRAFANA_ADMIN_USER`/`PASSWORD` |
+
+Grafana, Postgres, and MinIO have no default passwords — copy
+`deployment/compose/.env.example` to `deployment/compose/.env` and set
+`GRAFANA_ADMIN_PASSWORD`, `POSTGRES_PASSWORD`, `MINIO_ROOT_PASSWORD` first, or `docker
+compose up` refuses to start those services. See `deployment/README.md` for details.
 
 One-time, once `postgres` is healthy, load your local dataset into it:
 
 ```bash
-export FINQA_PG_URL=postgresql://finqa:finqa@localhost:55432/finqa
+export FINQA_PG_URL=postgresql://finqa:<POSTGRES_PASSWORD>@localhost:55432/finqa
 python -m finqa_v2.postgres.migrate
 ```
 

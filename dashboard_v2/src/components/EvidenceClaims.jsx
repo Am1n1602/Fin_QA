@@ -96,7 +96,7 @@ function ClaimCard({ claim: node }) {
       <div className="claim-body">
         {numericEvidence.length > 0 && (
           <section className="claim-section">
-            <h4>Supporting numbers</h4>
+            <h3>Supporting numbers</h3>
             <ul className="evidence-list">
               {numericEvidence.map((e) => (
                 <EvidenceRow key={e.evidence_id} ev={e} />
@@ -107,7 +107,7 @@ function ClaimCard({ claim: node }) {
 
         {calculations.length > 0 && (
           <section className="claim-section">
-            <h4>Calculations</h4>
+            <h3>Calculations</h3>
             <ul className="calc-list">
               {calculations.map((c) => (
                 <CalculationRow key={c.calculation_id} calc={c} />
@@ -118,7 +118,7 @@ function ClaimCard({ claim: node }) {
 
         {docEvidence.length > 0 && (
           <section className="claim-section">
-            <h4>Evidence</h4>
+            <h3>Evidence</h3>
             <ul className="evidence-list">
               {docEvidence.map((e) => (
                 <EvidenceRow key={e.evidence_id} ev={e} />
@@ -129,7 +129,7 @@ function ClaimCard({ claim: node }) {
 
         {sources.length > 0 && (
           <section className="claim-section">
-            <h4>Sources</h4>
+            <h3>Sources</h3>
             <div className="source-chips">
               {sources.map((s) => (
                 <SourceChip key={s.citation_id} source={s} />
@@ -149,11 +149,16 @@ function ClaimCard({ claim: node }) {
   );
 }
 
-export function ClaimList({ claims }) {
+export function ClaimList({ claims, contextLabel }) {
   if (!claims || claims.length === 0) return null;
+  // Distinguishes this landmark's accessible name when more than one answer is on screen
+  // at once (QaPage keeps a running log of questions) -- axe-core: landmark-unique.
+  const label = contextLabel
+    ? `Claims, with supporting evidence, for: ${contextLabel}`
+    : "Claims, with supporting evidence";
   return (
-    <section className="claim-list" aria-label="Claims, with supporting evidence">
-      <h3>Key findings</h3>
+    <section className="claim-list" aria-label={label}>
+      <h2>Key findings</h2>
       {claims.map((node) => (
         <ClaimCard key={node.claim.claim_id} claim={node} />
       ))}
@@ -189,7 +194,7 @@ export function VerificationNote({ verification }) {
   );
 }
 
-export default function EvidenceAnswer({ result }) {
+export default function EvidenceAnswer({ result, contextLabel }) {
   const { response, claim_graph: claimGraph } = result;
   return (
     <div className="evidence-answer">
@@ -199,7 +204,7 @@ export default function EvidenceAnswer({ result }) {
       </p>
       <VerificationNote verification={result.verification} />
       <LimitationsList items={response.limitations} />
-      <ClaimList claims={claimGraph?.claims} />
+      <ClaimList claims={claimGraph?.claims} contextLabel={contextLabel} />
     </div>
   );
 }

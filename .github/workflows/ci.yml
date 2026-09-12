@@ -1,0 +1,55 @@
+# CI for finqa_v2 + evaluation/. Runs entirely on stdlib unittest against synthetic/no-DB
+# state -- every test that needs the real dataset (database/data/*.db, gitignored, built by
+# a network-heavy NSE/BSE pipeline) or a live LLM/Postgres is already self-gated via
+# unittest.skipUnless / an env-var check, so this suite is green with zero secrets and zero
+# external services. The regression gate runs for real against a small committed 6-company
+# fixture (evaluation/regression/fixtures/) rather than the full production dataset -- see
+# evaluation/regression/README.md for how that fixture is built and re-pinned.
+name: CI
+
+on:
+  push:
+    branches: [main, v2]
+  pull_request:
+    branches: [main, v2]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dependencies (CPU-only torch)
+        run: |
+          pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+          pip install --no-cache-dir -e ".[api,anthropic,observability]"
+
+      - name: finqa_v2 test suite
+        run: python -m unittest discover -s finqa_v2 -v
+
+      - name: evaluation test suite
+        run: python -m unittest discover -s evaluation -v
+
+      - name: Regression gate (6-company fixture)
+        # The full production dataset is gitignored and built by a network-heavy NSE/BSE
+        # pipeline, so this runs the real deterministic pipeline against a small committed
+        # fixture DB (evaluation/regression/fixtures/finqa_v2_fixture.db, 6 companies, no
+        # documents/retrieval) instead -- a genuine candidate-vs-pinned-baseline regression
+        # check, just at fixture scale rather than the full 850/51-question datasets.
+        run: |
+          python -m evaluation.runners.v2_runner \
+            --dataset evaluation/regression/fixtures/finqa_v2_eval_fixture.jsonl \
+            --v2-db evaluation/regression/fixtures/finqa_v2_fixture.db \
+            --no-retriever --skip-retrieval-eval \
+            --label ci-fixture \
+            --out /tmp/fixture_candidate.json
+          python -m evaluation.regression.compare \
+            evaluation/regression/baselines/fixture_v2.json \
+            /tmp/fixture_candidate.json

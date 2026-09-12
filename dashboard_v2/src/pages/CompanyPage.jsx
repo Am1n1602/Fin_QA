@@ -30,65 +30,85 @@ export default function CompanyPage() {
   const [basis, setBasis] = useState("consolidated");
   usePageTitle(company ? `${company.ticker} — ${company.name}` : ticker);
 
-  if (loading) return <StatusBanner loading loadingText={`Loading ${ticker}...`} />;
-  if (error) return <StatusBanner error={error} />;
-  if (!company) return null;
-
   const ActiveSection = TABS.find((t) => t.key === tab)?.Component;
 
   return (
     <div>
+      {/* Always rendered, even while loading/erroring -- a page with no heading at all
+          (the previous early-return-before-<h1> shape) fails axe-core's
+          page-has-heading-one check on any ticker that 404s or is still loading. */}
       <div className="page-header">
         <h1>
-          {company.name} <span className="muted">({company.ticker})</span>
+          {company ? (
+            <>
+              {company.name} <span className="muted">({company.ticker})</span>
+            </>
+          ) : (
+            ticker
+          )}
         </h1>
-        <Link to={`/research/${company.ticker}`} className="tag">
-          Full research report &rarr;
-        </Link>
-      </div>
-      <p className="byline" style={{ marginTop: 0 }}>
-        {company.sector || "Sector unknown"}
-        {company.industry ? ` · ${company.industry}` : ""}
-        {company.isin ? ` · ${company.isin}` : ""}
-        {!company.active && " · inactive"}
-      </p>
-
-      <div className="tab-row" role="tablist" aria-label="Company sections">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            role="tab"
-            aria-selected={tab === t.key}
-            className={"tab-button" + (tab === t.key ? " tab-button-active" : "")}
-            onClick={() => setTab(t.key)}
-          >
-            {t.label}
-          </button>
-        ))}
-        <div className="basis-toggle" role="radiogroup" aria-label="Reporting basis">
-          {["consolidated", "standalone"].map((b) => (
-            <button
-              key={b}
-              type="button"
-              role="radio"
-              aria-checked={basis === b}
-              className={"basis-toggle-option" + (basis === b ? " basis-toggle-option-active" : "")}
-              onClick={() => setBasis(b)}
-              title={
-                b === "standalone"
-                  ? "Standalone-only filers (e.g. insurers) report nothing under consolidated"
-                  : "Group-level figures (default for most companies)"
-              }
-            >
-              {b === "consolidated" ? "Consolidated" : "Standalone"}
-            </button>
-          ))}
-        </div>
+        {company && (
+          <Link to={`/research/${company.ticker}`} className="tag">
+            Full research report &rarr;
+          </Link>
+        )}
       </div>
 
-      <div role="tabpanel" className="tab-panel">
-        {ActiveSection && <ActiveSection ticker={company.ticker} basis={basis} />}
-      </div>
+      {loading && <StatusBanner loading loadingText={`Loading ${ticker}...`} />}
+      {error && <StatusBanner error={error} />}
+
+      {company && (
+        <>
+          <p className="byline" style={{ marginTop: 0 }}>
+            {company.sector || "Sector unknown"}
+            {company.industry ? ` · ${company.industry}` : ""}
+            {company.isin ? ` · ${company.isin}` : ""}
+            {!company.active && " · inactive"}
+          </p>
+
+          <div className="tab-bar">
+            <div className="tab-row" role="tablist" aria-label="Company sections">
+              {TABS.map((t) => (
+                <button
+                  key={t.key}
+                  role="tab"
+                  aria-selected={tab === t.key}
+                  className={"tab-button" + (tab === t.key ? " tab-button-active" : "")}
+                  onClick={() => setTab(t.key)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            {/* Sibling of the tablist, not a child -- role="tablist" may only contain
+                role="tab" elements (WAI-ARIA required-children; axe-core:
+                aria-required-children). */}
+            <div className="basis-toggle" role="radiogroup" aria-label="Reporting basis">
+              {["consolidated", "standalone"].map((b) => (
+                <button
+                  key={b}
+                  type="button"
+                  role="radio"
+                  aria-checked={basis === b}
+                  className={"basis-toggle-option" + (basis === b ? " basis-toggle-option-active" : "")}
+                  onClick={() => setBasis(b)}
+                  title={
+                    b === "standalone"
+                      ? "Standalone-only filers (e.g. insurers) report nothing under consolidated"
+                      : "Group-level figures (default for most companies)"
+                  }
+                >
+                  {b === "consolidated" ? "Consolidated" : "Standalone"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div role="tabpanel" className="tab-panel">
+            {ActiveSection && <ActiveSection ticker={company.ticker} basis={basis} />}
+          </div>
+        </>
+      )}
     </div>
   );
 }

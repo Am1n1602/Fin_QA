@@ -19,7 +19,7 @@ function prefersReducedMotion() {
 
 function Message({ message }) {
   return (
-    <li className="qa-message">
+    <div className="qa-message">
       <p className="byline" style={{ margin: "0 0 0.2rem" }}>
         You
       </p>
@@ -28,10 +28,10 @@ function Message({ message }) {
       {message.status === "error" && <StatusBanner error={message.error} />}
       {message.status === "done" && (
         <div className="card">
-          <EvidenceAnswer result={message.result} />
+          <EvidenceAnswer result={message.result} contextLabel={message.question} />
         </div>
       )}
-    </li>
+    </div>
   );
 }
 
@@ -97,11 +97,15 @@ export default function QaPage() {
 
       {messages.length > 0 && (
         <>
-          <ul role="log" aria-live="polite" aria-relevant="additions" className="qa-log">
+          {/* role="log" is a live-region role, not a list container -- ARIA doesn't allow it
+              on <ul> (whose implicit role is "list"), and that mismatch also orphaned the
+              <li> children's listitem semantics (axe-core: aria-allowed-role, listitem). A
+              plain <div> is the correct host per the ARIA APG log pattern. */}
+          <div role="log" aria-live="polite" aria-relevant="additions" className="qa-log">
             {messages.map((m) => (
               <Message key={m.id} message={m} />
             ))}
-          </ul>
+          </div>
           <div ref={logEndRef} aria-hidden="true" />
         </>
       )}

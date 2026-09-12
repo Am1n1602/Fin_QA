@@ -46,7 +46,7 @@ export default function TrendsSection({ ticker, period = "FY2026", basis = "cons
 
       {Object.keys(factors).length > 0 && (
         <>
-          <h3 className="subsection-title">DuPont decomposition — ROE {period}</h3>
+          <h2 className="subsection-title">DuPont decomposition — ROE {period}</h2>
           <table className="data-table">
             <thead>
               <tr>

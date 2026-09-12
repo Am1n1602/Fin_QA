@@ -1,6 +1,8 @@
 # Fin_QA v2 — PostgreSQL + pgvector for local dev / staging (§17, §33).
+#   set POSTGRES_PASSWORD (e.g. in deployment/compose/.env, see .env.example) first --
+#   this refuses to start without it, no baked-in default password.
 #   docker compose -f deployment/compose/pgvector.yml up -d
-#   export FINQA_PG_URL=postgresql://finqa:finqa@localhost:55432/finqa
+#   export FINQA_PG_URL=postgresql://finqa:<POSTGRES_PASSWORD>@localhost:55432/finqa
 #   python -m finqa_v2.postgres.migrate          # copy SQLite -> PG (+ embeddings)
 #   python -m finqa_v2.dataset.audit             # runs unchanged on the PG backend
 services:
@@ -8,15 +10,15 @@ services:
     image: pgvector/pgvector:pg16
     container_name: finqa-pg
     environment:
-      POSTGRES_USER: finqa
-      POSTGRES_PASSWORD: finqa
-      POSTGRES_DB: finqa
+      POSTGRES_USER: ${POSTGRES_USER:-finqa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deployment/compose/.env -- see .env.example}
+      POSTGRES_DB: ${POSTGRES_DB:-finqa}
     ports:
       - "55432:5432"          # host 55432 -> container 5432 (avoids a local pg on 5432)
     volumes:
       - finqa_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U finqa -d finqa"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-finqa} -d ${POSTGRES_DB:-finqa}"]
       interval: 5s
       timeout: 3s
       retries: 10

@@ -56,7 +56,7 @@ export default function ResearchPage() {
       {error && <StatusBanner error={error} />}
       {report && (
         <div className="card" style={{ marginTop: "1rem" }}>
-          <EvidenceAnswer result={report} />
+          <EvidenceAnswer result={report} contextLabel={ticker} />
         </div>
       )}
     </div>

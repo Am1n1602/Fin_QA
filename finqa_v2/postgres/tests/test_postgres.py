@@ -1,7 +1,7 @@
 """PostgreSQL backend parity (§17). Gated on FINQA_PG_URL -- skips with no Postgres.
 
-    docker compose -f deployment/compose/pgvector.yml up -d
-    set FINQA_PG_URL=postgresql://finqa:finqa@localhost:55432/finqa
+    docker compose -f deployment/compose/pgvector.yml up -d   # needs POSTGRES_PASSWORD set, see .env.example
+    set FINQA_PG_URL=postgresql://finqa:<POSTGRES_PASSWORD>@localhost:55432/finqa
     python -m unittest finqa_v2.postgres.tests.test_postgres
 """
 from __future__ import annotations

@@ -3,7 +3,7 @@ dense embeddings from the faiss index dir into `document_chunks.embedding` (§17
 
 Idempotent: every table is TRUNCATEd then re-filled (the schema is applied first).
 
-    FINQA_PG_URL=postgresql://finqa:finqa@localhost:55432/finqa \
+    FINQA_PG_URL=postgresql://finqa:<POSTGRES_PASSWORD>@localhost:55432/finqa \
       python -m finqa_v2.postgres.migrate [--sqlite PATH] [--vector-dir PATH] [--no-vectors]
 """
 from __future__ import annotations

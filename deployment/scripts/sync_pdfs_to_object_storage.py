@@ -7,10 +7,11 @@ network-reachable home -- useful for a deployment where the raw PDF directory is
 available on whatever host runs a rebuild, and as the natural next step (not done
 here) if ingestion is later pointed at object storage instead of local disk.
 
-Usage (against the local docker-compose MinIO):
+Usage (against the local docker-compose MinIO -- use the MINIO_ROOT_USER/PASSWORD from
+your deployment/compose/.env):
     pip install boto3
     python deployment/scripts/sync_pdfs_to_object_storage.py \\
-        --endpoint-url http://localhost:9000 --access-key finqa --secret-key finqa12345
+        --endpoint-url http://localhost:9000 --access-key finqa --secret-key <MINIO_ROOT_PASSWORD>
 
 Usage (against real AWS S3 -- omit --endpoint-url, use your usual AWS credentials):
     python deployment/scripts/sync_pdfs_to_object_storage.py --bucket my-bucket

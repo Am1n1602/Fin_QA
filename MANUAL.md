@@ -716,17 +716,22 @@ docker compose up -d --build postgres minio minio-init api dashboard prometheus 
 | `api` | The FastAPI app, talking to `postgres` over the compose network | 8010 |
 | `dashboard` | Static build served by nginx, reverse-proxying `/api/*` and `/health` to the `api` service so the browser only ever talks to one port | 5174 |
 | `prometheus` | Scrapes `api:8010/metrics` every 15s | 9090 |
-| `grafana` | Pre-provisioned "Fin·QA v2 — Overview" dashboard (login `admin` / `finqa12345`) | 3000 |
+| `grafana` | Pre-provisioned "Fin·QA v2 — Overview" dashboard (login with your own `GRAFANA_ADMIN_USER`/`PASSWORD`) | 3000 |
 | `worker` (`profiles: ["tools"]`, not started by `up`) | One-shot dataset/index rebuild commands, packaged as a container instead of requiring a local Python env | — |
 
 `api`'s `database/data/` mount is **read-only**; `worker`'s is **read-write**. Both
 `data_extraction/data/` and `database/data/` are host bind mounts, not Docker volumes —
 they hold the real dataset and nothing here recreates it.
 
+**No default passwords.** Copy `deployment/compose/.env.example` to
+`deployment/compose/.env` and set `GRAFANA_ADMIN_PASSWORD`, `POSTGRES_PASSWORD`, and
+`MINIO_ROOT_PASSWORD` — `docker compose up` refuses to start any of those three services
+without its password set, rather than falling back to a guessable one.
+
 One-time, once `postgres` is healthy, load your local dataset into it:
 
 ```bash
-export FINQA_PG_URL=postgresql://finqa:finqa@localhost:55432/finqa
+export FINQA_PG_URL=postgresql://finqa:<POSTGRES_PASSWORD>@localhost:55432/finqa
 python -m finqa_v2.postgres.migrate
 ```
 
@@ -746,7 +751,7 @@ today):
 ```bash
 pip install -e ".[storage]"
 python deployment/scripts/sync_pdfs_to_object_storage.py \
-    --endpoint-url http://localhost:9000 --access-key finqa --secret-key finqa12345
+    --endpoint-url http://localhost:9000 --access-key finqa --secret-key <MINIO_ROOT_PASSWORD>
 ```
 
 ### Images
