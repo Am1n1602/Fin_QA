@@ -91,7 +91,10 @@ export default function RankingsPage() {
         </table>
       )}
       {ranking?.missing?.length > 0 && (
-        <p className="muted">No {metric} available for: {ranking.missing.join(", ")}.</p>
+        // Each entry is {ticker, reason} (finqa_v2/engine/engine.py:compare_companies),
+        // not a plain string -- .join() on the objects themselves was rendering
+        // "[object Object]" instead of the ticker.
+        <p className="muted">No {metric} available for: {ranking.missing.map((m) => m.ticker).join(", ")}.</p>
       )}
     </div>
   );

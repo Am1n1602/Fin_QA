@@ -40,3 +40,13 @@ services:
     envVars:
       - key: VITE_API_BASE_URL
         value: https://finqa-api-public.onrender.com
+    # react-router uses client-side routing -- without this, Render's static host looks
+    # for an actual file/route at e.g. /companies/TCS, finds nothing, and 404s. Every
+    # path must resolve to index.html so the SPA's own router can take over. (Discovered
+    # live: the homepage worked, but a direct link or a page refresh on any other route
+    # 404'd -- the local stack never hit this because it's served by nginx with its own
+    # SPA-fallback config, not this static-site mechanism.)
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

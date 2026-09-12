@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/client.js";
 import { useApi } from "../api/useApi.js";
 import { usePageTitle } from "../hooks/usePageTitle.js";
@@ -43,22 +43,26 @@ export default function Home() {
       </form>
 
       <div className="home-shortcuts">
-        <a className="card card-link" href="/companies">
+        {/* React Router <Link>, not a plain <a> -- a real anchor tag forces a full
+            browser navigation to that path, which (a) throws away SPA state
+            unnecessarily and (b) 404s on a static host with no server-side route for
+            it (only index.html gets rewritten there; see render.yaml). */}
+        <Link className="card card-link" to="/companies">
           <h2>Companies</h2>
           <p>Browse the NIFTY 50 universe, sector, and profile.</p>
-        </a>
-        <a className="card card-link" href="/rankings">
+        </Link>
+        <Link className="card card-link" to="/rankings">
           <h2>Rankings</h2>
           <p>Order companies by any metric or ratio.</p>
-        </a>
-        <a className="card card-link" href="/research">
+        </Link>
+        <Link className="card card-link" to="/research">
           <h2>Research</h2>
           <p>A full evidence-grounded overview of one company.</p>
-        </a>
-        <a className="card card-link" href="/qa">
+        </Link>
+        <Link className="card card-link" to="/qa">
           <h2>Financial QA</h2>
           <p>Ask a question; every claim comes with its own evidence trail.</p>
-        </a>
+        </Link>
       </div>
 
       <section className="card" style={{ marginTop: "1.5rem" }} aria-label="System status">
