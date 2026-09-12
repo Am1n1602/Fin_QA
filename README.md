@@ -1,6 +1,11 @@
 # Fin·QA
 
-<!-- TODO: live demo URL once deployed -- see deployment/README.md's "Public demo (Render)" -->
+**[Live demo →](https://finqa-dashboard-public.onrender.com/)** — a free-tier deployment
+covering 12 of the NIFTY 50 companies (TCS, INFY, HCLTECH, WIPRO, RELIANCE, ONGC,
+HDFCBANK, ICICIBANK, SBIN, ITC, M&M, SBILIFE), lexical-only retrieval, LLM synthesis on
+by default. First load can take up to a minute — the backend sleeps after inactivity on
+Render's free tier. See [`deployment/README.md`](deployment/README.md#public-demo-render)
+for what's deliberately scoped down for this deployment and why.
 
 Financial research API and dashboard for the NIFTY 50 universe. Ask it things like *"What
 was TCS's ROE?"*, *"Compare RELIANCE and ONGC on leverage"*, or *"Why did HCLTECH's
