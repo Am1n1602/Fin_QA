@@ -1,10 +1,3 @@
-# CI for finqa_v2 + evaluation/. Runs entirely on stdlib unittest against synthetic/no-DB
-# state -- every test that needs the real dataset (database/data/*.db, gitignored, built by
-# a network-heavy NSE/BSE pipeline) or a live LLM/Postgres is already self-gated via
-# unittest.skipUnless / an env-var check, so this suite is green with zero secrets and zero
-# external services. The regression gate runs for real against a small committed 6-company
-# fixture (evaluation/regression/fixtures/) rather than the full production dataset -- see
-# evaluation/regression/README.md for how that fixture is built and re-pinned.
 name: CI
 
 on:

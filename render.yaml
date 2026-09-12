@@ -20,7 +20,7 @@ services:
     name: finqa-api-public
     runtime: image
     image:
-      url: ghcr.io/YOUR_GITHUB_USERNAME/finqa-api-public:latest
+      url: ghcr.io/am1n1602/finqa-api-public:latest
     plan: free
     healthCheckPath: /health
     envVars:
