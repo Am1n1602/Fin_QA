@@ -60,7 +60,8 @@ def _company_id(repos, tickers: list[str] | None) -> int | None:
 
 
 def run_mode(retriever, repos, records: list[dict], mode: str, *,
-            filter_company: bool = True, rerank: bool = False) -> dict[str, Any]:
+            filter_company: bool = True, rerank: bool = False,
+            section_aware: bool = False) -> dict[str, Any]:
     if mode not in retriever.modes:
         return {"skipped": f"mode '{mode}' unavailable (modes={retriever.modes})"}
     first_ranks: list[int | None] = []
@@ -73,9 +74,10 @@ def run_mode(retriever, repos, records: list[dict], mode: str, *,
         gold = set(rec["gold_chunks"])
         cid = _company_id(repos, rec.get("company")) if filter_company else None
         filters = {"company_id": cid} if cid else None
+        intent = rec["intent"] if section_aware else None
         t0 = time.perf_counter()
         hits = retriever.retrieve(rec["question"], k=max(_KS), candidate_k=40,
-                                  mode=mode, filters=filters, rerank=rerank)
+                                  mode=mode, filters=filters, rerank=rerank, intent=intent)
         lat.append((time.perf_counter() - t0) * 1000)
         rels = [1 if h.chunk.chunk_id in gold else 0 for h in hits]
         first = next((i + 1 for i, r in enumerate(rels) if r), None)
@@ -112,6 +114,8 @@ def main() -> int:
     ap.add_argument("--filter-company", action="store_true", default=True)
     ap.add_argument("--no-filter-company", dest="filter_company", action="store_false")
     ap.add_argument("--rerank", action="store_true", help="wire the real CrossEncoderReranker")
+    ap.add_argument("--section-aware", action="store_true",
+                    help="pass each case's own intent to retrieve() for §15 section weighting")
     ap.add_argument("--out", type=Path, default=None, help="write a JSON report here")
     ap.add_argument("--label", default="retrieval_v21_baseline")
     args = ap.parse_args()
@@ -129,7 +133,8 @@ def main() -> int:
         results = {}
         for mode in (m.strip() for m in args.modes.split(",")):
             results[mode] = run_mode(retriever, repos, records, mode,
-                                     filter_company=args.filter_company, rerank=args.rerank)
+                                     filter_company=args.filter_company, rerank=args.rerank,
+                                     section_aware=args.section_aware)
     finally:
         repos.close()
 
@@ -162,6 +167,7 @@ def main() -> int:
             "dataset": str(args.dataset), "n_cases": len(records),
             "retriever_modes_available": list(retriever.modes),
             "filter_company": args.filter_company, "rerank": args.rerank,
+            "section_aware": args.section_aware,
             "results": {mode: {k: v for k, v in m.items() if k != "per_case"} for mode, m in results.items()},
         }
         args.out.parent.mkdir(parents=True, exist_ok=True)

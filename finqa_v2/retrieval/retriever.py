@@ -1,7 +1,14 @@
-"""HybridRetriever (§16-17): metadata pre-filter -> BM25 + vector -> RRF -> rerank -> top-k.
+"""HybridRetriever (§16-17): metadata pre-filter -> BM25 + vector -> RRF -> section
+weighting -> rerank -> top-k.
 
 modes: 'lexical' (BM25 only), 'vector' (dense only), 'hybrid' (both, fused). Falls back
 to lexical when a vector index / embedder is not wired.
+
+`retrieve(..., intent=None)` (§15): when `intent` is given, each candidate's fused score is
+multiplied by its section's configured weight (`finqa_v2/retrieval/section_weights.yaml`)
+before the top-k cut -- e.g. a `causal` query's `mda`/`earnings_call` chunks rank higher,
+boilerplate `cover_letter` chunks rank lower, regardless of intent. `intent=None` (every
+caller that predates this) skips the step entirely, so existing behavior is unchanged.
 """
 from __future__ import annotations
 
@@ -12,6 +19,7 @@ from finqa_v2.retrieval.filters import compile_filter
 from finqa_v2.retrieval.fuse import reciprocal_rank_fusion
 from finqa_v2.retrieval.lexical import BM25Index
 from finqa_v2.retrieval.rerank import IdentityReranker
+from finqa_v2.retrieval.section_weights import get_weight as _section_weight
 
 _META_KEYS = ("company_id", "financial_year", "document_type", "section", "segment", "topic")
 
@@ -72,7 +80,7 @@ class HybridRetriever:
     # ------------------------------------------------------------------ #
     def retrieve(self, query: str, *, k: int = 5, candidate_k: int = 30,
                  mode: str = "hybrid", filters: dict | None = None,
-                 rerank: bool = True) -> list[RetrievedChunk]:
+                 rerank: bool = True, intent: str | None = None) -> list[RetrievedChunk]:
         if mode == "hybrid" and "hybrid" not in self.modes:
             mode = "lexical"
         if mode not in ("lexical", "vector", "hybrid"):
@@ -97,6 +105,12 @@ class HybridRetriever:
         chunks = self._load_chunks(candidates)
         candidates = [cid for cid in candidates if cid in chunks]
 
+        section_weight: dict[int, float] = {}
+        if intent is not None and candidates:
+            base_score = {cid: 1.0 / (pos + 1) for pos, cid in enumerate(candidates)}
+            section_weight = {cid: _section_weight(intent, chunks[cid].section) for cid in candidates}
+            candidates = sorted(candidates, key=lambda cid: base_score[cid] * section_weight[cid], reverse=True)
+
         rerank_score: dict[int, float] = {}
         if rerank and candidates and not getattr(self._reranker, "trivial", False):
             rr = self._reranker.score(query, [chunks[cid].text for cid in candidates])
@@ -110,6 +124,7 @@ class HybridRetriever:
                 scores={
                     "lexical": lex_score.get(cid),
                     "rrf": rrf_score.get(cid),
+                    "section_weight": section_weight.get(cid),
                     "rerank": rerank_score.get(cid),
                 },
             ))

@@ -196,7 +196,10 @@ class ReasoningOrchestrator:
                 dm = "roe" if (metric in (None, "roe", "roce", "roa")) else "net_margin"
                 yield name, {"ticker": co, "metric": dm, "period": period}
             elif name == "search_documents":
-                a = {"query": plan.question, "k": 5}
+                # §15: the plan's own intent drives per-section retrieval weighting
+                # (finqa_v2/retrieval/section_weights.yaml) -- e.g. a causal question
+                # favors mda/earnings_call chunks over boilerplate cover-letter text.
+                a = {"query": plan.question, "k": 5, "intent": plan.intent.value}
                 if len(plan.companies) == 1:
                     a["company"] = co
                 yield name, a

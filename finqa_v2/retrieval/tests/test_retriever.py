@@ -4,6 +4,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from finqa_v2.retrieval.embed import HashEmbedder
 from finqa_v2.retrieval.lexical import BM25Index
@@ -100,6 +101,47 @@ class TestHybrid(unittest.TestCase):
         base = r.retrieve("segment revenue", k=5, mode="lexical", rerank=False)
         reranked = r.retrieve("segment revenue", k=5, mode="lexical", rerank=True)
         self.assertNotEqual([h.chunk.chunk_id for h in base], [h.chunk.chunk_id for h in reranked])
+
+    def test_intent_none_is_unchanged_from_omitting_the_argument(self):
+        # every caller that predates §15 never passes `intent` at all -- confirm the new
+        # default keeps their behavior byte-for-byte identical.
+        with_default = self.r.retrieve("independent auditor report basis for opinion", k=3, mode="lexical")
+        explicit_none = self.r.retrieve("independent auditor report basis for opinion", k=3,
+                                        mode="lexical", intent=None)
+        self.assertEqual([h.chunk.chunk_id for h in with_default],
+                         [h.chunk.chunk_id for h in explicit_none])
+
+    def test_intent_reorders_by_configured_section_weight(self):
+        # 3 lexical candidates for this query (see the ranking below); patch the weight
+        # lookup (not the real YAML -- that's section_weights.py's own test) so this only
+        # exercises the retriever's reordering logic in isolation.
+        query = "audit report board dividend opinion"
+        baseline = self.r.retrieve(query, k=3, mode="lexical", rerank=False)
+        self.assertEqual([h.chunk.section for h in baseline], ["auditors_report", "cover_letter", "notes"])
+
+        def _fake_weight(intent, section):
+            return 0.01 if section == "auditors_report" else 1.0
+
+        with mock.patch("finqa_v2.retrieval.retriever._section_weight", side_effect=_fake_weight):
+            weighted = self.r.retrieve(query, k=3, mode="lexical", rerank=False, intent="suppress_audit")
+        self.assertNotEqual(weighted[0].chunk.section, "auditors_report")
+        self.assertIsNotNone(weighted[0].scores["section_weight"])
+
+    def test_intent_demotes_boilerplate_cover_letter_using_the_real_shipped_config(self):
+        # this is the exact Phase-2 finding (cover_letter boilerplate outranking real
+        # content) reproduced in miniature, and the real section_weights.yaml's `global`
+        # cover_letter suppression fixing it -- no mocking, the actual shipped config.
+        query = "audit report board dividend opinion"
+        baseline = self.r.retrieve(query, k=3, mode="lexical", rerank=False)
+        self.assertEqual(baseline[1].chunk.section, "cover_letter")  # ranks #2 unweighted
+
+        weighted = self.r.retrieve(query, k=3, mode="lexical", rerank=False, intent="causal")
+        cover_letter_rank = next(h.rank for h in weighted if h.chunk.section == "cover_letter")
+        self.assertEqual(cover_letter_rank, 3)  # demoted to last by the global 0.3x weight
+
+    def test_intent_weighting_leaves_scores_empty_when_not_used(self):
+        hits = self.r.retrieve("segment revenue", k=3, mode="lexical")
+        self.assertTrue(all(h.scores["section_weight"] is None for h in hits))
 
 
 if __name__ == "__main__":

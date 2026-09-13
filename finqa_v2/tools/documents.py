@@ -19,6 +19,9 @@ class _Search(BaseModel):
     financial_year: int | None = None
     k: int = Field(5, ge=1, le=20)
     mode: Literal["lexical", "vector", "hybrid"] = "hybrid"
+    intent: str | None = Field(
+        None, description="query intent (e.g. causal, trend, segment) -- used to weight "
+                          "retrieval toward the sections that intent usually needs (§15)")
 
 
 class _Section(BaseModel):
@@ -47,7 +50,7 @@ def register(reg, repos, retriever) -> None:
             filters["section"] = m.sections
         if m.financial_year:
             filters["financial_year"] = m.financial_year
-        hits = retriever.retrieve(m.query, k=m.k, mode=m.mode, filters=filters or None)
+        hits = retriever.retrieve(m.query, k=m.k, mode=m.mode, filters=filters or None, intent=m.intent)
         ws = EvidenceSet()
         for h in hits:
             evidence_from_retrieved_chunk(h, repos=repos, company=m.company, workspace=ws)

@@ -99,7 +99,7 @@ class HypothesisTester:
             filters["company_id"] = co.company_id
         try:
             return self._retriever.retrieve(f"{metric} {statement}", k=self._docs_per,
-                                            filters=filters or None)
+                                            filters=filters or None, intent="causal")
         except Exception:
             return []
 

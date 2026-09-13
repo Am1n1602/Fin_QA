@@ -30,11 +30,12 @@ def corroborate_in_docs(retriever, repos, ticker, claim, fy, *, workspace=None, 
 
     query = " ".join(x for x in (claim.subject or "", claim.mechanism or "", claim.raw) if x)
     try:
-        hits = retriever.retrieve(query, k=k, filters=filters or None)
+        hits = retriever.retrieve(query, k=k, filters=filters or None, intent="cross_validation")
     except Exception:
         # retry without the FY filter (thin corpus)
         try:
-            hits = retriever.retrieve(query, k=k, filters={"company_id": co.company_id} if co else None)
+            hits = retriever.retrieve(query, k=k, filters={"company_id": co.company_id} if co else None,
+                                      intent="cross_validation")
         except Exception:
             return "absent", []
 
