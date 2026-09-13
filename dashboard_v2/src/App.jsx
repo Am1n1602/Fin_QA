@@ -7,6 +7,7 @@ import RankingsPage from "./pages/RankingsPage.jsx";
 import ResearchPage from "./pages/ResearchPage.jsx";
 import QaPage from "./pages/QaPage.jsx";
 import WakeGate from "./components/WakeGate.jsx";
+import { useTheme } from "./hooks/useTheme.js";
 
 const NAV_ITEMS = [
   { to: "/", label: "Overview", end: true },
@@ -17,6 +18,7 @@ const NAV_ITEMS = [
 ];
 
 export default function App() {
+  const { theme, toggleTheme } = useTheme();
   return (
     <WakeGate>
       <div className="app-shell">
@@ -30,6 +32,15 @@ export default function App() {
               <span className="brand">FIN&middot;QA v2</span>
               <span className="brand-tagline">Evidence Desk &mdash; NIFTY 50, every claim cited</span>
             </div>
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {theme === "dark" ? "☀️ Light" : "\u{1F319} Dark"}
+            </button>
           </div>
           <nav className="app-nav" aria-label="Primary">
             {NAV_ITEMS.map((item, i) => (

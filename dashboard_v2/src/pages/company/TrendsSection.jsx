@@ -3,6 +3,7 @@ import { api } from "../../api/client.js";
 import { useApi } from "../../api/useApi.js";
 import StatusBanner from "../../components/StatusBanner.jsx";
 import StatTile from "../../components/StatTile.jsx";
+import { formatIndianNumber } from "../../utils/format.js";
 
 const GROWTH_METRICS = [
   { key: "revenue", label: "Revenue Growth (YoY)" },
@@ -58,7 +59,7 @@ export default function TrendsSection({ ticker, period = "FY2026", basis = "cons
               {Object.entries(factors).map(([k, v]) => (
                 <tr key={k}>
                   <td>{k.replace(/_/g, " ")}</td>
-                  <td>{typeof v === "number" ? v.toLocaleString(undefined, { maximumFractionDigits: 4 }) : String(v)}</td>
+                  <td>{typeof v === "number" ? formatIndianNumber(v, 4) : String(v)}</td>
                 </tr>
               ))}
             </tbody>

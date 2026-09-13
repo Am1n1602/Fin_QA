@@ -1,4 +1,6 @@
 import React from "react";
+import { formatValue } from "../utils/format.js";
+import { renderAnswerHtml, reformatCurrencyNumbers } from "../utils/answerFormat.js";
 
 /* The v2 differentiator (roadmap §24/§32): every claim in an answer traces back to the
    exact evidence, calculation, and filing passage that supports it. `claims` here is
@@ -19,9 +21,7 @@ function StatusBadge({ status }) {
 }
 
 function fmtValue(value, unit) {
-  if (value === null || value === undefined) return "N/A";
-  const num = typeof value === "number" ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : value;
-  return unit ? `${num} ${unit}` : `${num}`;
+  return formatValue(value, unit) === "—" ? "N/A" : formatValue(value, unit);
 }
 
 function EvidenceRow({ ev }) {
@@ -34,10 +34,11 @@ function EvidenceRow({ ev }) {
   // duplicate value badge next to a nameless heading.
   const isDescriptive = ev.type === "segment" || ev.type === "comparison";
   const head = [ev.company, ev.metric, ev.period && `(${ev.period})`].filter(Boolean).join(" ");
+  const confidenceTitle = `Retrieval/derivation confidence: ${Math.round((ev.confidence ?? 0) * 100)}%`;
   return (
-    <li className="evidence-row">
+    <li className="evidence-row" title={confidenceTitle}>
       {isDescriptive ? (
-        <span className="evidence-head">{ev.text}</span>
+        <span className="evidence-head">{reformatCurrencyNumbers(ev.text)}</span>
       ) : isNumeric ? (
         <>
           <span className="evidence-head">{head || ev.type}</span>
@@ -49,9 +50,6 @@ function EvidenceRow({ ev }) {
           {ev.text && <p className="evidence-snippet">&ldquo;{ev.text}&rdquo;</p>}
         </>
       )}
-      <span className="evidence-confidence" title="Retrieval/derivation confidence">
-        {Math.round((ev.confidence ?? 0) * 100)}%
-      </span>
     </li>
   );
 }
@@ -81,16 +79,15 @@ function SourceChip({ source }) {
 }
 
 function ClaimCard({ claim: node }) {
-  const { claim, evidence = [], calculations = [], sources = [], confidence_breakdown: cb } = node;
+  const { claim, evidence = [], calculations = [], sources = [] } = node;
   const numericEvidence = evidence.filter((e) => e.value !== null && e.value !== undefined);
   const docEvidence = evidence.filter((e) => e.value === null || e.value === undefined);
 
   return (
     <details className="claim-card">
-      <summary className="claim-summary">
+      <summary className="claim-summary" title={`Claim confidence: ${Math.round((claim.confidence ?? 0) * 100)}%`}>
         <StatusBadge status={claim.status} />
-        <span className="claim-text">{claim.text}</span>
-        <span className="claim-confidence">{Math.round((claim.confidence ?? 0) * 100)}%</span>
+        <span className="claim-text">{reformatCurrencyNumbers(claim.text)}</span>
       </summary>
 
       <div className="claim-body">
@@ -136,13 +133,6 @@ function ClaimCard({ claim: node }) {
               ))}
             </div>
           </section>
-        )}
-
-        {cb && (
-          <p className="claim-confidence-note">
-            confidence = mean support ({cb.mean_support}) &times; status factor ({cb.status_factor}) ={" "}
-            {cb.claim_confidence}
-          </p>
         )}
       </div>
     </details>
@@ -197,11 +187,8 @@ export function VerificationNote({ verification }) {
 export default function EvidenceAnswer({ result, contextLabel }) {
   const { response, claim_graph: claimGraph } = result;
   return (
-    <div className="evidence-answer">
-      <p className="answer-text">{response.answer}</p>
-      <p className="answer-confidence">
-        Overall confidence: <strong>{Math.round((response.confidence ?? 0) * 100)}%</strong>
-      </p>
+    <div className="evidence-answer" title={`Overall confidence: ${Math.round((response.confidence ?? 0) * 100)}%`}>
+      <div className="answer-text" dangerouslySetInnerHTML={{ __html: renderAnswerHtml(response.answer) }} />
       <VerificationNote verification={result.verification} />
       <LimitationsList items={response.limitations} />
       <ClaimList claims={claimGraph?.claims} contextLabel={contextLabel} />

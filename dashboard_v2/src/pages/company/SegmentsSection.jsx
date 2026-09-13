@@ -2,9 +2,10 @@ import React from "react";
 import { api } from "../../api/client.js";
 import { useApi } from "../../api/useApi.js";
 import StatusBanner from "../../components/StatusBanner.jsx";
+import { formatValue, formatIndianNumber } from "../../utils/format.js";
 
 function fmt(v) {
-  return v === null || v === undefined ? "—" : v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  return v === null || v === undefined ? "—" : formatIndianNumber(v);
 }
 
 export default function SegmentsSection({ ticker, basis = "consolidated" }) {
@@ -46,7 +47,7 @@ export default function SegmentsSection({ ticker, basis = "consolidated" }) {
             return (
               <tr key={row.segment}>
                 <td>{row.segment}</td>
-                <td>{fmt(row.revenue)}</td>
+                <td>{formatValue(row.revenue, "INR")}</td>
                 <td>{row.contribution_pct !== null ? `${fmt(row.contribution_pct)}%` : "—"}</td>
                 <td>{g?.growth_pct !== undefined && g.growth_pct !== null ? `${fmt(g.growth_pct)}%` : "—"}</td>
                 <td>

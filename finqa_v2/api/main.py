@@ -168,13 +168,25 @@ async def observability_and_security_middleware(request: Request, call_next):
     `JSONResponse` directly (not raise `ApiError`) because exceptions raised in
     middleware BEFORE `call_next()` run outside FastAPI's own exception-handler
     pipeline (`install_exception_handlers`, which only sees exceptions raised inside
-    route/dependency resolution) and would otherwise surface as a raw 500."""
+    route/dependency resolution) and would otherwise surface as a raw 500.
+
+    This middleware is registered (via the decorator, i.e. `add_middleware`) AFTER
+    `CORSMiddleware` above, which makes it the OUTER one -- Starlette wraps middleware
+    in reverse registration order, so the last one added runs first on the way in. That
+    means a browser's CORS preflight (`OPTIONS`) hits the checks below BEFORE
+    `CORSMiddleware` ever gets a chance to answer it, so a tripped rate limit or a
+    missing API key was rejecting the preflight itself with a plain, CORS-header-less
+    429/401 -- which the browser can't attribute to the real request at all, surfacing
+    to `fetch()` as an opaque "Failed to fetch" instead of a readable error the UI could
+    show. A preflight carries no credentials and triggers no real work downstream, so
+    it's exempted here and left to `CORSMiddleware`/routing to answer normally; only the
+    browser's actual follow-up request (still subject to every check) can do anything."""
     request_id = new_request_id()
     token = request_id_var.set(request_id)
     t0 = time.perf_counter()
     status_code = 500
     try:
-        if request.url.path not in _SECURITY_EXEMPT_PATHS:
+        if request.method != "OPTIONS" and request.url.path not in _SECURITY_EXEMPT_PATHS:
             auth_error = check_api_key(request)
             # Only spend a rate-limit slot on an authenticated request -- an attacker
             # probing with no/a wrong key shouldn't also be able to exhaust a real

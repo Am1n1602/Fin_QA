@@ -4,6 +4,7 @@ import { api } from "../api/client.js";
 import { useApi } from "../api/useApi.js";
 import { usePageTitle } from "../hooks/usePageTitle.js";
 import StatusBanner from "../components/StatusBanner.jsx";
+import { formatValue } from "../utils/format.js";
 
 const METRICS = [
   { key: "roe", label: "Return on Equity" },
@@ -20,6 +21,7 @@ export default function RankingsPage() {
   const { data: companiesData } = useApi(() => api.listCompanies(), []);
   const [metric, setMetric] = useState("roe");
   const [selected, setSelected] = useState([]);
+  const [companyQuery, setCompanyQuery] = useState("");
 
   const tickers = selected.length >= 2 ? selected : (companiesData?.members || []).slice(0, 15).map((c) => c.ticker);
   const { data: ranking, loading, error } = useApi(
@@ -56,13 +58,29 @@ export default function RankingsPage() {
 
       <details className="picker" style={{ marginTop: "0.8rem" }}>
         <summary>Choose companies ({selected.length} selected)</summary>
+        <label htmlFor="company-search" className="visually-hidden">
+          Search companies
+        </label>
+        <input
+          id="company-search"
+          type="search"
+          className="picker-search"
+          placeholder="Search by ticker or name..."
+          value={companyQuery}
+          onChange={(e) => setCompanyQuery(e.target.value)}
+        />
         <div className="chip-picker">
-          {(companiesData?.members || []).map((c) => (
-            <label key={c.ticker} className="chip-checkbox">
-              <input type="checkbox" checked={selected.includes(c.ticker)} onChange={() => toggle(c.ticker)} />
-              {c.ticker}
-            </label>
-          ))}
+          {(companiesData?.members || [])
+            .filter((c) => {
+              const q = companyQuery.trim().toLowerCase();
+              return !q || c.ticker.toLowerCase().includes(q) || c.name.toLowerCase().includes(q);
+            })
+            .map((c) => (
+              <label key={c.ticker} className="chip-checkbox">
+                <input type="checkbox" checked={selected.includes(c.ticker)} onChange={() => toggle(c.ticker)} />
+                {c.ticker}
+              </label>
+            ))}
         </div>
       </details>
 
@@ -84,7 +102,7 @@ export default function RankingsPage() {
                 <td>
                   <Link to={`/companies/${r.ticker}`}>{r.ticker}</Link>
                 </td>
-                <td>{r.value !== null ? r.value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}</td>
+                <td>{formatValue(r.value, ranking.unit)}</td>
               </tr>
             ))}
           </tbody>

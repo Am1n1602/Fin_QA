@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../../api/client.js";
 import { useApi } from "../../api/useApi.js";
 import StatusBanner from "../../components/StatusBanner.jsx";
+import { formatValue } from "../../utils/format.js";
 
 const COMPARE_METRICS = [
   { key: "roe", label: "Return on Equity" },
@@ -66,7 +67,7 @@ export default function PeersSection({ ticker, basis = "consolidated" }) {
                   <Link to={`/companies/${r.ticker}`}>{r.ticker}</Link>
                   {r.ticker === ticker && <span className="tag" style={{ marginLeft: "0.4rem" }}>this company</span>}
                 </td>
-                <td>{r.value !== null ? r.value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}</td>
+                <td>{formatValue(r.value, ranking.unit)}</td>
               </tr>
             ))}
           </tbody>

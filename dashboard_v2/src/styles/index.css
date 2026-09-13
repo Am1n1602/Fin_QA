@@ -20,6 +20,7 @@
   --accent: #0f5c6b;
   --accent-strong: #0a4550;
   --accent-tint: #e3f0f2;
+  --on-accent: #ffffff;
   --supported: #1f6f4a;
   --supported-tint: #e6f3ec;
   --partial: #8a6a1f;
@@ -28,10 +29,66 @@
   --not-supported-tint: #fbe9e7;
   --insufficient: #5b6773;
   --insufficient-tint: #eceff1;
+  --shadow: 0 1px 2px rgba(27, 36, 48, 0.06), 0 4px 14px rgba(27, 36, 48, 0.05);
 
   --font-serif: Charter, Georgia, "Times New Roman", serif;
   --font-sans: "Segoe UI", Charter, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, Menlo, monospace;
+
+  color-scheme: light;
+}
+
+/* dark mode -- follows the system by default ([data-theme] unset), overridden either
+   way once the header toggle (useTheme.js) writes an explicit choice to localStorage. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10161b;
+    --surface: #171f26;
+    --surface-sunken: #0c1216;
+    --ink: #e7edf1;
+    --ink-soft: #aab6c0;
+    --ink-faint: #85929c;
+    --rule: #2a343c;
+    --rule-strong: #3c4750;
+    --accent: #55b8c7;
+    --accent-strong: #86d3df;
+    --accent-tint: #163138;
+    --on-accent: #0a1a1e;
+    --supported: #6bd39a;
+    --supported-tint: #143323;
+    --partial: #e7c069;
+    --partial-tint: #382c11;
+    --not-supported: #ec9285;
+    --not-supported-tint: #3b1c17;
+    --insufficient: #9aa7b0;
+    --insufficient-tint: #212a30;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 14px rgba(0, 0, 0, 0.28);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10161b;
+  --surface: #171f26;
+  --surface-sunken: #0c1216;
+  --ink: #e7edf1;
+  --ink-soft: #aab6c0;
+  --ink-faint: #85929c;
+  --rule: #2a343c;
+  --rule-strong: #3c4750;
+  --accent: #55b8c7;
+  --accent-strong: #86d3df;
+  --accent-tint: #163138;
+  --on-accent: #0a1a1e;
+  --supported: #6bd39a;
+  --supported-tint: #143323;
+  --partial: #e7c069;
+  --partial-tint: #382c11;
+  --not-supported: #ec9285;
+  --not-supported-tint: #3b1c17;
+  --insufficient: #9aa7b0;
+  --insufficient-tint: #212a30;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 14px rgba(0, 0, 0, 0.28);
+  color-scheme: dark;
 }
 
 * {
@@ -46,6 +103,7 @@ body {
   font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.5;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 h1,
@@ -55,6 +113,12 @@ h4 {
   font-family: var(--font-serif);
   font-weight: 600;
   color: var(--ink);
+}
+
+.page-header h1 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-size: 1.9rem;
 }
 
 a {
@@ -96,10 +160,33 @@ a {
   margin-bottom: 1.4rem;
 }
 
+.masthead-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
 .brand-block {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+}
+
+.theme-toggle {
+  background: var(--surface);
+  color: var(--ink-soft);
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.theme-toggle:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+  background: var(--surface);
 }
 
 .brand {
@@ -163,8 +250,9 @@ a {
 .card {
   background: var(--surface);
   border: 1px solid var(--rule);
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 1.1rem 1.2rem;
+  box-shadow: var(--shadow);
 }
 
 .card-link {
@@ -215,11 +303,17 @@ input[type="text"],
 input[type="search"],
 select {
   font: inherit;
-  padding: 0.45rem 0.6rem;
+  padding: 0.5rem 0.9rem;
   border: 1px solid var(--rule-strong);
-  border-radius: 5px;
+  border-radius: 999px;
   background: var(--surface);
   color: var(--ink);
+}
+.picker-search {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  margin: 0.6rem 0 0;
 }
 input[type="text"]:focus,
 select:focus {
@@ -231,9 +325,9 @@ button {
   cursor: pointer;
   border: 1px solid var(--accent-strong);
   background: var(--accent);
-  color: #fff;
-  padding: 0.45rem 0.9rem;
-  border-radius: 5px;
+  color: var(--on-accent);
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
 }
 button:hover {
   background: var(--accent-strong);
@@ -332,10 +426,14 @@ button:disabled {
   padding: 0.5rem 0.7rem;
 }
 .tab-button:hover {
-  color: var(--accent-strong);
+  color: var(--ink);
+  background: transparent;
+  border-bottom-color: var(--rule-strong);
 }
-.tab-button-active {
+.tab-button-active,
+.tab-button-active:hover {
   color: var(--accent-strong);
+  background: transparent;
   border-bottom-color: var(--accent);
   font-weight: 600;
 }
@@ -360,11 +458,13 @@ button:disabled {
   background: transparent;
 }
 .basis-toggle-option:hover {
-  color: var(--accent-strong);
+  color: var(--ink);
+  background: transparent;
 }
-.basis-toggle-option-active {
+.basis-toggle-option-active,
+.basis-toggle-option-active:hover {
   background: var(--accent);
-  color: var(--bg, #fff);
+  color: var(--on-accent);
   font-weight: 600;
 }
 .section-note {
@@ -530,13 +630,19 @@ button:disabled {
 }
 .answer-text {
   font-size: 1.02rem;
-  white-space: pre-wrap;
-  margin: 0;
 }
-.answer-confidence {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--ink-faint);
+.answer-paragraph {
+  margin: 0 0 0.6rem;
+}
+.answer-paragraph:last-child {
+  margin-bottom: 0;
+}
+.answer-list {
+  margin: 0 0 0.6rem;
+  padding-left: 1.3rem;
+}
+.answer-list li {
+  margin-bottom: 0.2rem;
 }
 .limitations-list {
   margin: 0;
@@ -601,11 +707,6 @@ button:disabled {
   flex: 1;
   min-width: 200px;
 }
-.claim-confidence {
-  font-size: 0.78rem;
-  color: var(--ink-faint);
-  font-family: var(--font-mono);
-}
 .claim-body {
   padding: 0 0.8rem 0.8rem 1.7rem;
   border-top: 1px solid var(--rule);
@@ -620,12 +721,6 @@ button:disabled {
   color: var(--ink-faint);
   margin: 0 0 0.3rem;
 }
-.claim-confidence-note {
-  font-size: 0.78rem;
-  color: var(--ink-faint);
-  margin: 0.6rem 0 0;
-}
-
 .status-badge {
   display: inline-block;
   padding: 0.1rem 0.55rem;
@@ -679,12 +774,6 @@ button:disabled {
   font-style: italic;
   font-size: 0.86rem;
   flex-basis: 100%;
-}
-.evidence-confidence {
-  margin-left: auto;
-  font-size: 0.75rem;
-  color: var(--ink-faint);
-  font-family: var(--font-mono);
 }
 
 .calc-row {
