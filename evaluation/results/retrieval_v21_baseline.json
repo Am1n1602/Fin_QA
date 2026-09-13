@@ -1,0 +1,60 @@
+{
+  "experiment_id": "retrieval_v21_baseline_002",
+  "git_commit": "6b34ef6e0a90c974b9a92852c6f7341e62727ca9",
+  "dataset": "evaluation\\datasets\\retrieval_v21.json",
+  "n_cases": 380,
+  "retriever_modes_available": [
+    "lexical",
+    "vector",
+    "hybrid"
+  ],
+  "filter_company": true,
+  "rerank": false,
+  "results": {
+    "vector": {
+      "mode": "vector",
+      "n_total": 380,
+      "n_scored": 330,
+      "recall@1": 0.1182,
+      "recall@3": 0.2061,
+      "recall@5": 0.2424,
+      "recall@10": 0.3242,
+      "mrr": 0.1745,
+      "ndcg@5": 0.161,
+      "p50_ms": 21.27,
+      "p95_ms": 27.63,
+      "no_gold_cases": 50,
+      "spurious_hit_rate": 0.98
+    },
+    "lexical": {
+      "mode": "lexical",
+      "n_total": 380,
+      "n_scored": 330,
+      "recall@1": 0.0939,
+      "recall@3": 0.1727,
+      "recall@5": 0.2,
+      "recall@10": 0.2606,
+      "mrr": 0.1426,
+      "ndcg@5": 0.1307,
+      "p50_ms": 4.75,
+      "p95_ms": 77.39,
+      "no_gold_cases": 50,
+      "spurious_hit_rate": 1.0
+    },
+    "hybrid": {
+      "mode": "hybrid",
+      "n_total": 380,
+      "n_scored": 330,
+      "recall@1": 0.0909,
+      "recall@3": 0.1818,
+      "recall@5": 0.2667,
+      "recall@10": 0.3515,
+      "mrr": 0.1602,
+      "ndcg@5": 0.1525,
+      "p50_ms": 27.37,
+      "p95_ms": 113.45,
+      "no_gold_cases": 50,
+      "spurious_hit_rate": 1.0
+    }
+  }
+}

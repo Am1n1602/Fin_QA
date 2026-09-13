@@ -33,6 +33,25 @@ The v2 set reuses every field above and adds a few the v2 runner / evaluators re
 `reference_value` on the v2 set is stored in the **engine's own unit** — absolute INR (not crore),
 `pct`, or `x` — so `NumericalEvaluator` reconciles directly against the answer text.
 
+## Phase 1 (v2.1) — retrieval fields (`retrieval_v21.json`)
+
+This dataset is retrieval-only, not a QA dataset -- it lives at
+`evaluation/datasets/retrieval_v21.json` (a JSON **array**, not JSONL) and does not reuse
+the schema above. Built by `evaluation.datasets.retrieval_v21.build`; see
+`docs/file-guide.md`'s "v2.1 Roadmap — Phase 1" section for the full generation writeup.
+
+| Field | Type | Required | Meaning |
+|---|---|---|---|
+| `id` | string | yes | `rv21-<category>-NNNN`. Never reused. |
+| `question` | string | yes | The natural-language query text to feed the retriever. |
+| `company` | string[] | yes | NSE tickers the question concerns; `[]` for a fully out-of-universe adversarial item. Two entries for `comparison`. |
+| `period` | string[] | yes | `["FY2026"]`-style labels, derived from the gold chunks' own `financial_year` when available, else the question's intended (possibly out-of-corpus) period; `[]` if neither applies. |
+| `intent` | string | yes | One of §5.1's 13 categories: `numeric`, `ratio`, `trend`, `narrative`, `causal`, `management_commentary`, `comparison`, `cross_document`, `multi_hop`, `table`, `segment`, `adversarial`, `no_evidence`. |
+| `gold_chunks` | int[] | yes | Real `document_chunks.chunk_id` values, verified present in `finqa_v2.db` at build time. `[]` for `adversarial`/`no_evidence` (verified *absent*, not merely omitted). |
+| `gold_sections` | string[] | yes | Distinct `section` values among the gold chunks; `[]` when `gold_chunks` is empty. |
+| `difficulty` | string | yes | `easy` \| `medium` \| `hard`. |
+| `adversarial_type` | string | no | Only on `adversarial`/`no_evidence` records: `wrong_period`, `out_of_universe`, `forecast_not_in_corpus`, or `nonexistent_metric`. |
+
 ## Conventions
 
 - One universe: NIFTY 50 tickers only, real NSE symbols (`TCS`, `INFY`, `HDFCBANK`, …).

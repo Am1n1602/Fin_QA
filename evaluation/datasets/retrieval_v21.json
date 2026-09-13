@@ -1,0 +1,9230 @@
+[
+  {
+    "id": "rv21-numeric-0001",
+    "question": "What was Mahindra & Mahindra's net profit according to its financial results?",
+    "company": [
+      "M&M"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      55568,
+      55569
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0002",
+    "question": "What was Mahindra & Mahindra's profit after tax according to its financial results?",
+    "company": [
+      "M&M"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      55568,
+      55569
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0003",
+    "question": "What was BAJAJFINSV's revenue from operations according to its financial results?",
+    "company": [
+      "BAJAJFINSV"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      44994,
+      44995,
+      45010,
+      45333,
+      45335,
+      45340,
+      45344
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0004",
+    "question": "What was BAJAJFINSV's total income according to its financial results?",
+    "company": [
+      "BAJAJFINSV"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      44994,
+      44995,
+      45010,
+      45333,
+      45335,
+      45340,
+      45344
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0005",
+    "question": "What was BAJAJFINSV's net profit according to its financial results?",
+    "company": [
+      "BAJAJFINSV"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      45341,
+      45342,
+      45343,
+      45344
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0006",
+    "question": "What was BAJAJFINSV's profit after tax according to its financial results?",
+    "company": [
+      "BAJAJFINSV"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      45010,
+      45333,
+      45335,
+      45340,
+      45341,
+      45342,
+      45343,
+      45344
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0007",
+    "question": "What was BAJAJFINSV's total expenses according to its financial results?",
+    "company": [
+      "BAJAJFINSV"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      44994,
+      44995,
+      45010,
+      45333,
+      45335,
+      45340,
+      45344
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0008",
+    "question": "What was BAJAJFINSV's earnings per share according to its financial results?",
+    "company": [
+      "BAJAJFINSV"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      44994,
+      44995,
+      45010,
+      45333,
+      45335,
+      45340,
+      45344
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0009",
+    "question": "What was HCLTECH's revenue from operations according to its financial results?",
+    "company": [
+      "HCLTECH"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      49741,
+      49744
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0010",
+    "question": "What was HCLTECH's total income according to its financial results?",
+    "company": [
+      "HCLTECH"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      49741,
+      49744
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0011",
+    "question": "What was HCLTECH's total expenses according to its financial results?",
+    "company": [
+      "HCLTECH"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      49741,
+      49744
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0012",
+    "question": "What was SHRIRAMFIN's revenue from operations according to its financial results?",
+    "company": [
+      "SHRIRAMFIN"
+    ],
+    "period": [],
+    "intent": "numeric",
+    "gold_chunks": [
+      59091,
+      59216,
+      59225,
+      59226,
+      59341,
+      59354,
+      59355,
+      59475,
+      59485,
+      59486
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0013",
+    "question": "What was SHRIRAMFIN's total income according to its financial results?",
+    "company": [
+      "SHRIRAMFIN"
+    ],
+    "period": [],
+    "intent": "numeric",
+    "gold_chunks": [
+      59091,
+      59216,
+      59223,
+      59224,
+      59225,
+      59226,
+      59341,
+      59354,
+      59355,
+      59475
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0014",
+    "question": "What was SHRIRAMFIN's net profit according to its financial results?",
+    "company": [
+      "SHRIRAMFIN"
+    ],
+    "period": [],
+    "intent": "numeric",
+    "gold_chunks": [
+      59222,
+      59223,
+      59224,
+      59225,
+      59226,
+      59351,
+      59352,
+      59353,
+      59354,
+      59355
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0015",
+    "question": "What was SHRIRAMFIN's profit after tax according to its financial results?",
+    "company": [
+      "SHRIRAMFIN"
+    ],
+    "period": [],
+    "intent": "numeric",
+    "gold_chunks": [
+      59222,
+      59223,
+      59224,
+      59225,
+      59226,
+      59351,
+      59352,
+      59353,
+      59354,
+      59355
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0016",
+    "question": "What was SHRIRAMFIN's total expenses according to its financial results?",
+    "company": [
+      "SHRIRAMFIN"
+    ],
+    "period": [],
+    "intent": "numeric",
+    "gold_chunks": [
+      59091,
+      59216,
+      59225,
+      59226,
+      59341,
+      59354,
+      59355,
+      59475,
+      59485,
+      59486
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0017",
+    "question": "What was TATACONSUM's total income according to its financial results?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      60953
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0018",
+    "question": "What was TATACONSUM's net profit according to its financial results?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      60956,
+      60957
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0019",
+    "question": "What was TATACONSUM's profit after tax according to its financial results?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      60956,
+      60957
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0020",
+    "question": "What was TATACONSUM's total expenses according to its financial results?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      60953
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0021",
+    "question": "What was TATACONSUM's earnings per share according to its financial results?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      60953
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0022",
+    "question": "What was BHARTIARTL's revenue from operations according to its financial results?",
+    "company": [
+      "BHARTIARTL"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      46766,
+      46767,
+      46777,
+      46778,
+      46961,
+      46962
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0023",
+    "question": "What was BHARTIARTL's earnings per share according to its financial results?",
+    "company": [
+      "BHARTIARTL"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      46766,
+      46767,
+      46778,
+      46956,
+      46957,
+      46962
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0024",
+    "question": "What was TMPV's revenue from operations according to its financial results?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      63964,
+      63967,
+      63968,
+      63989,
+      63992,
+      63993,
+      64253,
+      64254,
+      64269,
+      64270
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0025",
+    "question": "What was TMPV's total income according to its financial results?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      63964,
+      63967,
+      63968,
+      63989,
+      63992,
+      63993,
+      64253,
+      64254,
+      64269,
+      64270
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0026",
+    "question": "What was TMPV's net profit according to its financial results?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      64261,
+      64262,
+      64263
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0027",
+    "question": "What was TMPV's profit after tax according to its financial results?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      64261,
+      64262,
+      64263
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0028",
+    "question": "What was TMPV's total expenses according to its financial results?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      63964,
+      63967,
+      63968,
+      63989,
+      63992,
+      63993,
+      64253,
+      64254,
+      64269,
+      64270
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0029",
+    "question": "What was TMPV's earnings per share according to its financial results?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      63964,
+      63967,
+      63968,
+      64253,
+      64254,
+      64269,
+      64270
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0030",
+    "question": "What was DRREDDY's revenue from operations according to its financial results?",
+    "company": [
+      "DRREDDY"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      47830,
+      47831,
+      47843,
+      47844,
+      47922,
+      47923
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0031",
+    "question": "What was DRREDDY's total income according to its financial results?",
+    "company": [
+      "DRREDDY"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      47830,
+      47831,
+      47843,
+      47844,
+      47922,
+      47923
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0032",
+    "question": "What was DRREDDY's net profit according to its financial results?",
+    "company": [
+      "DRREDDY"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      47830,
+      47831,
+      47843,
+      47844,
+      47922,
+      47923
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0033",
+    "question": "What was DRREDDY's profit after tax according to its financial results?",
+    "company": [
+      "DRREDDY"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      47830,
+      47831
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0034",
+    "question": "What was DRREDDY's total expenses according to its financial results?",
+    "company": [
+      "DRREDDY"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      47830,
+      47831,
+      47843,
+      47844,
+      47922,
+      47923
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0035",
+    "question": "What was HINDUNILVR's net profit according to its financial results?",
+    "company": [
+      "HINDUNILVR"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      51522
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0036",
+    "question": "What was HINDUNILVR's profit after tax according to its financial results?",
+    "company": [
+      "HINDUNILVR"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      51522
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0037",
+    "question": "What was ICICIBANK's net profit according to its financial results?",
+    "company": [
+      "ICICIBANK"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      52307,
+      52308,
+      52309
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0038",
+    "question": "What was ICICIBANK's profit after tax according to its financial results?",
+    "company": [
+      "ICICIBANK"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      52307,
+      52308,
+      52309
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0039",
+    "question": "What was APOLLOHOSP's revenue from operations according to its financial results?",
+    "company": [
+      "APOLLOHOSP"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      41315
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-numeric-0040",
+    "question": "What was APOLLOHOSP's total income according to its financial results?",
+    "company": [
+      "APOLLOHOSP"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "numeric",
+    "gold_chunks": [
+      41315
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-ratio-0001",
+    "question": "What did JIOFIN report for earnings per share?",
+    "company": [
+      "JIOFIN"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      53981,
+      53984,
+      53985,
+      53992,
+      53995,
+      53996,
+      54075,
+      54079,
+      54083,
+      54085
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0002",
+    "question": "What did KOTAKBANK report for net profit margin?",
+    "company": [
+      "KOTAKBANK"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      54706,
+      54707
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0003",
+    "question": "What did KOTAKBANK report for operating margin?",
+    "company": [
+      "KOTAKBANK"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      54706,
+      54707
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0004",
+    "question": "What did KOTAKBANK report for current ratio?",
+    "company": [
+      "KOTAKBANK"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      54706,
+      54707
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0005",
+    "question": "What did KOTAKBANK report for earnings per share?",
+    "company": [
+      "KOTAKBANK"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      54607,
+      54620,
+      54694,
+      54695,
+      54706,
+      54707
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0006",
+    "question": "What did BAJAJFINSV report for return on equity?",
+    "company": [
+      "BAJAJFINSV"
+    ],
+    "period": [],
+    "intent": "ratio",
+    "gold_chunks": [
+      43601,
+      43602,
+      43892,
+      43893,
+      44182,
+      44183,
+      44361,
+      44362,
+      44707,
+      44708
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0007",
+    "question": "What did BAJAJFINSV report for earnings per share?",
+    "company": [
+      "BAJAJFINSV"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      44994,
+      44995,
+      45010,
+      45333,
+      45335,
+      45340,
+      45344
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0008",
+    "question": "What did INFY report for operating margin?",
+    "company": [
+      "INFY"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      53142,
+      53143,
+      53166,
+      53175,
+      53176,
+      53185,
+      53186,
+      53213,
+      53214
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0009",
+    "question": "What did SHRIRAMFIN report for net profit margin?",
+    "company": [
+      "SHRIRAMFIN"
+    ],
+    "period": [],
+    "intent": "ratio",
+    "gold_chunks": [
+      59123,
+      59124,
+      59237,
+      59238,
+      59364,
+      59365,
+      59499,
+      59500
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0010",
+    "question": "What did SHRIRAMFIN report for operating margin?",
+    "company": [
+      "SHRIRAMFIN"
+    ],
+    "period": [],
+    "intent": "ratio",
+    "gold_chunks": [
+      59123,
+      59124,
+      59237,
+      59238,
+      59364,
+      59365,
+      59499,
+      59500
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0011",
+    "question": "What did SHRIRAMFIN report for current ratio?",
+    "company": [
+      "SHRIRAMFIN"
+    ],
+    "period": [],
+    "intent": "ratio",
+    "gold_chunks": [
+      59123,
+      59124,
+      59237,
+      59238,
+      59364,
+      59365,
+      59499,
+      59500
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0012",
+    "question": "What did SHRIRAMFIN report for earnings per share?",
+    "company": [
+      "SHRIRAMFIN"
+    ],
+    "period": [],
+    "intent": "ratio",
+    "gold_chunks": [
+      59096,
+      59097,
+      59218,
+      59235,
+      59236,
+      59346,
+      59347,
+      59362,
+      59363
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0013",
+    "question": "What did ADANIPORTS report for net profit margin?",
+    "company": [
+      "ADANIPORTS"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      36982,
+      38325,
+      38328,
+      38329,
+      38340,
+      38341
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0014",
+    "question": "What did ADANIPORTS report for operating margin?",
+    "company": [
+      "ADANIPORTS"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      38325,
+      38328,
+      38329,
+      38340,
+      38341
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0015",
+    "question": "What did ADANIPORTS report for current ratio?",
+    "company": [
+      "ADANIPORTS"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      36982,
+      38325,
+      38328,
+      38329,
+      38340,
+      38341
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0016",
+    "question": "What did ADANIPORTS report for earnings per share?",
+    "company": [
+      "ADANIPORTS"
+    ],
+    "period": [],
+    "intent": "ratio",
+    "gold_chunks": [
+      37283,
+      37288,
+      37289,
+      37561,
+      37566,
+      37567,
+      39458,
+      39463,
+      39464
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0017",
+    "question": "What did HINDALCO report for earnings per share?",
+    "company": [
+      "HINDALCO"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      50969,
+      50970,
+      51134,
+      51142
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0018",
+    "question": "What did ULTRACEMCO report for net profit margin?",
+    "company": [
+      "ULTRACEMCO"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      64800,
+      64801,
+      64803,
+      64804,
+      64809,
+      64811,
+      64812
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0019",
+    "question": "What did ULTRACEMCO report for operating margin?",
+    "company": [
+      "ULTRACEMCO"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      64800,
+      64801,
+      64803,
+      64804,
+      64809,
+      64811,
+      64812
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0020",
+    "question": "What did ULTRACEMCO report for current ratio?",
+    "company": [
+      "ULTRACEMCO"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      64800,
+      64801,
+      64803,
+      64804,
+      64809,
+      64811,
+      64812
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0021",
+    "question": "What did ULTRACEMCO report for earnings per share?",
+    "company": [
+      "ULTRACEMCO"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      64800,
+      64801,
+      64803,
+      64804,
+      64809,
+      64811,
+      64812
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0022",
+    "question": "What did ASIANPAINT report for earnings per share?",
+    "company": [
+      "ASIANPAINT"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      42563,
+      42564,
+      42638,
+      42639,
+      42640
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0023",
+    "question": "What did Mahindra & Mahindra report for earnings per share?",
+    "company": [
+      "M&M"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      55438,
+      55589
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0024",
+    "question": "What did TATACONSUM report for net profit margin?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      60955
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0025",
+    "question": "What did TATACONSUM report for operating margin?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      60717,
+      60955
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0026",
+    "question": "What did TATACONSUM report for current ratio?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      60955
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0027",
+    "question": "What did TATACONSUM report for earnings per share?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      60953
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0028",
+    "question": "What did INDIGO report for earnings per share?",
+    "company": [
+      "INDIGO"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      52641,
+      52654,
+      52874,
+      52879
+    ],
+    "gold_sections": [
+      "notes"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0029",
+    "question": "What did NTPC report for net profit margin?",
+    "company": [
+      "NTPC"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      56701,
+      56704,
+      56705,
+      56720,
+      56723,
+      56724,
+      56770,
+      56772,
+      56779,
+      56783
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-ratio-0030",
+    "question": "What did NTPC report for operating margin?",
+    "company": [
+      "NTPC"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "ratio",
+    "gold_chunks": [
+      56701,
+      56704,
+      56705,
+      56720,
+      56723,
+      56724,
+      56770,
+      56772,
+      56779,
+      56783
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0001",
+    "question": "Did HINDUNILVR's performance grew during the year, and by how much?",
+    "company": [
+      "HINDUNILVR"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      51309,
+      51310,
+      51312,
+      51313,
+      51314,
+      51315,
+      51316,
+      51317,
+      51324,
+      51325
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0002",
+    "question": "Did HINDUNILVR's performance increased during the year, and by how much?",
+    "company": [
+      "HINDUNILVR"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      51474,
+      51475
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0003",
+    "question": "Did HINDUNILVR's performance declined during the year, and by how much?",
+    "company": [
+      "HINDUNILVR"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      51309,
+      51310,
+      51312,
+      51313,
+      51314,
+      51315,
+      51316,
+      51317,
+      51324,
+      51325
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0004",
+    "question": "Did HINDUNILVR's performance improved during the year, and by how much?",
+    "company": [
+      "HINDUNILVR"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      51321,
+      51322,
+      51323,
+      51324,
+      51471,
+      51472,
+      51474,
+      51475
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0005",
+    "question": "Did HINDUNILVR's performance moderated during the year, and by how much?",
+    "company": [
+      "HINDUNILVR"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      51312,
+      51313
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0006",
+    "question": "Did JIOFIN's performance grew during the year, and by how much?",
+    "company": [
+      "JIOFIN"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      53821,
+      53822,
+      53868,
+      53869,
+      53870,
+      54007,
+      54008,
+      54009,
+      54013,
+      54014
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0007",
+    "question": "Did JIOFIN's performance increased during the year, and by how much?",
+    "company": [
+      "JIOFIN"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      53788,
+      53789,
+      53790,
+      53791,
+      53820,
+      53821,
+      54008,
+      54009,
+      54012,
+      54013
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0008",
+    "question": "Did JIOFIN's performance declined during the year, and by how much?",
+    "company": [
+      "JIOFIN"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      53791
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0009",
+    "question": "Did JIOFIN's performance improved during the year, and by how much?",
+    "company": [
+      "JIOFIN"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      53786,
+      53787,
+      53824,
+      53825,
+      54014,
+      54015
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0010",
+    "question": "Did SUNPHARMA's performance grew during the year, and by how much?",
+    "company": [
+      "SUNPHARMA"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      59925,
+      59926,
+      60016,
+      60017,
+      60018,
+      60107,
+      60108,
+      60204,
+      60205,
+      60342
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0011",
+    "question": "Did SUNPHARMA's performance increased during the year, and by how much?",
+    "company": [
+      "SUNPHARMA"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      59934,
+      59935,
+      60210,
+      60211,
+      60431,
+      60432,
+      60554,
+      60555,
+      60564,
+      60565
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0012",
+    "question": "Did SUNPHARMA's performance declined during the year, and by how much?",
+    "company": [
+      "SUNPHARMA"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      59925,
+      59926,
+      60107,
+      60108,
+      60113,
+      60114
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0013",
+    "question": "Did SUNPHARMA's performance improved during the year, and by how much?",
+    "company": [
+      "SUNPHARMA"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      60202,
+      60203,
+      60206,
+      60207,
+      60558,
+      60559
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0014",
+    "question": "Did ASIANPAINT's performance grew during the year, and by how much?",
+    "company": [
+      "ASIANPAINT"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      42360,
+      42361,
+      42362,
+      42428,
+      42429,
+      42430,
+      42431,
+      42432,
+      42594,
+      42595
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0015",
+    "question": "Did ASIANPAINT's performance increased during the year, and by how much?",
+    "company": [
+      "ASIANPAINT"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      42428,
+      42429,
+      42499,
+      42500,
+      42598,
+      42599
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0016",
+    "question": "Did ASIANPAINT's performance decreased during the year, and by how much?",
+    "company": [
+      "ASIANPAINT"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      42368,
+      42369
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0017",
+    "question": "Did ASIANPAINT's performance improved during the year, and by how much?",
+    "company": [
+      "ASIANPAINT"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      42589,
+      42590,
+      42659,
+      42660
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0018",
+    "question": "Did BHARTIARTL's performance grew during the year, and by how much?",
+    "company": [
+      "BHARTIARTL"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "trend",
+    "gold_chunks": [
+      46696,
+      46697,
+      46715,
+      46716,
+      46749,
+      46750,
+      46751,
+      46860,
+      46861,
+      46862
+    ],
+    "gold_sections": [
+      "earnings_call",
+      "mda"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0019",
+    "question": "Did BHARTIARTL's performance increased during the year, and by how much?",
+    "company": [
+      "BHARTIARTL"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "trend",
+    "gold_chunks": [
+      46698,
+      46699,
+      46715,
+      46716,
+      46756,
+      46757,
+      46860,
+      46861,
+      46862,
+      46979
+    ],
+    "gold_sections": [
+      "earnings_call",
+      "mda"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0020",
+    "question": "Did BHARTIARTL's performance declined during the year, and by how much?",
+    "company": [
+      "BHARTIARTL"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      46704,
+      46705,
+      46751,
+      46752
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0021",
+    "question": "Did BHARTIARTL's performance improved during the year, and by how much?",
+    "company": [
+      "BHARTIARTL"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "trend",
+    "gold_chunks": [
+      46707,
+      46708,
+      46733,
+      46734,
+      46749,
+      46750,
+      46857,
+      46858,
+      46979
+    ],
+    "gold_sections": [
+      "earnings_call",
+      "mda"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0022",
+    "question": "Did BHARTIARTL's performance moderated during the year, and by how much?",
+    "company": [
+      "BHARTIARTL"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      46735,
+      46736
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0023",
+    "question": "Did ADANIPORTS's performance grew during the year, and by how much?",
+    "company": [
+      "ADANIPORTS"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      38423,
+      38424
+    ],
+    "gold_sections": [
+      "mda"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0024",
+    "question": "Did ADANIPORTS's performance improved during the year, and by how much?",
+    "company": [
+      "ADANIPORTS"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      38417,
+      38418
+    ],
+    "gold_sections": [
+      "mda"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0025",
+    "question": "Did RELIANCE's performance grew during the year, and by how much?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      58099,
+      58100,
+      58101,
+      58102,
+      58104,
+      58105,
+      58109,
+      58110
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0026",
+    "question": "Did RELIANCE's performance increased during the year, and by how much?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      58096,
+      58097,
+      58098,
+      58099,
+      58106,
+      58107,
+      58108,
+      58109,
+      58110,
+      58114
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0027",
+    "question": "Did RELIANCE's performance improved during the year, and by how much?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      58107,
+      58108
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0028",
+    "question": "Did RELIANCE's performance moderated during the year, and by how much?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      58110,
+      58111
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0029",
+    "question": "Did ETERNAL's performance grew during the year, and by how much?",
+    "company": [
+      "ETERNAL"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      49050
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-trend-0030",
+    "question": "Did ETERNAL's performance increased during the year, and by how much?",
+    "company": [
+      "ETERNAL"
+    ],
+    "period": [],
+    "intent": "trend",
+    "gold_chunks": [
+      48944,
+      48945,
+      48947,
+      48948,
+      48967,
+      48968,
+      49019,
+      49020,
+      49026,
+      49046
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0001",
+    "question": "What did GRASIM disclose about its expansion?",
+    "company": [
+      "GRASIM"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      49161,
+      49162
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0002",
+    "question": "What did GRASIM disclose about its risk management?",
+    "company": [
+      "GRASIM"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      49154,
+      49155
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0003",
+    "question": "What did GRASIM disclose about its sustainability?",
+    "company": [
+      "GRASIM"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      49154,
+      49155
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0004",
+    "question": "What did TATASTEEL disclose about its strategy?",
+    "company": [
+      "TATASTEEL"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      61001,
+      61002,
+      61004,
+      61005,
+      61041,
+      61042,
+      61141,
+      61142,
+      61144,
+      61145
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0005",
+    "question": "What did TATASTEEL disclose about its outlook?",
+    "company": [
+      "TATASTEEL"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      61131,
+      61132
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0006",
+    "question": "What did TATASTEEL disclose about its expansion?",
+    "company": [
+      "TATASTEEL"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      60991,
+      61003,
+      61004,
+      61041,
+      61042,
+      61043,
+      61044,
+      61129,
+      61130,
+      61131
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0007",
+    "question": "What did TATASTEEL disclose about its capital expenditure?",
+    "company": [
+      "TATASTEEL"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      60996,
+      60997,
+      61130,
+      61131,
+      61198,
+      61199,
+      61286,
+      61287,
+      61321,
+      61322
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0008",
+    "question": "What did TATASTEEL disclose about its investment plan?",
+    "company": [
+      "TATASTEEL"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      61142,
+      61143
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0009",
+    "question": "What did TATASTEEL disclose about its governance?",
+    "company": [
+      "TATASTEEL"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      60998,
+      60999,
+      61324,
+      61325
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0010",
+    "question": "What did TATASTEEL disclose about its risk management?",
+    "company": [
+      "TATASTEEL"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      60992,
+      60993,
+      61039,
+      61040,
+      61126,
+      61127,
+      61196,
+      61197,
+      61284,
+      61285
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0011",
+    "question": "What did TATASTEEL disclose about its sustainability?",
+    "company": [
+      "TATASTEEL"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      60992,
+      60993,
+      61000,
+      61001,
+      61002,
+      61003,
+      61041,
+      61042,
+      61130,
+      61131
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0012",
+    "question": "What did WIPRO disclose about its strategy?",
+    "company": [
+      "WIPRO"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      64861,
+      64862,
+      64876,
+      64877,
+      64972,
+      65040,
+      65041,
+      65042,
+      65043,
+      65045
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0013",
+    "question": "What did WIPRO disclose about its outlook?",
+    "company": [
+      "WIPRO"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      64856,
+      64857,
+      64858,
+      64859,
+      64887,
+      64888,
+      64889,
+      64898,
+      64899,
+      65049
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0014",
+    "question": "What did WIPRO disclose about its expansion?",
+    "company": [
+      "WIPRO"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      64836,
+      64837,
+      64839,
+      64840,
+      64856,
+      64857,
+      64858,
+      64859,
+      64861,
+      64862
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0015",
+    "question": "What did WIPRO disclose about its governance?",
+    "company": [
+      "WIPRO"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      64895,
+      64896,
+      64969,
+      64970,
+      65042,
+      65043
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0016",
+    "question": "What did WIPRO disclose about its risk management?",
+    "company": [
+      "WIPRO"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      64886,
+      64887
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0017",
+    "question": "What did Mahindra & Mahindra disclose about its strategy?",
+    "company": [
+      "M&M"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      55169,
+      55170
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0018",
+    "question": "What did BAJAJFINSV disclose about its strategy?",
+    "company": [
+      "BAJAJFINSV"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      43620,
+      43626,
+      43627,
+      43642,
+      43643,
+      43645,
+      43646,
+      43650,
+      43651,
+      43654
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0019",
+    "question": "What did BAJAJFINSV disclose about its outlook?",
+    "company": [
+      "BAJAJFINSV"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      43953,
+      43954,
+      44104,
+      44105,
+      44257,
+      44258,
+      44423,
+      44424,
+      44569,
+      44572
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0020",
+    "question": "What did BAJAJFINSV disclose about its expansion?",
+    "company": [
+      "BAJAJFINSV"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      44532,
+      44561,
+      44591,
+      44592,
+      44597,
+      44598,
+      44599,
+      44600,
+      44601,
+      44603
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0021",
+    "question": "What did BAJAJFINSV disclose about its governance?",
+    "company": [
+      "BAJAJFINSV"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      44125,
+      44141,
+      44142,
+      44278,
+      44294,
+      44295,
+      44519,
+      44520
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0022",
+    "question": "What did BAJAJFINSV disclose about its risk management?",
+    "company": [
+      "BAJAJFINSV"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      43624,
+      43625,
+      43640,
+      43641,
+      43657,
+      43658,
+      43770,
+      43783,
+      43784,
+      43800
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0023",
+    "question": "What did APOLLOHOSP disclose about its strategy?",
+    "company": [
+      "APOLLOHOSP"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      40426,
+      40427,
+      40431,
+      40432,
+      40457,
+      40465,
+      40466,
+      40472,
+      40481,
+      40482
+    ],
+    "gold_sections": [
+      "corporate_governance",
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0024",
+    "question": "What did APOLLOHOSP disclose about its outlook?",
+    "company": [
+      "APOLLOHOSP"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      40548,
+      40549,
+      41531,
+      41532
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0025",
+    "question": "What did APOLLOHOSP disclose about its expansion?",
+    "company": [
+      "APOLLOHOSP"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      40401,
+      40402,
+      40422,
+      40423,
+      40424,
+      40431,
+      40432,
+      40470,
+      40472,
+      40482
+    ],
+    "gold_sections": [
+      "corporate_governance",
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0026",
+    "question": "What did APOLLOHOSP disclose about its capital expenditure?",
+    "company": [
+      "APOLLOHOSP"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      40466,
+      40467,
+      40548,
+      40549,
+      41449,
+      41450,
+      41531,
+      41532
+    ],
+    "gold_sections": [
+      "corporate_governance",
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0027",
+    "question": "What did APOLLOHOSP disclose about its investment plan?",
+    "company": [
+      "APOLLOHOSP"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      40431,
+      40432,
+      41414,
+      41415
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0028",
+    "question": "What did APOLLOHOSP disclose about its governance?",
+    "company": [
+      "APOLLOHOSP"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      40375,
+      40394,
+      40395,
+      40408,
+      40409,
+      40410,
+      40411,
+      40417,
+      40418,
+      40420
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0029",
+    "question": "What did APOLLOHOSP disclose about its risk management?",
+    "company": [
+      "APOLLOHOSP"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      40385,
+      40391,
+      40393,
+      40431,
+      40432,
+      40433,
+      40434,
+      40437,
+      40457,
+      40460
+    ],
+    "gold_sections": [
+      "corporate_governance",
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0030",
+    "question": "What did APOLLOHOSP disclose about its sustainability?",
+    "company": [
+      "APOLLOHOSP"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      40384,
+      40394,
+      40395,
+      40425,
+      40426,
+      40428,
+      40429,
+      40431,
+      40432,
+      40433
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0031",
+    "question": "What did HCLTECH disclose about its strategy?",
+    "company": [
+      "HCLTECH"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      49762,
+      49763
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0032",
+    "question": "What did HCLTECH disclose about its risk management?",
+    "company": [
+      "HCLTECH"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      49762,
+      49763
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0033",
+    "question": "What did JIOFIN disclose about its strategy?",
+    "company": [
+      "JIOFIN"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      53827,
+      53828,
+      53830,
+      53874,
+      53875,
+      53876,
+      53877,
+      53918,
+      53919
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0034",
+    "question": "What did JIOFIN disclose about its expansion?",
+    "company": [
+      "JIOFIN"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "narrative",
+    "gold_chunks": [
+      53827,
+      53828,
+      53875,
+      53876,
+      53916,
+      53917,
+      54002
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0035",
+    "question": "What did JIOFIN disclose about its governance?",
+    "company": [
+      "JIOFIN"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      53829,
+      53830
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0036",
+    "question": "What did JIOFIN disclose about its risk management?",
+    "company": [
+      "JIOFIN"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "narrative",
+    "gold_chunks": [
+      53827,
+      53828,
+      53874,
+      53875,
+      53915,
+      53916,
+      54002,
+      54108,
+      54109
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0037",
+    "question": "What did TECHM disclose about its governance?",
+    "company": [
+      "TECHM"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      61980,
+      61981
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0038",
+    "question": "What did TECHM disclose about its sustainability?",
+    "company": [
+      "TECHM"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      61980,
+      61981
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0039",
+    "question": "What did BAJFINANCE disclose about its strategy?",
+    "company": [
+      "BAJFINANCE"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      45417,
+      45418,
+      45894,
+      46106,
+      46107
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-narrative-0040",
+    "question": "What did BAJFINANCE disclose about its expansion?",
+    "company": [
+      "BAJFINANCE"
+    ],
+    "period": [],
+    "intent": "narrative",
+    "gold_chunks": [
+      45535,
+      45538,
+      46103,
+      46114,
+      46307,
+      46310
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-causal-0001",
+    "question": "Why did RELIANCE's revenue change during the year?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      57620,
+      57880,
+      58009,
+      58095,
+      58096,
+      58099,
+      58100,
+      58102,
+      58103,
+      58104,
+      58105,
+      58109,
+      58110,
+      58115,
+      58116
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0002",
+    "question": "Why did RELIANCE's profit change during the year?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      57620,
+      57880,
+      58009,
+      58095,
+      58096,
+      58099,
+      58100,
+      58102,
+      58103,
+      58104,
+      58105,
+      58109,
+      58110,
+      58115,
+      58116
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0003",
+    "question": "Why did RELIANCE's margin change during the year?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      57620,
+      57880,
+      58009,
+      58095,
+      58096,
+      58099,
+      58100,
+      58102,
+      58103,
+      58104,
+      58105,
+      58109,
+      58110,
+      58115,
+      58116
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0004",
+    "question": "Why did RELIANCE's cost change during the year?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      57620,
+      57880,
+      58009,
+      58095,
+      58096,
+      58099,
+      58100,
+      58102,
+      58103,
+      58104,
+      58105,
+      58109,
+      58110,
+      58115,
+      58116
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0005",
+    "question": "Why did TMPV's revenue change during the year?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      63676,
+      63677,
+      63678,
+      63679,
+      63680,
+      63681,
+      63682,
+      63683,
+      63686,
+      63687,
+      63688,
+      63690,
+      63691,
+      63692,
+      63771,
+      63772,
+      63773,
+      63774,
+      63775,
+      63776,
+      63778,
+      63779,
+      64003,
+      64004,
+      64005,
+      64006,
+      64007,
+      64008,
+      64010,
+      64011,
+      64012,
+      64013,
+      64279,
+      64280,
+      64281,
+      64282,
+      64283,
+      64284
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0006",
+    "question": "Why did TMPV's profit change during the year?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      63676,
+      63677,
+      63678,
+      63679,
+      63680,
+      63681,
+      63682,
+      63683,
+      63686,
+      63687,
+      63688,
+      63690,
+      63691,
+      63692,
+      63771,
+      63772,
+      63773,
+      63774,
+      63775,
+      63776,
+      63778,
+      63779,
+      64003,
+      64004,
+      64005,
+      64006,
+      64007,
+      64008,
+      64010,
+      64011,
+      64012,
+      64013,
+      64279,
+      64280,
+      64281,
+      64282,
+      64283,
+      64284
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0007",
+    "question": "Why did TMPV's margin change during the year?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      63676,
+      63677,
+      63678,
+      63679,
+      63680,
+      63681,
+      63682,
+      63683,
+      63686,
+      63687,
+      63688,
+      63690,
+      63691,
+      63692,
+      63771,
+      63772,
+      63773,
+      63774,
+      63775,
+      63776,
+      63778,
+      63779,
+      64003,
+      64004,
+      64005,
+      64006,
+      64007,
+      64008,
+      64010,
+      64011,
+      64012,
+      64013,
+      64279,
+      64280,
+      64281,
+      64282,
+      64283,
+      64284
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0008",
+    "question": "Why did TMPV's cost change during the year?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      63676,
+      63677,
+      63678,
+      63679,
+      63680,
+      63681,
+      63682,
+      63683,
+      63686,
+      63687,
+      63688,
+      63690,
+      63691,
+      63692,
+      63771,
+      63772,
+      63773,
+      63774,
+      63775,
+      63776,
+      63778,
+      63779,
+      64003,
+      64004,
+      64005,
+      64006,
+      64007,
+      64008,
+      64010,
+      64011,
+      64012,
+      64013,
+      64279,
+      64280,
+      64281,
+      64282,
+      64283,
+      64284
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0009",
+    "question": "Why did SUNPHARMA's revenue change during the year?",
+    "company": [
+      "SUNPHARMA"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      59923,
+      59924,
+      59925,
+      59926,
+      59927,
+      59933,
+      59934,
+      59938,
+      59939,
+      60016,
+      60017,
+      60018,
+      60021,
+      60033,
+      60034,
+      60108,
+      60109,
+      60111,
+      60112,
+      60117,
+      60118,
+      60120,
+      60121,
+      60202,
+      60203,
+      60204,
+      60205,
+      60208,
+      60209,
+      60213,
+      60214,
+      60341,
+      60342,
+      60422,
+      60423,
+      60429,
+      60430,
+      60554,
+      60555,
+      60563,
+      60564
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0010",
+    "question": "Why did SUNPHARMA's profit change during the year?",
+    "company": [
+      "SUNPHARMA"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      59923,
+      59924,
+      59925,
+      59926,
+      59927,
+      59933,
+      59934,
+      59938,
+      59939,
+      60016,
+      60017,
+      60018,
+      60021,
+      60033,
+      60034,
+      60108,
+      60109,
+      60111,
+      60112,
+      60117,
+      60118,
+      60120,
+      60121,
+      60202,
+      60203,
+      60204,
+      60205,
+      60208,
+      60209,
+      60213,
+      60214,
+      60341,
+      60342,
+      60422,
+      60423,
+      60429,
+      60430,
+      60554,
+      60555,
+      60563,
+      60564
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0011",
+    "question": "Why did SUNPHARMA's margin change during the year?",
+    "company": [
+      "SUNPHARMA"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      59923,
+      59924,
+      59925,
+      59926,
+      59927,
+      59933,
+      59934,
+      59938,
+      59939,
+      60016,
+      60017,
+      60018,
+      60021,
+      60033,
+      60034,
+      60108,
+      60109,
+      60111,
+      60112,
+      60117,
+      60118,
+      60120,
+      60121,
+      60202,
+      60203,
+      60204,
+      60205,
+      60208,
+      60209,
+      60213,
+      60214,
+      60341,
+      60342,
+      60422,
+      60423,
+      60429,
+      60430,
+      60554,
+      60555,
+      60563,
+      60564
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0012",
+    "question": "Why did SUNPHARMA's cost change during the year?",
+    "company": [
+      "SUNPHARMA"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      59923,
+      59924,
+      59925,
+      59926,
+      59927,
+      59933,
+      59934,
+      59938,
+      59939,
+      60016,
+      60017,
+      60018,
+      60021,
+      60033,
+      60034,
+      60108,
+      60109,
+      60111,
+      60112,
+      60117,
+      60118,
+      60120,
+      60121,
+      60202,
+      60203,
+      60204,
+      60205,
+      60208,
+      60209,
+      60213,
+      60214,
+      60341,
+      60342,
+      60422,
+      60423,
+      60429,
+      60430,
+      60554,
+      60555,
+      60563,
+      60564
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0013",
+    "question": "Why did HINDUNILVR's revenue change during the year?",
+    "company": [
+      "HINDUNILVR"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      51309,
+      51310,
+      51312,
+      51313,
+      51314,
+      51315,
+      51316,
+      51317,
+      51319,
+      51320,
+      51321,
+      51322,
+      51323,
+      51324,
+      51325,
+      51471,
+      51472,
+      51473,
+      51474,
+      51475,
+      51476,
+      51477
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0014",
+    "question": "Why did HINDUNILVR's profit change during the year?",
+    "company": [
+      "HINDUNILVR"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      51309,
+      51310,
+      51312,
+      51313,
+      51314,
+      51315,
+      51316,
+      51317,
+      51319,
+      51320,
+      51321,
+      51322,
+      51323,
+      51324,
+      51325,
+      51471,
+      51472,
+      51473,
+      51474,
+      51475,
+      51476,
+      51477
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0015",
+    "question": "Why did HINDUNILVR's margin change during the year?",
+    "company": [
+      "HINDUNILVR"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      51309,
+      51310,
+      51312,
+      51313,
+      51314,
+      51315,
+      51316,
+      51317,
+      51319,
+      51320,
+      51321,
+      51322,
+      51323,
+      51324,
+      51325,
+      51471,
+      51472,
+      51473,
+      51474,
+      51475,
+      51476,
+      51477
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0016",
+    "question": "Why did HINDUNILVR's cost change during the year?",
+    "company": [
+      "HINDUNILVR"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      51309,
+      51310,
+      51312,
+      51313,
+      51314,
+      51315,
+      51316,
+      51317,
+      51319,
+      51320,
+      51321,
+      51322,
+      51323,
+      51324,
+      51325,
+      51471,
+      51472,
+      51473,
+      51474,
+      51475,
+      51476,
+      51477
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0017",
+    "question": "Why did BHARTIARTL's revenue change during the year?",
+    "company": [
+      "BHARTIARTL"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "causal",
+    "gold_chunks": [
+      46696,
+      46697,
+      46698,
+      46699,
+      46700,
+      46707,
+      46708,
+      46709,
+      46714,
+      46715,
+      46716,
+      46717,
+      46718,
+      46733,
+      46734,
+      46735,
+      46736,
+      46737,
+      46749,
+      46750,
+      46751,
+      46757,
+      46857,
+      46858,
+      46859,
+      46860,
+      46861,
+      46862,
+      46941,
+      46942,
+      46943,
+      46979
+    ],
+    "gold_sections": [
+      "earnings_call",
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0018",
+    "question": "Why did BHARTIARTL's profit change during the year?",
+    "company": [
+      "BHARTIARTL"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "causal",
+    "gold_chunks": [
+      46696,
+      46697,
+      46698,
+      46699,
+      46700,
+      46707,
+      46708,
+      46709,
+      46714,
+      46715,
+      46716,
+      46717,
+      46718,
+      46733,
+      46734,
+      46735,
+      46736,
+      46737,
+      46749,
+      46750,
+      46751,
+      46757,
+      46857,
+      46858,
+      46859,
+      46860,
+      46861,
+      46862,
+      46941,
+      46942,
+      46943,
+      46979
+    ],
+    "gold_sections": [
+      "earnings_call",
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0019",
+    "question": "Why did BHARTIARTL's margin change during the year?",
+    "company": [
+      "BHARTIARTL"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "causal",
+    "gold_chunks": [
+      46696,
+      46697,
+      46698,
+      46699,
+      46700,
+      46707,
+      46708,
+      46709,
+      46714,
+      46715,
+      46716,
+      46717,
+      46718,
+      46733,
+      46734,
+      46735,
+      46736,
+      46737,
+      46749,
+      46750,
+      46751,
+      46757,
+      46857,
+      46858,
+      46859,
+      46860,
+      46861,
+      46862,
+      46941,
+      46942,
+      46943,
+      46979
+    ],
+    "gold_sections": [
+      "earnings_call",
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0020",
+    "question": "Why did BHARTIARTL's cost change during the year?",
+    "company": [
+      "BHARTIARTL"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "causal",
+    "gold_chunks": [
+      46696,
+      46697,
+      46698,
+      46699,
+      46700,
+      46707,
+      46708,
+      46709,
+      46714,
+      46715,
+      46716,
+      46717,
+      46718,
+      46733,
+      46734,
+      46735,
+      46736,
+      46737,
+      46749,
+      46750,
+      46751,
+      46757,
+      46857,
+      46858,
+      46859,
+      46860,
+      46861,
+      46862,
+      46941,
+      46942,
+      46943,
+      46979
+    ],
+    "gold_sections": [
+      "earnings_call",
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0021",
+    "question": "Why did ADANIPORTS's revenue change during the year?",
+    "company": [
+      "ADANIPORTS"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      38411,
+      38412,
+      38413,
+      38414,
+      38417,
+      38418,
+      38424,
+      38425,
+      38426,
+      39069,
+      39070
+    ],
+    "gold_sections": [
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0022",
+    "question": "Why did ADANIPORTS's profit change during the year?",
+    "company": [
+      "ADANIPORTS"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      38411,
+      38412,
+      38413,
+      38414,
+      38417,
+      38418,
+      38424,
+      38425,
+      38426,
+      39069,
+      39070
+    ],
+    "gold_sections": [
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0023",
+    "question": "Why did ADANIPORTS's margin change during the year?",
+    "company": [
+      "ADANIPORTS"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      38411,
+      38412,
+      38413,
+      38414,
+      38417,
+      38418,
+      38424,
+      38425,
+      38426,
+      39069,
+      39070
+    ],
+    "gold_sections": [
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0024",
+    "question": "Why did ADANIPORTS's cost change during the year?",
+    "company": [
+      "ADANIPORTS"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      38411,
+      38412,
+      38413,
+      38414,
+      38417,
+      38418,
+      38424,
+      38425,
+      38426,
+      39069,
+      39070
+    ],
+    "gold_sections": [
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0025",
+    "question": "Why did INDIGO's revenue change during the year?",
+    "company": [
+      "INDIGO"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      52395,
+      52396,
+      52499,
+      52500,
+      52501,
+      52502,
+      52503,
+      52555,
+      52556,
+      52557,
+      52558,
+      52658,
+      52659,
+      52660,
+      52661
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0026",
+    "question": "Why did INDIGO's profit change during the year?",
+    "company": [
+      "INDIGO"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      52395,
+      52396,
+      52499,
+      52500,
+      52501,
+      52502,
+      52503,
+      52555,
+      52556,
+      52557,
+      52558,
+      52658,
+      52659,
+      52660,
+      52661
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0027",
+    "question": "Why did INDIGO's margin change during the year?",
+    "company": [
+      "INDIGO"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      52395,
+      52396,
+      52499,
+      52500,
+      52501,
+      52502,
+      52503,
+      52555,
+      52556,
+      52557,
+      52558,
+      52658,
+      52659,
+      52660,
+      52661
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0028",
+    "question": "Why did INDIGO's cost change during the year?",
+    "company": [
+      "INDIGO"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      52395,
+      52396,
+      52499,
+      52500,
+      52501,
+      52502,
+      52503,
+      52555,
+      52556,
+      52557,
+      52558,
+      52658,
+      52659,
+      52660,
+      52661
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0029",
+    "question": "Why did ADANIENT's revenue change during the year?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      33394,
+      33395,
+      33941,
+      33942,
+      35406,
+      35864,
+      35865
+    ],
+    "gold_sections": [
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0030",
+    "question": "Why did ADANIENT's profit change during the year?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      33394,
+      33395,
+      33941,
+      33942,
+      35406,
+      35864,
+      35865
+    ],
+    "gold_sections": [
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0031",
+    "question": "Why did ADANIENT's margin change during the year?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      33394,
+      33395,
+      33941,
+      33942,
+      35406,
+      35864,
+      35865
+    ],
+    "gold_sections": [
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0032",
+    "question": "Why did ADANIENT's cost change during the year?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      33394,
+      33395,
+      33941,
+      33942,
+      35406,
+      35864,
+      35865
+    ],
+    "gold_sections": [
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0033",
+    "question": "Why did ASIANPAINT's revenue change during the year?",
+    "company": [
+      "ASIANPAINT"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      42349,
+      42350,
+      42366,
+      42367,
+      42426,
+      42427,
+      42428,
+      42429,
+      42431,
+      42432,
+      42435,
+      42436,
+      42439,
+      42440,
+      42500,
+      42501,
+      42502,
+      42503,
+      42589,
+      42590,
+      42594,
+      42595,
+      42598,
+      42599,
+      42603,
+      42653,
+      42654
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0034",
+    "question": "Why did ASIANPAINT's profit change during the year?",
+    "company": [
+      "ASIANPAINT"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      42349,
+      42350,
+      42366,
+      42367,
+      42426,
+      42427,
+      42428,
+      42429,
+      42431,
+      42432,
+      42435,
+      42436,
+      42439,
+      42440,
+      42500,
+      42501,
+      42502,
+      42503,
+      42589,
+      42590,
+      42594,
+      42595,
+      42598,
+      42599,
+      42603,
+      42653,
+      42654
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0035",
+    "question": "Why did ASIANPAINT's margin change during the year?",
+    "company": [
+      "ASIANPAINT"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      42349,
+      42350,
+      42366,
+      42367,
+      42426,
+      42427,
+      42428,
+      42429,
+      42431,
+      42432,
+      42435,
+      42436,
+      42439,
+      42440,
+      42500,
+      42501,
+      42502,
+      42503,
+      42589,
+      42590,
+      42594,
+      42595,
+      42598,
+      42599,
+      42603,
+      42653,
+      42654
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0036",
+    "question": "Why did ASIANPAINT's cost change during the year?",
+    "company": [
+      "ASIANPAINT"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      42349,
+      42350,
+      42366,
+      42367,
+      42426,
+      42427,
+      42428,
+      42429,
+      42431,
+      42432,
+      42435,
+      42436,
+      42439,
+      42440,
+      42500,
+      42501,
+      42502,
+      42503,
+      42589,
+      42590,
+      42594,
+      42595,
+      42598,
+      42599,
+      42603,
+      42653,
+      42654
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0037",
+    "question": "Why did APOLLOHOSP's revenue change during the year?",
+    "company": [
+      "APOLLOHOSP"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      40562,
+      40563,
+      40564,
+      40565,
+      40566,
+      40820,
+      40821,
+      41545,
+      41546,
+      41547,
+      41548,
+      41549,
+      41803,
+      41804
+    ],
+    "gold_sections": [
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0038",
+    "question": "Why did APOLLOHOSP's profit change during the year?",
+    "company": [
+      "APOLLOHOSP"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      40562,
+      40563,
+      40564,
+      40565,
+      40566,
+      40820,
+      40821,
+      41545,
+      41546,
+      41547,
+      41548,
+      41549,
+      41803,
+      41804
+    ],
+    "gold_sections": [
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0039",
+    "question": "Why did APOLLOHOSP's margin change during the year?",
+    "company": [
+      "APOLLOHOSP"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      40562,
+      40563,
+      40564,
+      40565,
+      40566,
+      40820,
+      40821,
+      41545,
+      41546,
+      41547,
+      41548,
+      41549,
+      41803,
+      41804
+    ],
+    "gold_sections": [
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-causal-0040",
+    "question": "Why did APOLLOHOSP's cost change during the year?",
+    "company": [
+      "APOLLOHOSP"
+    ],
+    "period": [],
+    "intent": "causal",
+    "gold_chunks": [
+      40562,
+      40563,
+      40564,
+      40565,
+      40566,
+      40820,
+      40821,
+      41545,
+      41546,
+      41547,
+      41548,
+      41549,
+      41803,
+      41804
+    ],
+    "gold_sections": [
+      "mda"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-management_commentary-0001",
+    "question": "What did BHARTIARTL's management say about guidance?",
+    "company": [
+      "BHARTIARTL"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      46714,
+      46715,
+      46738,
+      46739,
+      46752,
+      46753
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0002",
+    "question": "What did BHARTIARTL's management say about going forward?",
+    "company": [
+      "BHARTIARTL"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      46701,
+      46702,
+      46715,
+      46716
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0003",
+    "question": "What did ASIANPAINT's management say about guidance?",
+    "company": [
+      "ASIANPAINT"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      42369,
+      42370,
+      42437,
+      42438,
+      42502,
+      42503,
+      42504,
+      42505,
+      42506,
+      42597
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0004",
+    "question": "What did ASIANPAINT's management say about going forward?",
+    "company": [
+      "ASIANPAINT"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      42358,
+      42359,
+      42363,
+      42364,
+      42365,
+      42368,
+      42369,
+      42370,
+      42437,
+      42438
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0005",
+    "question": "What did ASIANPAINT's management say about outlook for?",
+    "company": [
+      "ASIANPAINT"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      42496,
+      42497,
+      42664,
+      42665
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0006",
+    "question": "What did ASIANPAINT's management say about demand environment?",
+    "company": [
+      "ASIANPAINT"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      42502,
+      42503
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0007",
+    "question": "What did SUNPHARMA's management say about guidance?",
+    "company": [
+      "SUNPHARMA"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      59926,
+      59927,
+      59934,
+      59935,
+      59936,
+      59937,
+      59938,
+      59939,
+      59942,
+      59943
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0008",
+    "question": "What did SUNPHARMA's management say about going forward?",
+    "company": [
+      "SUNPHARMA"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      59924,
+      59925,
+      59933,
+      59934,
+      60022,
+      60023,
+      60024,
+      60025,
+      60114,
+      60115
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0009",
+    "question": "What did SUNPHARMA's management say about outlook for?",
+    "company": [
+      "SUNPHARMA"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      60426,
+      60427
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0010",
+    "question": "What did MAXHEALTH's management say about guidance?",
+    "company": [
+      "MAXHEALTH"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      56121,
+      56122
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0011",
+    "question": "What did MAXHEALTH's management say about going forward?",
+    "company": [
+      "MAXHEALTH"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      55896,
+      55897,
+      55901,
+      55902,
+      55904,
+      55905,
+      56119,
+      56120,
+      56125,
+      56126
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0012",
+    "question": "What did ETERNAL's management say about guidance?",
+    "company": [
+      "ETERNAL"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      48908,
+      48909,
+      48910,
+      48945,
+      48946,
+      48947,
+      48948,
+      48949,
+      48950,
+      48962
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0013",
+    "question": "What did ETERNAL's management say about going forward?",
+    "company": [
+      "ETERNAL"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      48926,
+      48927,
+      48931,
+      48943,
+      48944,
+      48946,
+      48947,
+      48962,
+      48963,
+      48964
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0014",
+    "question": "What did ETERNAL's management say about outlook for?",
+    "company": [
+      "ETERNAL"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      48907,
+      48908,
+      48925,
+      48926,
+      48943,
+      48944,
+      48961,
+      48962,
+      49011,
+      49012
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0015",
+    "question": "What did JIOFIN's management say about guidance?",
+    "company": [
+      "JIOFIN"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      53788,
+      53789
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0016",
+    "question": "What did TMPV's management say about guidance?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      63433,
+      63678,
+      63679,
+      63684,
+      63685,
+      63687,
+      63688,
+      63774,
+      63775,
+      63777
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0017",
+    "question": "What did TMPV's management say about going forward?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      63432,
+      63433,
+      63677,
+      63678,
+      63679,
+      63682,
+      63683,
+      63776,
+      63777,
+      64012
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0018",
+    "question": "What did TMPV's management say about outlook for?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      64015,
+      64289,
+      64290
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0019",
+    "question": "What did TMPV's management say about demand environment?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      63682,
+      63683,
+      63688,
+      63689,
+      63776,
+      63777,
+      64008,
+      64009,
+      64011,
+      64012
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0020",
+    "question": "What did RELIANCE's management say about going forward?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      58107,
+      58108
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0021",
+    "question": "What did INDIGO's management say about guidance?",
+    "company": [
+      "INDIGO"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      52502,
+      52503,
+      52661
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0022",
+    "question": "What did INDIGO's management say about demand environment?",
+    "company": [
+      "INDIGO"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      52660,
+      52661
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0023",
+    "question": "What did HINDUNILVR's management say about guidance?",
+    "company": [
+      "HINDUNILVR"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      51309,
+      51310,
+      51315,
+      51316,
+      51317,
+      51325,
+      51326,
+      51327,
+      51328,
+      51329
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0024",
+    "question": "What did HINDUNILVR's management say about going forward?",
+    "company": [
+      "HINDUNILVR"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      51319,
+      51320,
+      51321,
+      51322,
+      51328,
+      51329
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-management_commentary-0025",
+    "question": "What did HINDUNILVR's management say about outlook for?",
+    "company": [
+      "HINDUNILVR"
+    ],
+    "period": [],
+    "intent": "management_commentary",
+    "gold_chunks": [
+      51328,
+      51329
+    ],
+    "gold_sections": [
+      "earnings_call"
+    ],
+    "difficulty": "medium"
+  },
+  {
+    "id": "rv21-comparison-0001",
+    "question": "Compare JSWSTEEL and BAJFINANCE on revenue from operations.",
+    "company": [
+      "JSWSTEEL",
+      "BAJFINANCE"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      46314,
+      46323,
+      46324,
+      46336,
+      46342,
+      46343,
+      46589,
+      46593,
+      46594,
+      46598,
+      54286,
+      54287,
+      54289,
+      54290,
+      54294,
+      54295,
+      54297,
+      54298
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0002",
+    "question": "Compare JSWSTEEL and BAJFINANCE on total income.",
+    "company": [
+      "JSWSTEEL",
+      "BAJFINANCE"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      46314,
+      46323,
+      46324,
+      46326,
+      46327,
+      46336,
+      46342,
+      46343,
+      46345,
+      46346,
+      54286,
+      54289,
+      54290,
+      54294,
+      54297,
+      54298
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0003",
+    "question": "Compare JSWSTEEL and BAJFINANCE on net profit.",
+    "company": [
+      "JSWSTEEL",
+      "BAJFINANCE"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      46332,
+      46600,
+      46601,
+      46602,
+      54286,
+      54287,
+      54289,
+      54290,
+      54294,
+      54295,
+      54297,
+      54298
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0004",
+    "question": "Compare JSWSTEEL and BAJFINANCE on profit after tax.",
+    "company": [
+      "JSWSTEEL",
+      "BAJFINANCE"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      46314,
+      46323,
+      46324,
+      46336,
+      46342,
+      46343,
+      46598,
+      46600,
+      46601,
+      46602
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0005",
+    "question": "Compare JSWSTEEL and BAJFINANCE on total expenses.",
+    "company": [
+      "JSWSTEEL",
+      "BAJFINANCE"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      46314,
+      46323,
+      46324,
+      46336,
+      46342,
+      46343,
+      46589,
+      46593,
+      46594,
+      46598,
+      54286,
+      54289,
+      54290,
+      54294,
+      54297,
+      54298
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0006",
+    "question": "Compare JSWSTEEL and BAJFINANCE on earnings per share.",
+    "company": [
+      "JSWSTEEL",
+      "BAJFINANCE"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      46314,
+      46323,
+      46324,
+      46327,
+      46328,
+      46336,
+      46342,
+      46343,
+      46346,
+      46347
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0007",
+    "question": "Compare TECHM and KOTAKBANK on total income.",
+    "company": [
+      "TECHM",
+      "KOTAKBANK"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      54696,
+      54699
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0008",
+    "question": "Compare TECHM and KOTAKBANK on net profit.",
+    "company": [
+      "TECHM",
+      "KOTAKBANK"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      54683,
+      54684,
+      54685,
+      54696,
+      54699
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0009",
+    "question": "Compare TECHM and KOTAKBANK on profit after tax.",
+    "company": [
+      "TECHM",
+      "KOTAKBANK"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      54683,
+      54684,
+      54685
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0010",
+    "question": "Compare TECHM and KOTAKBANK on operating profit.",
+    "company": [
+      "TECHM",
+      "KOTAKBANK"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      54696,
+      54699
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0011",
+    "question": "Compare ULTRACEMCO and POWERGRID on revenue from operations.",
+    "company": [
+      "ULTRACEMCO",
+      "POWERGRID"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      57260,
+      57264,
+      57265,
+      57408,
+      57409,
+      57419,
+      57422,
+      64799,
+      64805,
+      64808
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0012",
+    "question": "Compare ULTRACEMCO and POWERGRID on total income.",
+    "company": [
+      "ULTRACEMCO",
+      "POWERGRID"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      57260,
+      57264,
+      57265,
+      57408,
+      57409,
+      57419,
+      57422,
+      64793,
+      64794,
+      64799,
+      64805,
+      64808
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0013",
+    "question": "Compare ULTRACEMCO and POWERGRID on net profit.",
+    "company": [
+      "ULTRACEMCO",
+      "POWERGRID"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      57260,
+      57264,
+      57265,
+      57419,
+      57422,
+      57439,
+      57440,
+      57442,
+      57443,
+      64793,
+      64794,
+      64795,
+      64796,
+      64797,
+      64798,
+      64799,
+      64805,
+      64808
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0014",
+    "question": "Compare ULTRACEMCO and POWERGRID on profit after tax.",
+    "company": [
+      "ULTRACEMCO",
+      "POWERGRID"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      57442,
+      57443,
+      64795,
+      64796,
+      64797,
+      64798
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0015",
+    "question": "Compare ULTRACEMCO and POWERGRID on total expenses.",
+    "company": [
+      "ULTRACEMCO",
+      "POWERGRID"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      57260,
+      57264,
+      57265,
+      57408,
+      57409,
+      57419,
+      57422,
+      64799,
+      64805,
+      64808
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0016",
+    "question": "Compare ULTRACEMCO and POWERGRID on operating profit.",
+    "company": [
+      "ULTRACEMCO",
+      "POWERGRID"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      57262,
+      57266,
+      57267
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0017",
+    "question": "Compare RELIANCE and Mahindra & Mahindra on net profit.",
+    "company": [
+      "RELIANCE",
+      "M&M"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      55568,
+      55569
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0018",
+    "question": "Compare RELIANCE and Mahindra & Mahindra on profit after tax.",
+    "company": [
+      "RELIANCE",
+      "M&M"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      55568,
+      55569
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0019",
+    "question": "Compare WIPRO and AXISBANK on net profit.",
+    "company": [
+      "WIPRO",
+      "AXISBANK"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      43348,
+      43349,
+      43350
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0020",
+    "question": "Compare WIPRO and AXISBANK on profit after tax.",
+    "company": [
+      "WIPRO",
+      "AXISBANK"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      43348,
+      43349,
+      43350
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0021",
+    "question": "Compare HCLTECH and TCS on revenue from operations.",
+    "company": [
+      "HCLTECH",
+      "TCS"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      49741,
+      49744
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0022",
+    "question": "Compare HCLTECH and TCS on total income.",
+    "company": [
+      "HCLTECH",
+      "TCS"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      49741,
+      49744
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0023",
+    "question": "Compare HCLTECH and TCS on total expenses.",
+    "company": [
+      "HCLTECH",
+      "TCS"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      49741,
+      49744
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0024",
+    "question": "Compare TATACONSUM and APOLLOHOSP on revenue from operations.",
+    "company": [
+      "TATACONSUM",
+      "APOLLOHOSP"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      41315
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0025",
+    "question": "Compare TATACONSUM and APOLLOHOSP on total income.",
+    "company": [
+      "TATACONSUM",
+      "APOLLOHOSP"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      41315,
+      60953
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0026",
+    "question": "Compare TATACONSUM and APOLLOHOSP on net profit.",
+    "company": [
+      "TATACONSUM",
+      "APOLLOHOSP"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      60956,
+      60957
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0027",
+    "question": "Compare TATACONSUM and APOLLOHOSP on profit after tax.",
+    "company": [
+      "TATACONSUM",
+      "APOLLOHOSP"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      41315,
+      60956,
+      60957
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0028",
+    "question": "Compare TATACONSUM and APOLLOHOSP on total expenses.",
+    "company": [
+      "TATACONSUM",
+      "APOLLOHOSP"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      41315,
+      60953
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0029",
+    "question": "Compare TATACONSUM and APOLLOHOSP on earnings per share.",
+    "company": [
+      "TATACONSUM",
+      "APOLLOHOSP"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      60953
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-comparison-0030",
+    "question": "Compare BEL and ICICIBANK on net profit.",
+    "company": [
+      "BEL",
+      "ICICIBANK"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "comparison",
+    "gold_chunks": [
+      52307,
+      52308,
+      52309
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0001",
+    "question": "What does TATACONSUM disclose about revenue from operations across its transcripts and filings?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      60589,
+      60590,
+      60605,
+      60606,
+      60648,
+      60664,
+      60716,
+      60717,
+      60770,
+      60771,
+      60867,
+      60868,
+      60869,
+      60871,
+      60879,
+      60883,
+      60954,
+      60955,
+      60960,
+      60961
+    ],
+    "gold_sections": [
+      "annexure",
+      "auditors_report",
+      "balance_sheet",
+      "notes",
+      "risk_factors"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0002",
+    "question": "What does TATACONSUM disclose about net profit across its transcripts and filings?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      60619,
+      60620,
+      60621,
+      60673,
+      60674,
+      60675,
+      60676,
+      60726,
+      60727,
+      60798,
+      60863,
+      60864,
+      60865,
+      60867,
+      60871,
+      60872,
+      60873,
+      60874,
+      60875,
+      60878
+    ],
+    "gold_sections": [
+      "annexure",
+      "auditors_report",
+      "balance_sheet",
+      "cover_letter"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0003",
+    "question": "What does TATACONSUM disclose about ebitda across its transcripts and filings?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [],
+    "intent": "cross_document",
+    "gold_chunks": [
+      60576,
+      60579,
+      60580,
+      60583,
+      60584,
+      60585,
+      60589,
+      60590,
+      60592,
+      60593,
+      60619,
+      60620,
+      60621,
+      60622,
+      60626,
+      60627,
+      60628,
+      60629,
+      60630,
+      60672
+    ],
+    "gold_sections": [
+      "cover_letter",
+      "notes",
+      "risk_factors"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0004",
+    "question": "What does TATACONSUM disclose about operating profit across its transcripts and filings?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      60620,
+      60621,
+      60622,
+      60623,
+      60870,
+      60871,
+      60882,
+      60883,
+      60954,
+      60955,
+      60961
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "cover_letter",
+      "notes"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0005",
+    "question": "What does TATACONSUM disclose about strategy across its transcripts and filings?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [],
+    "intent": "cross_document",
+    "gold_chunks": [
+      60573,
+      60574,
+      60636,
+      60637,
+      60689,
+      60690,
+      60743,
+      60744,
+      60762,
+      60763,
+      60802,
+      60803,
+      60806,
+      60807,
+      60808,
+      60890,
+      60891,
+      60899,
+      60900,
+      60978
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "cover_letter",
+      "notes",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0006",
+    "question": "What does TATACONSUM disclose about outlook across its transcripts and filings?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [],
+    "intent": "cross_document",
+    "gold_chunks": [
+      60573,
+      60574,
+      60591,
+      60636,
+      60637,
+      60639,
+      60675,
+      60676,
+      60689,
+      60690,
+      60743,
+      60744,
+      60801,
+      60802,
+      60810,
+      60811,
+      60900,
+      60901,
+      60979
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "cover_letter",
+      "risk_factors",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0007",
+    "question": "What does TATACONSUM disclose about expansion across its transcripts and filings?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [],
+    "intent": "cross_document",
+    "gold_chunks": [
+      60579,
+      60580,
+      60583,
+      60584,
+      60585,
+      60600,
+      60601,
+      60602,
+      60603,
+      60604,
+      60624,
+      60625,
+      60626,
+      60627,
+      60628,
+      60630,
+      60631,
+      60632,
+      60633,
+      60682
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "cover_letter",
+      "notes",
+      "risk_factors"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0008",
+    "question": "What does TATACONSUM disclose about sustainability across its transcripts and filings?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [],
+    "intent": "cross_document",
+    "gold_chunks": [
+      60585,
+      60586,
+      60591,
+      60592,
+      60620,
+      60621,
+      60651,
+      60652,
+      60654,
+      60655,
+      60674,
+      60675,
+      60699,
+      60700,
+      60726,
+      60727,
+      60888,
+      60889,
+      60967
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "cover_letter",
+      "notes",
+      "risk_factors"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0009",
+    "question": "What does NESTLEIND disclose about ebitda across its transcripts and filings?",
+    "company": [
+      "NESTLEIND"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      56510,
+      56514,
+      56515,
+      56517,
+      56518,
+      56519,
+      56523,
+      56529,
+      56530,
+      56536,
+      56572
+    ],
+    "gold_sections": [
+      "auditors_report",
+      "board_meeting_outcome",
+      "cover_letter",
+      "notes"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0010",
+    "question": "What does NESTLEIND disclose about strategy across its transcripts and filings?",
+    "company": [
+      "NESTLEIND"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      56537,
+      56538,
+      56539,
+      56540,
+      56573,
+      56574
+    ],
+    "gold_sections": [
+      "auditors_report",
+      "cover_letter"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0011",
+    "question": "What does NESTLEIND disclose about outlook across its transcripts and filings?",
+    "company": [
+      "NESTLEIND"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      56539,
+      56540,
+      56553,
+      56601,
+      56602,
+      56603,
+      56604
+    ],
+    "gold_sections": [
+      "auditors_report",
+      "cover_letter"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0012",
+    "question": "What does NESTLEIND disclose about expansion across its transcripts and filings?",
+    "company": [
+      "NESTLEIND"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      56537,
+      56538,
+      56539,
+      56551,
+      56552,
+      56553,
+      56581
+    ],
+    "gold_sections": [
+      "auditors_report",
+      "cover_letter"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0013",
+    "question": "What does NESTLEIND disclose about capital expenditure across its transcripts and filings?",
+    "company": [
+      "NESTLEIND"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      56511,
+      56515,
+      56516,
+      56524,
+      56526,
+      56527,
+      56581
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "board_meeting_outcome",
+      "cover_letter"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0014",
+    "question": "What does NESTLEIND disclose about governance across its transcripts and filings?",
+    "company": [
+      "NESTLEIND"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      56521,
+      56522,
+      56534,
+      56535,
+      56537,
+      56538,
+      56579
+    ],
+    "gold_sections": [
+      "auditors_report",
+      "cover_letter"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0015",
+    "question": "What does NESTLEIND disclose about sustainability across its transcripts and filings?",
+    "company": [
+      "NESTLEIND"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      56552,
+      56553,
+      56602,
+      56603
+    ],
+    "gold_sections": [
+      "auditors_report",
+      "cover_letter"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0016",
+    "question": "What does LT disclose about profit after tax across its transcripts and filings?",
+    "company": [
+      "LT"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      54830,
+      54885,
+      54886,
+      55018,
+      55019,
+      55055,
+      55061,
+      55069,
+      55070
+    ],
+    "gold_sections": [
+      "annexure",
+      "cover_letter"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0017",
+    "question": "What does LT disclose about ebitda across its transcripts and filings?",
+    "company": [
+      "LT"
+    ],
+    "period": [
+      "FY2025",
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      54757,
+      54758,
+      54766,
+      54767,
+      54769,
+      54770,
+      54771,
+      54776,
+      54777,
+      54778,
+      55057,
+      55058,
+      55059,
+      55060,
+      55061,
+      55062,
+      55069,
+      55070
+    ],
+    "gold_sections": [
+      "annexure",
+      "cover_letter",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0018",
+    "question": "What does LT disclose about strategy across its transcripts and filings?",
+    "company": [
+      "LT"
+    ],
+    "period": [
+      "FY2025",
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      54782,
+      54783,
+      55056,
+      55057
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0019",
+    "question": "What does LT disclose about outlook across its transcripts and filings?",
+    "company": [
+      "LT"
+    ],
+    "period": [
+      "FY2025",
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      54804,
+      54805,
+      55059,
+      55060
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0020",
+    "question": "What does LT disclose about expansion across its transcripts and filings?",
+    "company": [
+      "LT"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      54959,
+      54960,
+      55035,
+      55036,
+      55059,
+      55060
+    ],
+    "gold_sections": [
+      "cover_letter",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0021",
+    "question": "What does ULTRACEMCO disclose about total income across its transcripts and filings?",
+    "company": [
+      "ULTRACEMCO"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      64495,
+      64497,
+      64504,
+      64539,
+      64540,
+      64541,
+      64542,
+      64546,
+      64547,
+      64586,
+      64793,
+      64794,
+      64799,
+      64805,
+      64808
+    ],
+    "gold_sections": [
+      "cover_letter",
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0022",
+    "question": "What does ULTRACEMCO disclose about total expenses across its transcripts and filings?",
+    "company": [
+      "ULTRACEMCO"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      64495,
+      64497,
+      64504,
+      64539,
+      64540,
+      64541,
+      64542,
+      64546,
+      64547,
+      64586,
+      64799,
+      64805,
+      64808
+    ],
+    "gold_sections": [
+      "cover_letter",
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0023",
+    "question": "What does ULTRACEMCO disclose about ebitda across its transcripts and filings?",
+    "company": [
+      "ULTRACEMCO"
+    ],
+    "period": [],
+    "intent": "cross_document",
+    "gold_chunks": [
+      64465,
+      64495,
+      64496,
+      64497,
+      64498,
+      64500,
+      64504,
+      64506,
+      64514,
+      64515,
+      64554,
+      64555,
+      64556,
+      64557,
+      64558,
+      64559,
+      64560,
+      64561,
+      64562,
+      64563
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "cover_letter"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0024",
+    "question": "What does ULTRACEMCO disclose about strategy across its transcripts and filings?",
+    "company": [
+      "ULTRACEMCO"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "cross_document",
+    "gold_chunks": [
+      64566,
+      64567,
+      64626,
+      64627,
+      64725,
+      64814
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "cover_letter",
+      "notes"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-cross_document-0025",
+    "question": "What does ULTRACEMCO disclose about expansion across its transcripts and filings?",
+    "company": [
+      "ULTRACEMCO"
+    ],
+    "period": [],
+    "intent": "cross_document",
+    "gold_chunks": [
+      64554,
+      64555,
+      64558,
+      64559,
+      64563,
+      64564,
+      64565,
+      64566,
+      64567,
+      64568,
+      64569,
+      64592,
+      64593,
+      64652,
+      64653,
+      64695,
+      64696,
+      64701,
+      64702,
+      64749
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "cover_letter"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0001",
+    "question": "How does TMPV's (b) Passenger Vehicle segment relate to its overall revenue from operations?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      63964,
+      63967,
+      63968,
+      63989,
+      63992,
+      63993,
+      63995,
+      63998,
+      63999,
+      64253,
+      64254,
+      64269,
+      64270,
+      64272,
+      64275,
+      64276
+    ],
+    "gold_sections": [
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0002",
+    "question": "How does TMPV's (b) Passenger Vehicle segment relate to its overall total income?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      63964,
+      63967,
+      63968,
+      63989,
+      63992,
+      63993,
+      63995,
+      63998,
+      63999,
+      64253,
+      64254,
+      64269,
+      64270,
+      64272,
+      64275,
+      64276
+    ],
+    "gold_sections": [
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0003",
+    "question": "How does TMPV's (b) Passenger Vehicle segment relate to its overall net profit?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      63995,
+      63998,
+      63999,
+      64261,
+      64262,
+      64263,
+      64272,
+      64275,
+      64276
+    ],
+    "gold_sections": [
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0004",
+    "question": "How does TMPV's (b) Passenger Vehicle segment relate to its overall profit after tax?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      63995,
+      63998,
+      63999,
+      64261,
+      64262,
+      64263,
+      64272,
+      64275,
+      64276
+    ],
+    "gold_sections": [
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0005",
+    "question": "How does TMPV's (b) Passenger Vehicle segment relate to its overall total expenses?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      63964,
+      63967,
+      63968,
+      63989,
+      63992,
+      63993,
+      63995,
+      63998,
+      63999,
+      64253,
+      64254,
+      64269,
+      64270,
+      64272,
+      64275,
+      64276
+    ],
+    "gold_sections": [
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0006",
+    "question": "How does TMPV's (b) Passenger Vehicle segment relate to its overall earnings per share?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      63964,
+      63967,
+      63968,
+      63995,
+      63998,
+      63999,
+      64253,
+      64254,
+      64269,
+      64270,
+      64272,
+      64275,
+      64276
+    ],
+    "gold_sections": [
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0007",
+    "question": "How does TMPV's (b) Passenger Vehicle segment relate to its overall ebitda?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      63995,
+      63998,
+      63999,
+      64272,
+      64275,
+      64276
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0008",
+    "question": "How does TMPV's (b) Passenger Vehicle segment relate to its overall operating profit?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      63995,
+      63998,
+      63999,
+      64272,
+      64275,
+      64276
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0009",
+    "question": "How does GRASIM's Chemicals # segment relate to its overall revenue from operations?",
+    "company": [
+      "GRASIM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      49459,
+      49564
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0010",
+    "question": "How does GRASIM's Chemicals # segment relate to its overall total income?",
+    "company": [
+      "GRASIM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      49459,
+      49564
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0011",
+    "question": "How does GRASIM's Chemicals # segment relate to its overall net profit?",
+    "company": [
+      "GRASIM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      49459,
+      49554,
+      49555,
+      49556,
+      49557,
+      49564
+    ],
+    "gold_sections": [
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0012",
+    "question": "How does GRASIM's Chemicals # segment relate to its overall profit after tax?",
+    "company": [
+      "GRASIM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      49459,
+      49554,
+      49555,
+      49556,
+      49557,
+      49564
+    ],
+    "gold_sections": [
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0013",
+    "question": "How does GRASIM's Chemicals # segment relate to its overall total expenses?",
+    "company": [
+      "GRASIM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      49459,
+      49564
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0014",
+    "question": "How does GRASIM's Chemicals # segment relate to its overall earnings per share?",
+    "company": [
+      "GRASIM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      49459,
+      49564
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0015",
+    "question": "How does GRASIM's Chemicals # segment relate to its overall ebitda?",
+    "company": [
+      "GRASIM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      49459,
+      49564
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0016",
+    "question": "How does GRASIM's Chemicals # segment relate to its overall operating profit?",
+    "company": [
+      "GRASIM"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      49459,
+      49564
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0017",
+    "question": "How does CIPLA's Pharmaceuticals segment relate to its overall revenue from operations?",
+    "company": [
+      "CIPLA"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      47273,
+      47275,
+      47276,
+      47288,
+      47290,
+      47291,
+      47342,
+      47343,
+      47344,
+      47356
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0018",
+    "question": "How does CIPLA's Pharmaceuticals segment relate to its overall total income?",
+    "company": [
+      "CIPLA"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      47273,
+      47275,
+      47276,
+      47288,
+      47290,
+      47291,
+      47342,
+      47343,
+      47344,
+      47356
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0019",
+    "question": "How does CIPLA's Pharmaceuticals segment relate to its overall net profit?",
+    "company": [
+      "CIPLA"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      47273,
+      47275,
+      47276,
+      47288,
+      47290,
+      47291,
+      47342,
+      47343,
+      47344,
+      47347
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0020",
+    "question": "How does CIPLA's Pharmaceuticals segment relate to its overall profit after tax?",
+    "company": [
+      "CIPLA"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      47273,
+      47275,
+      47276,
+      47288,
+      47290,
+      47291,
+      47342,
+      47343,
+      47344,
+      47347
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0021",
+    "question": "How does CIPLA's Pharmaceuticals segment relate to its overall total expenses?",
+    "company": [
+      "CIPLA"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      47273,
+      47275,
+      47276,
+      47288,
+      47290,
+      47291,
+      47342,
+      47343,
+      47344,
+      47356
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0022",
+    "question": "How does TITAN's Watches segment relate to its overall revenue from operations?",
+    "company": [
+      "TITAN"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      62652,
+      62653,
+      62654,
+      62655,
+      62952,
+      62953,
+      62958,
+      62959,
+      62974,
+      62975,
+      62991,
+      62992,
+      63285,
+      63286,
+      63297,
+      63301,
+      63302
+    ],
+    "gold_sections": [
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0023",
+    "question": "How does TITAN's Watches segment relate to its overall total income?",
+    "company": [
+      "TITAN"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      62652,
+      62653,
+      62654,
+      62655,
+      62952,
+      62953,
+      62958,
+      62959,
+      62974,
+      62975,
+      62991,
+      62992,
+      63285,
+      63286,
+      63297,
+      63301,
+      63302
+    ],
+    "gold_sections": [
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0024",
+    "question": "How does TITAN's Watches segment relate to its overall net profit?",
+    "company": [
+      "TITAN"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      62652,
+      62653,
+      62654,
+      62655,
+      62952,
+      62953,
+      62958,
+      62959,
+      62974,
+      62975,
+      62991,
+      62992,
+      63277,
+      63278,
+      63285,
+      63286,
+      63297,
+      63301,
+      63302
+    ],
+    "gold_sections": [
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0025",
+    "question": "How does TITAN's Watches segment relate to its overall profit after tax?",
+    "company": [
+      "TITAN"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      62652,
+      62653,
+      62654,
+      62655,
+      62958,
+      62959,
+      62991,
+      62992,
+      63277,
+      63278,
+      63285,
+      63286
+    ],
+    "gold_sections": [
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0026",
+    "question": "How does TITAN's Watches segment relate to its overall total expenses?",
+    "company": [
+      "TITAN"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      62652,
+      62653,
+      62654,
+      62655,
+      62952,
+      62953,
+      62958,
+      62959,
+      62974,
+      62975,
+      62991,
+      62992,
+      63285,
+      63286,
+      63297,
+      63301,
+      63302
+    ],
+    "gold_sections": [
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0027",
+    "question": "How does TITAN's Watches segment relate to its overall earnings per share?",
+    "company": [
+      "TITAN"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      62652,
+      62653,
+      62654,
+      62655,
+      62953,
+      62958,
+      62959,
+      62975,
+      62991,
+      62992,
+      63285,
+      63286,
+      63301,
+      63302
+    ],
+    "gold_sections": [
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0028",
+    "question": "How does TITAN's Watches segment relate to its overall ebitda?",
+    "company": [
+      "TITAN"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      62652,
+      62653,
+      62654,
+      62655,
+      62958,
+      62959,
+      62991,
+      62992,
+      63285,
+      63286
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0029",
+    "question": "How does TITAN's Watches segment relate to its overall operating profit?",
+    "company": [
+      "TITAN"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      62652,
+      62653,
+      62654,
+      62655,
+      62958,
+      62959,
+      62991,
+      62992,
+      63285,
+      63286
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-multi_hop-0030",
+    "question": "How does WIPRO's Europe segment relate to its overall revenue from operations?",
+    "company": [
+      "WIPRO"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "multi_hop",
+    "gold_chunks": [
+      64866,
+      64867,
+      64868,
+      64871,
+      64872,
+      64931,
+      64932,
+      64933,
+      64958,
+      64959
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "hard"
+  },
+  {
+    "id": "rv21-table-0001",
+    "question": "Which table in HCLTECH's filings reports its revenue from operations?",
+    "company": [
+      "HCLTECH"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      49663,
+      49666,
+      49671,
+      49697,
+      49702,
+      49707,
+      49716,
+      49719,
+      49741,
+      49745
+    ],
+    "gold_sections": [
+      "auditors_report",
+      "cover_letter",
+      "financial_results",
+      "notes",
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0002",
+    "question": "Which table in HCLTECH's filings reports its total income?",
+    "company": [
+      "HCLTECH"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      49663,
+      49671,
+      49697,
+      49707,
+      49716,
+      49741
+    ],
+    "gold_sections": [
+      "auditors_report",
+      "cover_letter",
+      "financial_results",
+      "notes"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0003",
+    "question": "Which table in HCLTECH's filings reports its total expenses?",
+    "company": [
+      "HCLTECH"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      49663,
+      49671,
+      49697,
+      49707,
+      49716,
+      49741
+    ],
+    "gold_sections": [
+      "auditors_report",
+      "cover_letter",
+      "financial_results",
+      "notes"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0004",
+    "question": "Which table in HDFCLIFE's filings reports its net profit?",
+    "company": [
+      "HDFCLIFE"
+    ],
+    "period": [
+      "FY2025",
+      "FY2026"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      49874,
+      50026
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0005",
+    "question": "Which table in HDFCLIFE's filings reports its profit after tax?",
+    "company": [
+      "HDFCLIFE"
+    ],
+    "period": [
+      "FY2025",
+      "FY2026"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      49812,
+      49832,
+      49872,
+      49873,
+      49971,
+      49992,
+      50024,
+      50025
+    ],
+    "gold_sections": [
+      "cover_letter",
+      "risk_factors"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0006",
+    "question": "Which table in HDFCLIFE's filings reports its total expenses?",
+    "company": [
+      "HDFCLIFE"
+    ],
+    "period": [
+      "FY2025",
+      "FY2026"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      49802,
+      49804,
+      49874,
+      49875,
+      49961,
+      49963,
+      50026,
+      50027
+    ],
+    "gold_sections": [
+      "cover_letter",
+      "risk_factors"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0007",
+    "question": "Which table in HDFCLIFE's filings reports its operating profit?",
+    "company": [
+      "HDFCLIFE"
+    ],
+    "period": [
+      "FY2025",
+      "FY2026"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      49827,
+      49834,
+      49987
+    ],
+    "gold_sections": [
+      "risk_factors"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0008",
+    "question": "Which table in JSWSTEEL's filings reports its revenue from operations?",
+    "company": [
+      "JSWSTEEL"
+    ],
+    "period": [],
+    "intent": "table",
+    "gold_chunks": [
+      54112,
+      54150,
+      54151,
+      54152,
+      54178,
+      54179,
+      54180,
+      54181,
+      54198,
+      54205
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "brsr",
+      "cover_letter"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0009",
+    "question": "Which table in JSWSTEEL's filings reports its total income?",
+    "company": [
+      "JSWSTEEL"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      54286,
+      54294
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0010",
+    "question": "Which table in JSWSTEEL's filings reports its net profit?",
+    "company": [
+      "JSWSTEEL"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      54112,
+      54198,
+      54286,
+      54287,
+      54294,
+      54295
+    ],
+    "gold_sections": [
+      "cover_letter",
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0011",
+    "question": "Which table in JSWSTEEL's filings reports its profit after tax?",
+    "company": [
+      "JSWSTEEL"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      54150,
+      54178,
+      54205,
+      54214,
+      54299
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "brsr",
+      "cover_letter",
+      "notes"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0012",
+    "question": "Which table in JSWSTEEL's filings reports its total expenses?",
+    "company": [
+      "JSWSTEEL"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      54286,
+      54294
+    ],
+    "gold_sections": [
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0013",
+    "question": "Which table in JSWSTEEL's filings reports its ebitda?",
+    "company": [
+      "JSWSTEEL"
+    ],
+    "period": [],
+    "intent": "table",
+    "gold_chunks": [
+      54112,
+      54150,
+      54152,
+      54153,
+      54178,
+      54179,
+      54180,
+      54181,
+      54198,
+      54205
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "brsr",
+      "cover_letter"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0014",
+    "question": "Which table in POWERGRID's filings reports its revenue from operations?",
+    "company": [
+      "POWERGRID"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      57239,
+      57248,
+      57260,
+      57269,
+      57408,
+      57411,
+      57419,
+      57424
+    ],
+    "gold_sections": [
+      "annexure",
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0015",
+    "question": "Which table in POWERGRID's filings reports its total income?",
+    "company": [
+      "POWERGRID"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      56932,
+      56936,
+      57009,
+      57013,
+      57072,
+      57076,
+      57135,
+      57139,
+      57239,
+      57247
+    ],
+    "gold_sections": [
+      "annexure",
+      "cover_letter",
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0016",
+    "question": "Which table in POWERGRID's filings reports its net profit?",
+    "company": [
+      "POWERGRID"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      57248,
+      57260,
+      57268,
+      57269,
+      57291,
+      57295,
+      57296,
+      57411,
+      57419,
+      57423
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "financial_results",
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0017",
+    "question": "Which table in POWERGRID's filings reports its profit after tax?",
+    "company": [
+      "POWERGRID"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      56934,
+      56938,
+      57011,
+      57015,
+      57074,
+      57078,
+      57137,
+      57141,
+      57247,
+      57268
+    ],
+    "gold_sections": [
+      "cover_letter",
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0018",
+    "question": "Which table in POWERGRID's filings reports its total expenses?",
+    "company": [
+      "POWERGRID"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      57239,
+      57260,
+      57408,
+      57419
+    ],
+    "gold_sections": [
+      "annexure",
+      "financial_results"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0019",
+    "question": "Which table in POWERGRID's filings reports its earnings per share?",
+    "company": [
+      "POWERGRID"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "table",
+    "gold_chunks": [
+      56939,
+      57016,
+      57079,
+      57142,
+      57295,
+      57336,
+      57447,
+      57482
+    ],
+    "gold_sections": [
+      "balance_sheet",
+      "cover_letter",
+      "notes"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-table-0020",
+    "question": "Which table in POWERGRID's filings reports its ebitda?",
+    "company": [
+      "POWERGRID"
+    ],
+    "period": [],
+    "intent": "table",
+    "gold_chunks": [
+      56933,
+      56937,
+      57010,
+      57014,
+      57073,
+      57077,
+      57136,
+      57140,
+      57333,
+      57335
+    ],
+    "gold_sections": [
+      "cover_letter"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0001",
+    "question": "Is New Energy Ecosystem one of ADANIENT's reported business segments?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      34955,
+      34957,
+      34958,
+      36057,
+      36059,
+      36464,
+      36466,
+      36467
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0002",
+    "question": "Is Unallocable one of ADANIENT's reported business segments?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      34200,
+      34201,
+      34955,
+      34957,
+      34958,
+      36059,
+      36071,
+      36072,
+      36464,
+      36466
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0003",
+    "question": "Is Commercial Mining one of ADANIENT's reported business segments?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      34200,
+      34201,
+      34955,
+      34957,
+      34958,
+      36057,
+      36059,
+      36464,
+      36466,
+      36467
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0004",
+    "question": "Is Unallocable Income one of ADANIENT's reported business segments?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      34955,
+      34957,
+      34958,
+      36464,
+      36466,
+      36467
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0005",
+    "question": "Is Mining Services one of ADANIENT's reported business segments?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      34200,
+      34201,
+      34955,
+      34957,
+      34958,
+      36057,
+      36059,
+      36178,
+      36181,
+      36182
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0006",
+    "question": "Is Copper one of ADANIENT's reported business segments?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      34955,
+      34957,
+      34958,
+      36057,
+      36058,
+      36059,
+      36070,
+      36071,
+      36072,
+      36077
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0007",
+    "question": "Is Other one of ADANIENT's reported business segments?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      33930,
+      33931,
+      33932,
+      34199,
+      34200,
+      34201,
+      34955,
+      34957,
+      34958,
+      35856
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0008",
+    "question": "Is Integrated Resources Management one of ADANIENT's reported business segments?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [
+      "FY2026",
+      "FY2027"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      34955,
+      34957,
+      34958,
+      36057,
+      36059,
+      36187,
+      36464,
+      36466,
+      36467
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0009",
+    "question": "Is Others one of ADANIENT's reported business segments?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      34199,
+      34200,
+      34201,
+      34955,
+      34957,
+      34958,
+      36057,
+      36058,
+      36059,
+      36063
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0010",
+    "question": "Is Road one of ADANIENT's reported business segments?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      34199,
+      34200,
+      34201,
+      34955,
+      34957,
+      34958,
+      36057,
+      36059,
+      36070,
+      36071
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0011",
+    "question": "Is Airport one of ADANIENT's reported business segments?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [
+      "FY2026"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      34199,
+      34200,
+      34201,
+      34955,
+      34957,
+      34958,
+      36057,
+      36059,
+      36070,
+      36071
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0012",
+    "question": "Is Oil to Chemicals (O2C) one of RELIANCE's reported business segments?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      58069,
+      58070,
+      58071,
+      58072,
+      58073,
+      58088,
+      58089,
+      58090,
+      58091,
+      58092
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0013",
+    "question": "Is Digital Services one of RELIANCE's reported business segments?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      58069,
+      58070,
+      58071,
+      58072,
+      58073,
+      58088,
+      58089,
+      58090,
+      58091,
+      58092
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0014",
+    "question": "Is Others one of RELIANCE's reported business segments?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      58069,
+      58070,
+      58071,
+      58072,
+      58073,
+      58088,
+      58089,
+      58090,
+      58091,
+      58092
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0015",
+    "question": "Is Retail one of RELIANCE's reported business segments?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      58069,
+      58070,
+      58071,
+      58072,
+      58073,
+      58088,
+      58089,
+      58090,
+      58091,
+      58092
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0016",
+    "question": "Is Oil and Gas one of RELIANCE's reported business segments?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      58069,
+      58070,
+      58071,
+      58072,
+      58073,
+      58088,
+      58089,
+      58090,
+      58091,
+      58092
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0017",
+    "question": "Is Others one of TITAN's reported business segments?",
+    "company": [
+      "TITAN"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      62652,
+      62653,
+      62654,
+      62655,
+      62958,
+      62959,
+      62991,
+      62992,
+      63285,
+      63286
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0018",
+    "question": "Is Corporate (unallocated) one of TITAN's reported business segments?",
+    "company": [
+      "TITAN"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      62958,
+      62959,
+      63285,
+      63286
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0019",
+    "question": "Is Jewellery one of TITAN's reported business segments?",
+    "company": [
+      "TITAN"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      62652,
+      62653,
+      62654,
+      62655,
+      62958,
+      62959,
+      62991,
+      62992,
+      63285,
+      63286
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-segment-0020",
+    "question": "Is Eyecare one of TITAN's reported business segments?",
+    "company": [
+      "TITAN"
+    ],
+    "period": [
+      "FY2027"
+    ],
+    "intent": "segment",
+    "gold_chunks": [
+      62652,
+      62653,
+      62654,
+      62655,
+      62958,
+      62959,
+      62991,
+      62992,
+      63285,
+      63286
+    ],
+    "gold_sections": [
+      "segment_information"
+    ],
+    "difficulty": "easy"
+  },
+  {
+    "id": "rv21-adversarial-0001",
+    "question": "What was ADANIENT's revenue from operations in FY2015?",
+    "company": [
+      "ADANIENT"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0002",
+    "question": "What was TITAN's revenue from operations in FY2015?",
+    "company": [
+      "TITAN"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0003",
+    "question": "What was SBILIFE's revenue from operations in FY2015?",
+    "company": [
+      "SBILIFE"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0004",
+    "question": "What was HDFCBANK's revenue from operations in FY2015?",
+    "company": [
+      "HDFCBANK"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0005",
+    "question": "What was Bajaj Auto's revenue from operations in FY2015?",
+    "company": [
+      "BAJAJ-AUTO"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0006",
+    "question": "What was NTPC's revenue from operations in FY2015?",
+    "company": [
+      "NTPC"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0007",
+    "question": "What was JSWSTEEL's revenue from operations in FY2015?",
+    "company": [
+      "JSWSTEEL"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0008",
+    "question": "What was JIOFIN's revenue from operations in FY2015?",
+    "company": [
+      "JIOFIN"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0009",
+    "question": "What was TECHM's revenue from operations in FY2015?",
+    "company": [
+      "TECHM"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0010",
+    "question": "What was HDFCLIFE's revenue from operations in FY2015?",
+    "company": [
+      "HDFCLIFE"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0011",
+    "question": "What was KOTAKBANK's revenue from operations in FY2015?",
+    "company": [
+      "KOTAKBANK"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0012",
+    "question": "What was TATACONSUM's revenue from operations in FY2015?",
+    "company": [
+      "TATACONSUM"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0013",
+    "question": "What was GRASIM's revenue from operations in FY2015?",
+    "company": [
+      "GRASIM"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0014",
+    "question": "What was EICHERMOT's revenue from operations in FY2015?",
+    "company": [
+      "EICHERMOT"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0015",
+    "question": "What was WIPRO's revenue from operations in FY2015?",
+    "company": [
+      "WIPRO"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0016",
+    "question": "What was SBIN's revenue from operations in FY2015?",
+    "company": [
+      "SBIN"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0017",
+    "question": "What was NESTLEIND's revenue from operations in FY2015?",
+    "company": [
+      "NESTLEIND"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0018",
+    "question": "What was BAJFINANCE's revenue from operations in FY2015?",
+    "company": [
+      "BAJFINANCE"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0019",
+    "question": "What was BHARTIARTL's revenue from operations in FY2015?",
+    "company": [
+      "BHARTIARTL"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0020",
+    "question": "What was APOLLOHOSP's revenue from operations in FY2015?",
+    "company": [
+      "APOLLOHOSP"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0021",
+    "question": "What was CIPLA's revenue from operations in FY2015?",
+    "company": [
+      "CIPLA"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0022",
+    "question": "What was HINDALCO's revenue from operations in FY2015?",
+    "company": [
+      "HINDALCO"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0023",
+    "question": "What was BAJAJFINSV's revenue from operations in FY2015?",
+    "company": [
+      "BAJAJFINSV"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0024",
+    "question": "What was RELIANCE's revenue from operations in FY2015?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0025",
+    "question": "What was TRENT's revenue from operations in FY2015?",
+    "company": [
+      "TRENT"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0026",
+    "question": "What was SUNPHARMA's revenue from operations in FY2015?",
+    "company": [
+      "SUNPHARMA"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0027",
+    "question": "What was SHRIRAMFIN's revenue from operations in FY2015?",
+    "company": [
+      "SHRIRAMFIN"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0028",
+    "question": "What was HINDUNILVR's revenue from operations in FY2015?",
+    "company": [
+      "HINDUNILVR"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0029",
+    "question": "What was COALINDIA's revenue from operations in FY2015?",
+    "company": [
+      "COALINDIA"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-adversarial-0030",
+    "question": "What was TATASTEEL's revenue from operations in FY2015?",
+    "company": [
+      "TATASTEEL"
+    ],
+    "period": [
+      "FY2015"
+    ],
+    "intent": "adversarial",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "wrong_period"
+  },
+  {
+    "id": "rv21-no_evidence-0001",
+    "question": "What will Bajaj Auto's revenue be in FY2030?",
+    "company": [
+      "BAJAJ-AUTO"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0002",
+    "question": "What will ULTRACEMCO's revenue be in FY2030?",
+    "company": [
+      "ULTRACEMCO"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0003",
+    "question": "What will SHRIRAMFIN's revenue be in FY2030?",
+    "company": [
+      "SHRIRAMFIN"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0004",
+    "question": "What will Mahindra & Mahindra's revenue be in FY2030?",
+    "company": [
+      "M&M"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0005",
+    "question": "What will TMPV's revenue be in FY2030?",
+    "company": [
+      "TMPV"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0006",
+    "question": "What will TECHM's revenue be in FY2030?",
+    "company": [
+      "TECHM"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0007",
+    "question": "What will BAJAJFINSV's revenue be in FY2030?",
+    "company": [
+      "BAJAJFINSV"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0008",
+    "question": "What will RELIANCE's revenue be in FY2030?",
+    "company": [
+      "RELIANCE"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0009",
+    "question": "What will POWERGRID's revenue be in FY2030?",
+    "company": [
+      "POWERGRID"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0010",
+    "question": "What will SUNPHARMA's revenue be in FY2030?",
+    "company": [
+      "SUNPHARMA"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0011",
+    "question": "What will BEL's revenue be in FY2030?",
+    "company": [
+      "BEL"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0012",
+    "question": "What will ITC's revenue be in FY2030?",
+    "company": [
+      "ITC"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0013",
+    "question": "What will ONGC's revenue be in FY2030?",
+    "company": [
+      "ONGC"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0014",
+    "question": "What will KOTAKBANK's revenue be in FY2030?",
+    "company": [
+      "KOTAKBANK"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0015",
+    "question": "What will CIPLA's revenue be in FY2030?",
+    "company": [
+      "CIPLA"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0016",
+    "question": "What will LT's revenue be in FY2030?",
+    "company": [
+      "LT"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0017",
+    "question": "What will TITAN's revenue be in FY2030?",
+    "company": [
+      "TITAN"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0018",
+    "question": "What will MARUTI's revenue be in FY2030?",
+    "company": [
+      "MARUTI"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0019",
+    "question": "What will AXISBANK's revenue be in FY2030?",
+    "company": [
+      "AXISBANK"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  },
+  {
+    "id": "rv21-no_evidence-0020",
+    "question": "What will TRENT's revenue be in FY2030?",
+    "company": [
+      "TRENT"
+    ],
+    "period": [
+      "FY2030"
+    ],
+    "intent": "no_evidence",
+    "gold_chunks": [],
+    "gold_sections": [],
+    "difficulty": "hard",
+    "adversarial_type": "forecast_not_in_corpus"
+  }
+]
