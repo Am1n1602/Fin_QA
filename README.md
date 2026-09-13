@@ -1,6 +1,6 @@
 # Fin·QA
 
-**[Live demo →](https://finqa-dashboard-public.onrender.com/)** — a free-tier deployment
+**[Live demo](https://finqa-dashboard-public.onrender.com/)** (Disable ublock origin for this to load) — a free-tier deployment
 covering 12 of the NIFTY 50 companies (TCS, INFY, HCLTECH, WIPRO, RELIANCE, ONGC,
 HDFCBANK, ICICIBANK, SBIN, ITC, M&M, SBILIFE), lexical-only retrieval, LLM synthesis on
 by default. First load can take up to a minute — the backend sleeps after inactivity on
