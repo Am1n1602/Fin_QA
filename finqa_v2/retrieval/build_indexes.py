@@ -29,6 +29,10 @@ def main() -> int:
     ap.add_argument("--model", default="all-mpnet-base-v2")
     ap.add_argument("--device", default="auto",
                     help="'auto' (cuda if available else cpu), 'cuda', or 'cpu'.")
+    ap.add_argument("--batch-size", type=int, default=32,
+                    help="encoder batch size -- lower it for a larger model on limited VRAM.")
+    ap.add_argument("--trust-remote-code", action="store_true",
+                    help="required by some HF models with custom modeling code (e.g. jina-embeddings-v3).")
     ap.add_argument("--hash-embedder", action="store_true",
                     help="Build the vector index with the dependency-free HashEmbedder "
                          "(exercises the path; not semantically strong).")
@@ -60,7 +64,9 @@ def main() -> int:
         if args.hash_embedder:
             embedder = HashEmbedder()
         else:
-            embedder = SentenceTransformerEmbedder(args.model, device=device)
+            embedder = SentenceTransformerEmbedder(args.model, device=device,
+                                                   batch_size=args.batch_size,
+                                                   trust_remote_code=args.trust_remote_code)
             print(f"[vector] embedding with {args.model} on {device}")
         try:
             idx = VectorIndex.build(repos, embedder)
