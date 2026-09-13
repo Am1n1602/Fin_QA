@@ -136,7 +136,7 @@ app = FastAPI(
                 "metrics/ratios/growth/segments/rankings, hybrid document search, and "
                 "evidence-grounded, verified natural-language QA over the NIFTY 50. Every "
                 "number comes from the Financial Engine -- this API computes nothing itself.",
-    version="0.1.0",
+    version="2.0.0-alpha.1",
     lifespan=lifespan,
     default_response_class=UTF8JSONResponse,
 )
