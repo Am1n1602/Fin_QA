@@ -16,9 +16,10 @@ The core design constraint: an LLM never computes or invents a figure. All arith
 happens in a plain deterministic Python engine over normalized XBRL data; the LLM's only
 job is to read the numbers and documents that engine and retrieval layer already produced
 and write them up, citing which evidence each sentence came from. A separate verification
-pass then recomputes every calculation and checks every citation before the answer goes
-out. Every code path also has a no-LLM fallback, so the system still answers — more
-plainly — with zero model calls and $0 spend.
+pass then independently checks the arithmetic and every citation before the answer goes
+out, downgrading or abstaining on anything it can't confirm. Every code path also has a
+no-LLM fallback, so the system still answers — more plainly — with zero model calls and $0
+spend.
 
 [**MANUAL.md**](MANUAL.md) has the full technical reference: every module, every config
 variable, the API and metrics reference, deployment, and known limitations. This README is
@@ -46,21 +47,21 @@ Deterministic Financial Engine ◄───────┘
         ▼
 Query Planner (rules-based, LLM-assisted when a key is configured)
         ▼
-Tool Registry — ~15 typed functions; the only path any answer touches data or documents
+Tool Registry — 15 typed functions; the only path any answer touches data or documents
         ▼
 Reasoning Orchestrator
         ├── causal "why" questions       → hypothesis decomposition + structural testing
         ├── "is management's claim true" → cross-validation against reported figures
         └── everything else              → evidence assembly + LLM (or deterministic) synthesis
         ▼
-Verification — recomputes every calculation, checks every citation, abstains on mismatch
+Verification — independently checks calculations and citations, abstains on mismatch
         ▼
 FastAPI ──► React/Vite dashboard (chat + per-company drill-down, claim-level evidence)
 ```
 
 ## What it does
 
-- **Deterministic financial engine.** ~17 ratios (ROE, ROCE, margins, leverage, coverage,
+- **Deterministic financial engine.** 17 ratios (ROE, ROCE, margins, leverage, coverage,
   liquidity), valuation multiples, YoY/QoQ growth, CAGR, segment attribution, and a
   DuPont/net-margin decomposition, each traceable to the exact source facts and formula
   used. A metric that can't be computed cleanly comes back `null` with a stated reason —
@@ -76,19 +77,25 @@ FastAPI ──► React/Vite dashboard (chat + per-company drill-down, claim-lev
 - **Claim cross-validation.** "Management said growth was driven by BFSI — is that true?"
   is checked against both the segment data and the filing text, landing on `supported` /
   `partially_supported` / `not_supported` / `insufficient_evidence`.
-- **Post-hoc verification.** Before an answer ships, every calculation is independently
-  recomputed and every number in the prose is reconciled against its source evidence; a
-  claim that fails is downgraded, and an answer that fails as a whole is abstained rather
-  than shown.
+- **Post-hoc verification.** Before an answer ships, the verifier independently attempts
+  to recompute every calculation (a formula whose inputs aren't all pinned values is
+  flagged `not_recomputable` rather than silently trusted) and reconciles every number in
+  the prose against its source evidence; a claim that fails is downgraded, and an answer
+  that fails as a whole is abstained rather than shown. Measured on the 850-question
+  benchmark below: 99.7% of claims are fully grounded (every evidence id they cite
+  resolves to real, unflagged evidence).
 - **REST API and dashboard**, both pure transport over the same engine — neither computes
   anything on its own.
-- **Cost-aware LLM layer.** Works out of the box on Groq's free tier, with an optional paid
-  Anthropic path guarded by a hard dollar cap.
-- **An internal evaluation suite**, not spot checks: an 850-question benchmark across
-  factual/numerical/comparison/causal/cross-validation/adversarial categories, plus a
-  controlled comparison against three simpler pipelines (LLM-only, retrieval-only,
-  engine-without-verification) showing numeric accuracy going from near-zero to over 80%
-  the moment the deterministic engine is in the loop.
+- **Cost-aware LLM layer.** Groq's free tier by default (a 60-request/session, 180k
+  token/day budget, enforced in code, not just documented), or an optional Anthropic path
+  with a hard $3 spend cap that refuses a call rather than risk exceeding it.
+- **462 unit tests, 0 failures** (`python -m unittest discover -s finqa_v2`, last verified
+  2026-09-13), plus the evaluation suite below, which runs against the live engine and
+  retrieval stack rather than mocks.
+- **An 850-question internal benchmark** across factual, numerical, comparison, causal,
+  cross-validation, and adversarial categories, all 50 NIFTY 50 companies — see
+  [Evaluation](#evaluation) for what running it actually shows, including where the
+  numbers are weaker.
 
 ## Project layout
 
@@ -187,7 +194,10 @@ python -m finqa_v2.retrieval.build_indexes
 The first command imports company/index metadata, normalizes XBRL facts, extracts
 segments, imports share prices, ingests filing PDFs into structured chunks, and runs a
 coverage audit — each step is idempotent and resumable (`--from segments`, `--skip-docs`,
-`--company TCS`). The second builds the BM25 and embedding indexes the retriever needs
+`--company TCS`). Run against the maintainer's own dataset, that audit currently reports
+100/100 on all 50 NIFTY 50 companies (`python -m finqa_v2.dataset.audit`) — your own build
+depends on what BSE/NSE currently serves, so re-run it yourself rather than assuming this
+holds. The second command builds the BM25 and embedding indexes the retriever needs
 (`--device cuda` if you have a GPU).
 
 Prefer PostgreSQL? See [`deployment/README.md`](deployment/README.md) — the repository
@@ -268,12 +278,48 @@ python -m evaluation.datasets.finqa_india.build
 python -m evaluation.baselines.runner --dataset evaluation/datasets/finqa_india.jsonl --sample 20 --llm
 ```
 
-The benchmark spans factual, numerical, comparison, multi-step, causal, cross-document,
-analytical, and adversarial questions across all 50 NIFTY 50 names, with numeric answers
-checked against the engine's own ground truth. A regression gate compares any run against
-a pinned baseline and fails on a metric regression beyond tolerance. See
-[`MANUAL.md §17`](MANUAL.md#17-evaluation-framework) for the evaluator and baseline
-comparison detail.
+The benchmark (`evaluation/datasets/finqa_india.jsonl`, 850 questions) spans factual,
+numerical, comparison, multi-step, causal, cross-document, analytical, and adversarial
+questions across all 50 NIFTY 50 names. Two real runs, both checked in under
+`evaluation/`, not cherry-picked:
+
+**Full benchmark, deterministic path (0 LLM calls, all 850 questions), 2026-09-10:**
+
+| Check | Result | n checked |
+|---|---|---|
+| Numerical accuracy | 100% | 200 |
+| Claim groundedness (every cited evidence id is real) | 99.7% | 625 |
+| Correct abstention (declines what it can't answer) | 99.7% | 850 |
+| Overall correctness (keyword/tolerance match to reference) | 58.0% | 800 |
+
+Correctness lands well below the other three because it's the bluntest check — a strict
+keyword/tolerance match against one reference answer — and many causal/adversarial
+questions don't have a single "correct" phrasing to match, even when the underlying
+numbers and evidence are right. Raw report:
+[`evaluation/datasets/finqa_india/baseline_deterministic.json`](evaluation/datasets/finqa_india/baseline_deterministic.json).
+
+**204-question sample, Claude Sonnet via Anthropic, $3 cost cap, 2026-09-11** — four
+pipeline variants compared on the same questions:
+
+| Pipeline | Numerical accuracy | Correctness |
+|---|---|---|
+| A — LLM only, no tools | 0.0% | 32.3% |
+| B — vector RAG + LLM | 4.2% | 33.9% |
+| C — deterministic engine + LLM, no verification | 83.3% | 83.3% |
+| D — full Fin·QA (this system) | 91.7% | 68.2% |
+
+The gap that matters: an LLM answering from its own knowledge or from retrieved passages
+alone gets financial arithmetic right essentially never (0–4%) on this dataset; adding the
+deterministic engine — regardless of whether verification/reasoning sits on top — moves
+numerical accuracy to 83–92%. D's correctness score sitting below C's is a real, unresolved
+result, not a typo: D abstains far more often (98.8% vs 93.9% correct-abstention), which
+trades some judged-correct answers for refusing ones it's less sure of — plausible, but
+not something this sample size (n=204, one seed) proves either way. Raw report:
+[`evaluation/reports/baselines-claude-sonnet5.json`](evaluation/reports/baselines-claude-sonnet5.json).
+
+A regression gate compares any new run against a pinned baseline and fails on a metric
+regression beyond tolerance. See [`MANUAL.md §17`](MANUAL.md#17-evaluation-framework) for
+the evaluator definitions, the regression harness, and baseline-comparison detail.
 
 ## Known limitations
 
