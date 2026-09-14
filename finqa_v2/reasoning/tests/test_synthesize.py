@@ -97,6 +97,36 @@ class TestDeterministic(unittest.TestCase):
         d = deterministic_answer(plan.question, plan, w)
         self.assertTrue(any("cause is not established" in l for l in d["limitations"]))
 
+    def test_causal_with_weak_docs_flags_gate_failure_not_missing_docs(self):
+        # §21 Evidence Quality Gate: a doc WAS retrieved, but confidence 0.2 is well below
+        # the calibrated 0.50 threshold -- must be caught, and with a message distinct
+        # from the "no docs at all" one (the old check only saw `not docs`).
+        w = EvidenceSet()
+        w.add(Evidence(evidence_id="ev-g", type=EvidenceType.GROWTH, company="TCS",
+                       metric="revenue_yoy", period="FY2025 -> FY2026", value=4.5, unit="pct",
+                       confidence=0.9))
+        w.add(Evidence(evidence_id="ev-doc", type=EvidenceType.DOCUMENT, company="TCS",
+                       document_id=5, section="cover_letter", confidence=0.2,
+                       text="Unrelated boilerplate filing text."))
+        plan = QueryPlan(question="Why did TCS revenue barely grow?", intent=Intent.CAUSAL,
+                         companies=["TCS"], metrics=["revenue"], tools=["get_growth", "search_documents"])
+        d = deterministic_answer(plan.question, plan, w)
+        self.assertTrue(any("too weak to establish the cause" in l for l in d["limitations"]))
+        self.assertFalse(any("cause is not established" in l for l in d["limitations"]))
+
+    def test_causal_with_strong_docs_does_not_flag_the_gate(self):
+        w = EvidenceSet()
+        w.add(Evidence(evidence_id="ev-g", type=EvidenceType.GROWTH, company="TCS",
+                       metric="revenue_yoy", period="FY2025 -> FY2026", value=4.5, unit="pct",
+                       confidence=0.9))
+        w.add(Evidence(evidence_id="ev-doc", type=EvidenceType.DOCUMENT, company="TCS",
+                       document_id=5, section="mda", confidence=0.7,
+                       text="Management discussed pricing pressure driving the slowdown."))
+        plan = QueryPlan(question="Why did TCS revenue barely grow?", intent=Intent.CAUSAL,
+                         companies=["TCS"], metrics=["revenue"], tools=["get_growth", "search_documents"])
+        d = deterministic_answer(plan.question, plan, w)
+        self.assertFalse(any("not established" in l or "too weak" in l for l in d["limitations"]))
+
     def test_no_evidence(self):
         d = deterministic_answer("huh?", QueryPlan(question="huh?", intent=Intent.UNKNOWN), EvidenceSet())
         self.assertIn("not sufficient", d["answer"])

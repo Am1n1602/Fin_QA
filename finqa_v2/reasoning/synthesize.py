@@ -9,6 +9,7 @@ import json
 import re
 
 from finqa_v2.evidence.models import EvidenceType
+from finqa_v2.evidence.quality_gate import check as _quality_gate_check
 
 SYSTEM = (
     "You are the reasoning layer of a deterministic financial-analysis engine for Indian "
@@ -162,8 +163,20 @@ def deterministic_answer(question: str, plan, workspace, *, analysis=None) -> di
         for lim in e.limitations:
             if lim not in limitations:
                 limitations.append(lim)
-    if plan.intent.value in ("causal", "cross_validation") and not docs:
-        limitations.append("No supporting document passages were retrieved, so the cause is not established.")
+    if plan.intent.value in ("causal", "cross_validation"):
+        # §21 Evidence Quality Gate: generalizes the old "no docs at all" check to also
+        # catch docs that WERE retrieved but are too weak/scattered to actually support a
+        # causal conclusion (low confidence, single source, wrong section for the intent)
+        # -- `not docs` alone missed that case entirely.
+        gate = _quality_gate_check(docs, intent=plan.intent.value)
+        if not gate.sufficient:
+            if not docs:
+                limitations.append("No supporting document passages were retrieved, so the cause is not established.")
+            else:
+                limitations.append(
+                    "Retrieved document evidence was too weak to establish the cause "
+                    f"({'; '.join(gate.reasons)})."
+                )
     if not sentences:
         sentences.append("The available evidence was not sufficient to answer this question.")
     return {"answer": " ".join(sentences), "key_findings": sentences[:],
