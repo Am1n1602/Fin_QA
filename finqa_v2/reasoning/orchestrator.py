@@ -199,10 +199,17 @@ class ReasoningOrchestrator:
                 # §15: the plan's own intent drives per-section retrieval weighting
                 # (finqa_v2/retrieval/section_weights.yaml) -- e.g. a causal question
                 # favors mda/earnings_call chunks over boilerplate cover-letter text.
-                a = {"query": plan.question, "k": 5, "intent": plan.intent.value}
-                if len(plan.companies) == 1:
-                    a["company"] = co
-                yield name, a
+                # §13/§9: a decomposed plan (comparison / multi-company-causal) fans out
+                # into one search_documents call per sub-question instead of one search
+                # over the combined question -- plan.sub_questions is [] for every other
+                # intent (§13's own scoping rule), so this is a no-op fallback to the
+                # single-query behavior for everything that isn't decomposed.
+                queries = plan.sub_questions or [plan.question]
+                for q in queries:
+                    a = {"query": q, "k": 5, "intent": plan.intent.value}
+                    if len(plan.companies) == 1:
+                        a["company"] = co
+                    yield name, a
             elif name == "get_company" and co:
                 yield name, {"ticker": co}
             elif name == "get_peers" and co:

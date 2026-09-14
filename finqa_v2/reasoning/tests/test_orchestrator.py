@@ -77,6 +77,26 @@ class TestOrchestrator(OrchestratorTestCase):
         # §31 core schema is unchanged for causal questions
         self.assertEqual(set(r.response), _KEYS)
 
+    def test_complex_causal_comparison_decomposes_into_multiple_searches(self):
+        # COMPARISON intent's own tool list doesn't call search_documents at all (a
+        # pre-existing, deliberate v2 scope decision -- comparisons are numeric-only via
+        # compare_companies/get_ratio) so decomposition's effect on plain `comparison`
+        # questions only shows up via the LLM planner path, not this deterministic one.
+        # CAUSAL does call search_documents deterministically, so that's what §13's
+        # "complex causal" case is tested against here.
+        r = self.orch.answer("Why did TEST net profit margin decline compared with PEER?")
+        searches = [c["args"]["query"] for c in r.trace if c["tool"] == "search_documents"]
+        self.assertEqual(len(searches), 3, searches)
+        self.assertTrue(any("why did TEST" in q for q in searches))
+        self.assertTrue(any(q.startswith("TEST ") for q in searches))
+        self.assertTrue(any(q.startswith("PEER ") for q in searches))
+
+    def test_plain_causal_question_still_searches_once(self):
+        r = self.orch.answer("Why did TEST net profit rise in FY2026?")
+        searches = [c["args"]["query"] for c in r.trace if c["tool"] == "search_documents"]
+        self.assertEqual(len(searches), 1, searches)
+        self.assertEqual(searches[0], "Why did TEST net profit rise in FY2026?")
+
     def test_non_causal_has_no_hypothesis_report(self):
         r = self.orch.answer("What was TEST revenue in FY2026?")
         self.assertIsNone(r.hypothesis_report)

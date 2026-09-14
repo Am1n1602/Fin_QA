@@ -8,6 +8,7 @@ import re
 from finqa_v2.engine.ratios import SPECS as _RATIO_SPECS
 from finqa_v2.engine.ratios import resolve as _resolve_ratio
 from finqa_v2.engine.valuation import resolve as _resolve_valuation
+from finqa_v2.planner.decompose import decompose
 from finqa_v2.planner.models import Intent, QueryPlan
 
 _RATIO_NAMES = set(_RATIO_SPECS)
@@ -217,8 +218,10 @@ def plan_with_rules(question: str, *, matcher: CompanyMatcher | None = None,
     periods, notes = _periods(question)
     intent = _intent(question, companies, metrics)
     tools, needs_docs, needs_calc = _tools_for(intent, metrics)
-    return QueryPlan(
+    plan = QueryPlan(
         question=question, intent=intent, companies=companies, periods=periods,
         metrics=metrics, tools=tools, needs_documents=needs_docs,
         needs_calculation=needs_calc, planner="rules", notes=notes,
     )
+    plan.sub_questions = decompose(plan)
+    return plan

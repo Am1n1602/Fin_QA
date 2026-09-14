@@ -58,6 +58,16 @@ class RunMode(unittest.TestCase):
         with_qe = run_mode(self.retriever, self.repos, self.records, "lexical", query_expansion=True)
         self.assertEqual(without["n_total"], with_qe["n_total"])
 
+    def test_multi_query_runs_without_error_and_is_off_by_default(self):
+        from evaluation.run_retrieval_benchmark import run_mode
+
+        comparison_records = [r for r in self.records if len(r.get("company") or []) >= 2][:10]
+        if not comparison_records:
+            self.skipTest("no multi-company records in this 40-row slice")
+        without = run_mode(self.retriever, self.repos, comparison_records, "lexical", multi_query=False)
+        with_mq = run_mode(self.retriever, self.repos, comparison_records, "lexical", multi_query=True)
+        self.assertEqual(without["n_total"], with_mq["n_total"])
+
 
 if __name__ == "__main__":
     unittest.main()

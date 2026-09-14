@@ -61,10 +61,35 @@ def _company_id(repos, tickers: list[str] | None) -> int | None:
     return co.company_id if co else None
 
 
+def _multi_query_hits(retriever, repos, rec: dict, *, mode: str, rerank: bool,
+                      intent: str | None, query_expansion: bool):
+    """§8/§9: for a multi-company record, retrieve once PER company (mirroring
+    `finqa_v2.planner.decompose.decompose()`'s comparison branch) and merge by
+    chunk_id, keeping each chunk's best (lowest) rank across the sub-queries -- the
+    same union+best-rank merge `EvidenceSet.add()` already does in production."""
+    companies = rec.get("company") or []
+    best: dict[int, int] = {}
+    for co in companies:
+        # the benchmark dataset's question already names the metric in text (e.g.
+        # "Compare X and Y on revenue from operations.") -- reuse it as-is per company
+        # rather than trying to re-derive a canonical metric name from the record.
+        sub_q = rec["question"]
+        cid = _company_id(repos, [co])
+        filters = {"company_id": cid} if cid else None
+        lexical_query = expand_lexical_query(sub_q) if query_expansion else None
+        hits = retriever.retrieve(sub_q, k=max(_KS), candidate_k=40, mode=mode,
+                                  filters=filters, rerank=rerank, intent=intent,
+                                  lexical_query=lexical_query)
+        for h in hits:
+            if h.chunk.chunk_id not in best or h.rank < best[h.chunk.chunk_id]:
+                best[h.chunk.chunk_id] = h.rank
+    return sorted(best.items(), key=lambda kv: kv[1])
+
+
 def run_mode(retriever, repos, records: list[dict], mode: str, *,
             filter_company: bool = True, rerank: bool = False,
             section_aware: bool = False, section_hints: bool = False,
-            query_expansion: bool = False) -> dict[str, Any]:
+            query_expansion: bool = False, multi_query: bool = False) -> dict[str, Any]:
     """`section_hints=True` (§10) additionally FILTERS candidates to the sections
     `finqa_v2.retrieval.section_weights.list_weighted_sections(intent)` names for the
     case's intent -- a harder constraint than `section_aware`'s soft re-ranking weight,
@@ -92,18 +117,24 @@ def run_mode(retriever, repos, records: list[dict], mode: str, *,
         intent = rec["intent"] if section_aware else None
         lexical_query = expand_lexical_query(rec["question"]) if query_expansion else None
         t0 = time.perf_counter()
-        hits = retriever.retrieve(rec["question"], k=max(_KS), candidate_k=40,
-                                  mode=mode, filters=filters, rerank=rerank, intent=intent,
-                                  lexical_query=lexical_query)
+        if multi_query and len(rec.get("company") or []) >= 2:
+            merged = _multi_query_hits(retriever, repos, rec, mode=mode, rerank=rerank,
+                                       intent=intent, query_expansion=query_expansion)
+            chunk_ids = [cid_ for cid_, _ in merged][:max(_KS)]
+        else:
+            hits = retriever.retrieve(rec["question"], k=max(_KS), candidate_k=40,
+                                      mode=mode, filters=filters, rerank=rerank, intent=intent,
+                                      lexical_query=lexical_query)
+            chunk_ids = [h.chunk.chunk_id for h in hits]
         lat.append((time.perf_counter() - t0) * 1000)
-        rels = [1 if h.chunk.chunk_id in gold else 0 for h in hits]
+        rels = [1 if cid_ in gold else 0 for cid_ in chunk_ids]
         first = next((i + 1 for i, r in enumerate(rels) if r), None)
         if gold:
             first_ranks.append(first)
             ndcg_rels.append(rels)
         else:
             n_no_gold += 1
-            if hits:
+            if chunk_ids:
                 spurious_hits += 1
         per_case.append({"id": rec["id"], "intent": rec["intent"],
                          "first_relevant_rank": first, "gold_size": len(gold)})
@@ -137,6 +168,8 @@ def main() -> int:
                     help="§10: additionally FILTER to list_weighted_sections(intent), not just weight")
     ap.add_argument("--query-expansion", action="store_true",
                     help="§11/§12: expand the BM25 leg's query with financial-terminology synonyms")
+    ap.add_argument("--multi-query", action="store_true",
+                    help="§8/§9: for multi-company records, retrieve once per company and merge")
     ap.add_argument("--out", type=Path, default=None, help="write a JSON report here")
     ap.add_argument("--label", default="retrieval_v21_baseline")
     args = ap.parse_args()
@@ -157,7 +190,8 @@ def main() -> int:
                                      filter_company=args.filter_company, rerank=args.rerank,
                                      section_aware=args.section_aware,
                                      section_hints=args.section_hints,
-                                     query_expansion=args.query_expansion)
+                                     query_expansion=args.query_expansion,
+                                     multi_query=args.multi_query)
     finally:
         repos.close()
 
@@ -191,7 +225,7 @@ def main() -> int:
             "retriever_modes_available": list(retriever.modes),
             "filter_company": args.filter_company, "rerank": args.rerank,
             "section_aware": args.section_aware, "section_hints": args.section_hints,
-            "query_expansion": args.query_expansion,
+            "query_expansion": args.query_expansion, "multi_query": args.multi_query,
             "results": {mode: {k: v for k, v in m.items() if k != "per_case"} for mode, m in results.items()},
         }
         args.out.parent.mkdir(parents=True, exist_ok=True)
