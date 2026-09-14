@@ -31,6 +31,21 @@ class TestBuildRetrieverReranker(unittest.TestCase):
         self.assertIsInstance(r._reranker, CrossEncoderReranker)
         self.assertIsNone(r._reranker._model)  # constructed, not loaded
 
+    def test_reranker_model_none_keeps_the_cross_encoders_own_default(self):
+        r = build_retriever(self.repos, bm25_path=Path("/nonexistent"), vector_dir=Path("/nonexistent"),
+                            use_reranker=True)
+        self.assertEqual(r._reranker.model_name, "cross-encoder/ms-marco-MiniLM-L-6-v2")
+
+    def test_reranker_model_override_is_used(self):
+        r = build_retriever(self.repos, bm25_path=Path("/nonexistent"), vector_dir=Path("/nonexistent"),
+                            use_reranker=True, reranker_model="cross-encoder/ms-marco-MiniLM-L-12-v2")
+        self.assertEqual(r._reranker.model_name, "cross-encoder/ms-marco-MiniLM-L-12-v2")
+
+    def test_reranker_model_ignored_when_reranker_disabled(self):
+        r = build_retriever(self.repos, bm25_path=Path("/nonexistent"), vector_dir=Path("/nonexistent"),
+                            reranker_model="cross-encoder/ms-marco-MiniLM-L-12-v2")
+        self.assertIsInstance(r._reranker, IdentityReranker)
+
 
 class TestEvaluateMath(unittest.TestCase):
     def setUp(self):

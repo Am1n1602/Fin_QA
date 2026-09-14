@@ -176,6 +176,8 @@ def main() -> int:
     ap.add_argument("--filter-company", action="store_true", default=True)
     ap.add_argument("--no-filter-company", dest="filter_company", action="store_false")
     ap.add_argument("--rerank", action="store_true", help="wire the real CrossEncoderReranker")
+    ap.add_argument("--rerank-model", default=None,
+                    help="§19: override the cross-encoder model name (only with --rerank)")
     ap.add_argument("--section-aware", action="store_true",
                     help="pass each case's own intent to retrieve() for §15 section weighting")
     ap.add_argument("--section-hints", action="store_true",
@@ -205,7 +207,7 @@ def main() -> int:
     repos = SqliteRepositories(args.v2_db)
     try:
         retriever = build_retriever(repos, bm25_path=args.bm25, vector_dir=args.vector_dir,
-                                    use_reranker=args.rerank)
+                                    use_reranker=args.rerank, reranker_model=args.rerank_model)
         results = {}
         for mode in (m.strip() for m in args.modes.split(",")):
             results[mode] = run_mode(retriever, repos, records, mode,
@@ -249,6 +251,7 @@ def main() -> int:
             "dataset": str(args.dataset), "n_cases": len(records),
             "retriever_modes_available": list(retriever.modes),
             "filter_company": args.filter_company, "rerank": args.rerank,
+            "rerank_model": args.rerank_model if args.rerank else None,
             "section_aware": args.section_aware, "section_hints": args.section_hints,
             "query_expansion": args.query_expansion, "multi_query": args.multi_query,
             "weighted_fusion": args.weighted_fusion, "neighbor_window": args.neighbor_window,

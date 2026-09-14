@@ -93,12 +93,16 @@ def _device() -> str:
 
 
 def build_retriever(repos, *, bm25_path: Path, vector_dir: Path,
-                    use_reranker: bool = False) -> HybridRetriever:
+                    use_reranker: bool = False, reranker_model: str | None = None) -> HybridRetriever:
     """`use_reranker=False` by default so every existing caller (tests, ad hoc eval runs)
     keeps its current fast, network-free behavior unchanged -- a real `CrossEncoderReranker`
     lazily downloads/loads a model on first use, same as `SentenceTransformerEmbedder`.
     The API (`finqa_v2/api/main.py`) explicitly opts in and warms it at boot (Phase 27's
-    embedder warm-up pattern) so that cost never lands on a real request either."""
+    embedder warm-up pattern) so that cost never lands on a real request either.
+
+    `reranker_model` (§19, default None -- every pre-existing caller keeps
+    `CrossEncoderReranker`'s own default model, unchanged): overrides the cross-encoder
+    model name, e.g. for benchmarking an alternative reranker against the shipped one."""
     bm25 = BM25Index.load(bm25_path) if bm25_path.exists() else BM25Index.build(repos)
     device = _device()
     vector = embedder = None
@@ -119,7 +123,10 @@ def build_retriever(repos, *, bm25_path: Path, vector_dir: Path,
         try:
             from finqa_v2.retrieval.rerank import CrossEncoderReranker
 
-            reranker = CrossEncoderReranker(device=device)
+            kwargs = {"device": device}
+            if reranker_model:
+                kwargs["model_name"] = reranker_model
+            reranker = CrossEncoderReranker(**kwargs)
         except Exception:
             reranker = None
     return HybridRetriever(repos, bm25=bm25, vector=vector, embedder=embedder, reranker=reranker)
