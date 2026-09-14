@@ -44,6 +44,13 @@ class RunMode(unittest.TestCase):
         # not asserting recall improves on this 40-row slice -- that's the full-dataset
         # A/B comparison's job (evaluation/results/), not a unit test's.
 
+    def test_section_hints_runs_without_error_and_is_off_by_default(self):
+        from evaluation.run_retrieval_benchmark import run_mode
+
+        without = run_mode(self.retriever, self.repos, self.records, "lexical", section_hints=False)
+        with_hints = run_mode(self.retriever, self.repos, self.records, "lexical", section_hints=True)
+        self.assertEqual(without["n_total"], with_hints["n_total"])
+
 
 if __name__ == "__main__":
     unittest.main()

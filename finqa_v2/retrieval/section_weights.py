@@ -36,6 +36,19 @@ def get_weight(intent: str | None, section: str | None, *, path: Path | str = DE
     return weight
 
 
+def list_weighted_sections(intent: str | None, *, min_weight: float = 1.0,
+                           path: Path | str = DEFAULT_PATH) -> list[str]:
+    """§10 section hints: the sections this intent's config boosts above `min_weight`,
+    read from the SAME YAML as `get_weight()` so hints and weights never disagree with
+    each other. `[]` for an unconfigured/falsy intent -- callers should treat that as
+    "no hint available", not "restrict to nothing"."""
+    if not intent:
+        return []
+    cfg = _load(str(path))
+    intent_weights = cfg.get(intent) or {}
+    return sorted(s for s, w in intent_weights.items() if float(w) > min_weight)
+
+
 def get_topic_weight(intent: str | None, topic: str | None, *, path: Path | str = DEFAULT_PATH) -> float:
     """Same shape as `get_weight()` but keyed by chunk `topic` (e.g. 'table') under its own
     `topics:` namespace in the YAML, so it never collides with the section weights above.

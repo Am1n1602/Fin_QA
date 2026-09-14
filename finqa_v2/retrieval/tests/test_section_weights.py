@@ -2,7 +2,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from finqa_v2.retrieval.section_weights import DEFAULT_PATH, get_topic_weight, get_weight
+from finqa_v2.retrieval.section_weights import (
+    DEFAULT_PATH,
+    get_topic_weight,
+    get_weight,
+    list_weighted_sections,
+)
 
 
 def _write(tmp: Path, text: str) -> Path:
@@ -53,6 +58,35 @@ class GetWeight(unittest.TestCase):
         self.assertEqual(get_weight("causal", "mda", path=DEFAULT_PATH), 1.5)
         self.assertEqual(get_weight(None, "cover_letter", path=DEFAULT_PATH), 0.3)
         self.assertEqual(get_weight("numeric", "nonexistent_section", path=DEFAULT_PATH), 1.0)
+
+
+class ListWeightedSections(unittest.TestCase):
+    def setUp(self):
+        self._tmpdir = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmpdir.name)
+        self.addCleanup(self._tmpdir.cleanup)
+
+    def test_no_intent_is_empty(self):
+        self.assertEqual(list_weighted_sections(None), [])
+        self.assertEqual(list_weighted_sections(""), [])
+
+    def test_missing_file_is_empty(self):
+        self.assertEqual(list_weighted_sections("causal", path=self.tmp / "nope.yaml"), [])
+
+    def test_only_sections_above_min_weight(self):
+        p = _write(self.tmp, "causal:\n  mda: 1.5\n  earnings_call: 1.0\n  risk_factors: 0.5\n")
+        self.assertEqual(list_weighted_sections("causal", path=p), ["mda"])
+
+    def test_sorted_and_deduped_by_construction(self):
+        p = _write(self.tmp, "numeric:\n  notes: 1.1\n  balance_sheet: 1.2\n  financial_results: 1.4\n")
+        self.assertEqual(list_weighted_sections("numeric", path=p),
+                         ["balance_sheet", "financial_results", "notes"])
+
+    def test_real_config_matches_get_weight(self):
+        hints = list_weighted_sections("causal", path=DEFAULT_PATH)
+        self.assertIn("mda", hints)
+        for section in hints:
+            self.assertGreater(get_weight("causal", section, path=DEFAULT_PATH), 1.0)
 
 
 class GetTopicWeight(unittest.TestCase):

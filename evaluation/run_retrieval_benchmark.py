@@ -27,6 +27,7 @@ from evaluation.metrics.mrr import mean_reciprocal_rank
 from evaluation.metrics.ndcg import mean_ndcg_at_k
 from evaluation.metrics.recall import mean_recall_at_k
 from finqa_v2.retrieval.evaluate import build_retriever
+from finqa_v2.retrieval.section_weights import list_weighted_sections
 from finqa_v2.sqlite import DEFAULT_V2_DB_PATH, SqliteRepositories
 
 _ROOT = Path(__file__).resolve().parents[1]
@@ -61,7 +62,12 @@ def _company_id(repos, tickers: list[str] | None) -> int | None:
 
 def run_mode(retriever, repos, records: list[dict], mode: str, *,
             filter_company: bool = True, rerank: bool = False,
-            section_aware: bool = False) -> dict[str, Any]:
+            section_aware: bool = False, section_hints: bool = False) -> dict[str, Any]:
+    """`section_hints=True` (§10) additionally FILTERS candidates to the sections
+    `finqa_v2.retrieval.section_weights.list_weighted_sections(intent)` names for the
+    case's intent -- a harder constraint than `section_aware`'s soft re-ranking weight,
+    and only meaningful combined with it (a case whose intent has no configured hints
+    gets no filter either way)."""
     if mode not in retriever.modes:
         return {"skipped": f"mode '{mode}' unavailable (modes={retriever.modes})"}
     first_ranks: list[int | None] = []
@@ -73,7 +79,14 @@ def run_mode(retriever, repos, records: list[dict], mode: str, *,
     for rec in records:
         gold = set(rec["gold_chunks"])
         cid = _company_id(repos, rec.get("company")) if filter_company else None
-        filters = {"company_id": cid} if cid else None
+        filters: dict[str, Any] = {}
+        if cid:
+            filters["company_id"] = cid
+        if section_hints:
+            hints = list_weighted_sections(rec["intent"])
+            if hints:
+                filters["section"] = hints
+        filters = filters or None
         intent = rec["intent"] if section_aware else None
         t0 = time.perf_counter()
         hits = retriever.retrieve(rec["question"], k=max(_KS), candidate_k=40,
@@ -116,6 +129,8 @@ def main() -> int:
     ap.add_argument("--rerank", action="store_true", help="wire the real CrossEncoderReranker")
     ap.add_argument("--section-aware", action="store_true",
                     help="pass each case's own intent to retrieve() for §15 section weighting")
+    ap.add_argument("--section-hints", action="store_true",
+                    help="§10: additionally FILTER to list_weighted_sections(intent), not just weight")
     ap.add_argument("--out", type=Path, default=None, help="write a JSON report here")
     ap.add_argument("--label", default="retrieval_v21_baseline")
     args = ap.parse_args()
@@ -134,7 +149,8 @@ def main() -> int:
         for mode in (m.strip() for m in args.modes.split(",")):
             results[mode] = run_mode(retriever, repos, records, mode,
                                      filter_company=args.filter_company, rerank=args.rerank,
-                                     section_aware=args.section_aware)
+                                     section_aware=args.section_aware,
+                                     section_hints=args.section_hints)
     finally:
         repos.close()
 
@@ -167,7 +183,7 @@ def main() -> int:
             "dataset": str(args.dataset), "n_cases": len(records),
             "retriever_modes_available": list(retriever.modes),
             "filter_company": args.filter_company, "rerank": args.rerank,
-            "section_aware": args.section_aware,
+            "section_aware": args.section_aware, "section_hints": args.section_hints,
             "results": {mode: {k: v for k, v in m.items() if k != "per_case"} for mode, m in results.items()},
         }
         args.out.parent.mkdir(parents=True, exist_ok=True)
