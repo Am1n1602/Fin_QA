@@ -16,6 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from finqa_v2.models import DocumentChunk
+from finqa_v2.retrieval.candidate_pool import get_candidate_k as _candidate_k
 from finqa_v2.retrieval.context_expander import expand_with_neighbors
 from finqa_v2.retrieval.filters import compile_filter
 from finqa_v2.retrieval.fuse import reciprocal_rank_fusion
@@ -88,7 +89,8 @@ class HybridRetriever:
                  rerank: bool = True, intent: str | None = None,
                  lexical_query: str | None = None,
                  weighted_fusion: bool = False, neighbor_window: int = 0,
-                 mmr: bool = False, mmr_lambda: float = 0.7) -> list[RetrievedChunk]:
+                 mmr: bool = False, mmr_lambda: float = 0.7,
+                 adaptive_pool: bool = False) -> list[RetrievedChunk]:
         """`lexical_query` (§11, default None -- every pre-existing caller keeps `query`
         for BOTH legs, unchanged): when given, the BM25 leg searches `lexical_query`
         (e.g. a synonym-expanded string from `finqa_v2.planner.terminology.
@@ -114,11 +116,20 @@ class HybridRetriever:
         `finqa_v2.retrieval.mmr.mmr_select`, using each candidate's stored embedding for
         the diversity term), trading `mmr_lambda` relevance against `1 - mmr_lambda`
         redundancy. Silently a no-op outside hybrid mode or without a vector index --
-        there's no embedding space to diversify against."""
+        there's no embedding space to diversify against.
+
+        `adaptive_pool` (§20, default False -- every pre-existing caller keeps the
+        `candidate_k` it passed in, unchanged): when True and `intent` is given,
+        `candidate_k` is replaced per
+        `finqa_v2.retrieval.candidate_pool.get_candidate_k(intent, default=candidate_k)`
+        -- e.g. a wider net for `multi_hop`/`comparison` questions, a narrower one for
+        `numeric`. An intent with no configured size keeps the caller's own `candidate_k`."""
         if mode == "hybrid" and "hybrid" not in self.modes:
             mode = "lexical"
         if mode not in ("lexical", "vector", "hybrid"):
             raise ValueError(f"unknown mode {mode!r}")
+        if adaptive_pool and intent:
+            candidate_k = _candidate_k(intent, default=candidate_k)
         keep = compile_filter(filters)
         bm25_query = lexical_query if lexical_query is not None else query
 

@@ -195,6 +195,53 @@ class TestHybrid(unittest.TestCase):
         direct_vector = self.r.retrieve(query, k=5, mode="vector", rerank=False)
         self.assertEqual([h.chunk.chunk_id for h in vector_only], [h.chunk.chunk_id for h in direct_vector])
 
+    def test_adaptive_pool_false_is_unchanged_from_omitting_the_argument(self):
+        query = "segment revenue retail digital services"
+        with_default = self.r.retrieve(query, k=3, mode="hybrid", rerank=False, intent="numeric")
+        explicit_false = self.r.retrieve(query, k=3, mode="hybrid", rerank=False, intent="numeric",
+                                         adaptive_pool=False)
+        self.assertEqual([h.chunk.chunk_id for h in with_default],
+                         [h.chunk.chunk_id for h in explicit_false])
+
+    def test_adaptive_pool_ignored_without_intent(self):
+        query = "segment revenue retail digital services"
+        without = self.r.retrieve(query, k=3, mode="hybrid", rerank=False, candidate_k=5)
+        with_flag = self.r.retrieve(query, k=3, mode="hybrid", rerank=False, candidate_k=5,
+                                    adaptive_pool=True)
+        self.assertEqual([h.chunk.chunk_id for h in without], [h.chunk.chunk_id for h in with_flag])
+
+    def test_adaptive_pool_overrides_candidate_k_for_a_configured_intent(self):
+        from unittest import mock as _mock
+
+        seen = {}
+        real_search = self.r._bm25.search
+
+        def _recording_search(query, k, **kw):
+            seen["k"] = k
+            return real_search(query, k, **kw)
+
+        with _mock.patch.object(self.r._bm25, "search", side_effect=_recording_search):
+            self.r.retrieve("segment revenue", k=3, mode="lexical", rerank=False,
+                            candidate_k=5, intent="numeric", adaptive_pool=True)
+        self.assertEqual(seen["k"], 25)   # candidate_pool.yaml's real "numeric" value
+
+    def test_adaptive_pool_falls_back_to_callers_candidate_k_for_unconfigured_intent(self):
+        from unittest import mock as _mock
+
+        seen = {}
+        real_search = self.r._bm25.search
+
+        def _recording_search(query, k, **kw):
+            seen["k"] = k
+            return real_search(query, k, **kw)
+
+        with _mock.patch("finqa_v2.retrieval.retriever._candidate_k", return_value=17) as fake:
+            with _mock.patch.object(self.r._bm25, "search", side_effect=_recording_search):
+                self.r.retrieve("segment revenue", k=3, mode="lexical", rerank=False,
+                                candidate_k=5, intent="whatever_unconfigured", adaptive_pool=True)
+        fake.assert_called_once_with("whatever_unconfigured", default=5)
+        self.assertEqual(seen["k"], 17)
+
     def test_mmr_false_is_unchanged_from_omitting_the_argument(self):
         query = "segment revenue retail digital services"
         with_default = self.r.retrieve(query, k=3, mode="hybrid", rerank=False)

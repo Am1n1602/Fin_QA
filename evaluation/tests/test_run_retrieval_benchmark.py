@@ -85,6 +85,15 @@ class RunMode(unittest.TestCase):
         self.assertEqual(without["ndcg@5"], with_nw["ndcg@5"])
         self.assertGreater(with_nw["avg_evidence_size"], without["avg_evidence_size"])
 
+    def test_adaptive_pool_runs_without_error_and_is_off_by_default(self):
+        from evaluation.run_retrieval_benchmark import run_mode
+
+        without = run_mode(self.retriever, self.repos, self.records, "hybrid",
+                           section_aware=True, adaptive_pool=False)
+        with_ap = run_mode(self.retriever, self.repos, self.records, "hybrid",
+                           section_aware=True, adaptive_pool=True)
+        self.assertEqual(without["n_total"], with_ap["n_total"])
+
     def test_mmr_runs_without_error_and_is_off_by_default(self):
         from evaluation.run_retrieval_benchmark import run_mode
 
