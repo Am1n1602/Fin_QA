@@ -25,16 +25,26 @@ class VectorIndex:
 
     # ------------------------------------------------------------------ #
     @classmethod
-    def build(cls, repos, embedder, *, batch: int = 256, use_faiss: bool = True) -> "VectorIndex":
+    def build(cls, repos, embedder, *, batch: int = 256, use_faiss: bool = True,
+             text_fn=None) -> "VectorIndex":
+        """`text_fn(row) -> str`, when given, builds the string actually sent to the
+        embedder from a row carrying `text` + `company_name`/`financial_year`/
+        `document_type`/`section`/`page_start` (§8 metadata-enriched embeddings) --
+        default `None` embeds raw `text`, byte-for-byte the prior behavior. Either way
+        `document_chunks.text` itself is never modified; only the embedding INPUT differs."""
         import numpy as np
 
         rows = repos.connection.execute(
-            "SELECT chunk_id, text FROM document_chunks ORDER BY chunk_id"
+            "SELECT dc.chunk_id, dc.text, dc.financial_year, dc.document_type, dc.section, "
+            "dc.page_start, c.name AS company_name "
+            "FROM document_chunks dc JOIN companies c ON c.company_id = dc.company_id "
+            "ORDER BY dc.chunk_id"
         ).fetchall()
         ids = [r["chunk_id"] for r in rows]
+        texts = [r["text"] for r in rows] if text_fn is None else [text_fn(r) for r in rows]
         vecs = []
         for i in range(0, len(rows), batch):
-            vecs.append(embedder.encode([r["text"] for r in rows[i:i + batch]]))
+            vecs.append(embedder.encode(texts[i:i + batch]))
         matrix = np.vstack(vecs).astype("float32") if vecs else np.zeros((0, 0), "float32")
 
         faiss_index = None

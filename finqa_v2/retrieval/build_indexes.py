@@ -33,6 +33,9 @@ def main() -> int:
                     help="encoder batch size -- lower it for a larger model on limited VRAM.")
     ap.add_argument("--trust-remote-code", action="store_true",
                     help="required by some HF models with custom modeling code (e.g. jina-embeddings-v3).")
+    ap.add_argument("--metadata-enriched", action="store_true",
+                    help="§8: prepend company/period/document/section/page metadata to the "
+                         "embedding INPUT (document_chunks.text itself is never changed).")
     ap.add_argument("--hash-embedder", action="store_true",
                     help="Build the vector index with the dependency-free HashEmbedder "
                          "(exercises the path; not semantically strong).")
@@ -68,8 +71,11 @@ def main() -> int:
                                                    batch_size=args.batch_size,
                                                    trust_remote_code=args.trust_remote_code)
             print(f"[vector] embedding with {args.model} on {device}")
+        text_fn = None
+        if args.metadata_enriched:
+            from finqa_v2.retrieval.text_builder import from_row as text_fn
         try:
-            idx = VectorIndex.build(repos, embedder)
+            idx = VectorIndex.build(repos, embedder, text_fn=text_fn)
         except Exception as e:  # torch/paging-file/import failures land here
             print(f"[vector] FAILED to build ({type(e).__name__}: {e}).")
             print("[vector] BM25 index is still in place; retry --vector when the model "
@@ -77,8 +83,9 @@ def main() -> int:
             return 3
         idx.save(args.vector_dir)
         model_id = "hash-embedder" if args.hash_embedder else args.model
-        (args.vector_dir / "model.txt").write_text(f"{model_id}\ndevice={device}\n",
-                                                   encoding="utf-8")
+        (args.vector_dir / "model.txt").write_text(
+            f"{model_id}\ndevice={device}\nmetadata_enriched={args.metadata_enriched}\n",
+            encoding="utf-8")
         print(f"[vector] {len(idx.chunk_ids)} chunks, dim={idx.dim}, model={model_id}, "
               f"faiss={'yes' if idx._faiss is not None else 'numpy'} -> {args.vector_dir}")
         print("[vector] NOTE: query with the SAME embedder -- "

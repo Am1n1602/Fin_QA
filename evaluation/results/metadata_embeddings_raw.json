@@ -1,0 +1,31 @@
+{
+  "experiment_id": "metadata_embeddings_raw",
+  "git_commit": "1f059fefd9fca9279f2e7e7d5a2aec3f8fd4752b",
+  "dataset": "evaluation\\datasets\\retrieval_v21.json",
+  "n_cases": 380,
+  "retriever_modes_available": [
+    "lexical",
+    "vector",
+    "hybrid"
+  ],
+  "filter_company": true,
+  "rerank": false,
+  "section_aware": true,
+  "results": {
+    "vector": {
+      "mode": "vector",
+      "n_total": 380,
+      "n_scored": 330,
+      "recall@1": 0.1394,
+      "recall@3": 0.2364,
+      "recall@5": 0.2606,
+      "recall@10": 0.3879,
+      "mrr": 0.2037,
+      "ndcg@5": 0.1759,
+      "p50_ms": 25.03,
+      "p95_ms": 32.47,
+      "no_gold_cases": 50,
+      "spurious_hit_rate": 0.98
+    }
+  }
+}
