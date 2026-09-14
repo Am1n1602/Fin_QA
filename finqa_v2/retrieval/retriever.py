@@ -16,6 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from finqa_v2.models import DocumentChunk
+from finqa_v2.retrieval.context_expander import expand_with_neighbors
 from finqa_v2.retrieval.filters import compile_filter
 from finqa_v2.retrieval.fuse import reciprocal_rank_fusion
 from finqa_v2.retrieval.fusion_weights import get_fusion_weights as _fusion_weights
@@ -85,7 +86,7 @@ class HybridRetriever:
                  mode: str = "hybrid", filters: dict | None = None,
                  rerank: bool = True, intent: str | None = None,
                  lexical_query: str | None = None,
-                 weighted_fusion: bool = False) -> list[RetrievedChunk]:
+                 weighted_fusion: bool = False, neighbor_window: int = 0) -> list[RetrievedChunk]:
         """`lexical_query` (§11, default None -- every pre-existing caller keeps `query`
         for BOTH legs, unchanged): when given, the BM25 leg searches `lexical_query`
         (e.g. a synonym-expanded string from `finqa_v2.planner.terminology.
@@ -96,7 +97,13 @@ class HybridRetriever:
         `weighted_fusion` (§16, default False -- every pre-existing caller keeps plain
         unweighted RRF, unchanged): when True, the lexical/vector legs are weighted per
         `finqa_v2.retrieval.fusion_weights.get_fusion_weights(intent)` before summing rank
-        scores, instead of the equal 1.0/1.0 weight plain RRF uses."""
+        scores, instead of the equal 1.0/1.0 weight plain RRF uses.
+
+        `neighbor_window` (§17, default 0 -- every pre-existing caller keeps exactly the
+        returned top-k, unchanged): when > 0, each returned chunk's document neighbors
+        within `chunk_index` +/- window are appended via
+        `finqa_v2.retrieval.context_expander.expand_with_neighbors` -- so the result can
+        contain more than `k` chunks. Applied last, after rerank."""
         if mode == "hybrid" and "hybrid" not in self.modes:
             mode = "lexical"
         if mode not in ("lexical", "vector", "hybrid"):
@@ -151,4 +158,6 @@ class HybridRetriever:
                     "rerank": rerank_score.get(cid),
                 },
             ))
+        if neighbor_window > 0:
+            out = expand_with_neighbors(out, self._repos, window=neighbor_window)
         return out

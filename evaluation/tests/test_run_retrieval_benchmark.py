@@ -71,6 +71,20 @@ class RunMode(unittest.TestCase):
         # pre-§16 plain-RRF call byte-for-byte, which the retriever-level tests already
         # cover directly.
 
+    def test_neighbor_window_runs_without_error_and_is_off_by_default(self):
+        from evaluation.run_retrieval_benchmark import run_mode
+
+        without = run_mode(self.retriever, self.repos, self.records, "hybrid", neighbor_window=0)
+        with_nw = run_mode(self.retriever, self.repos, self.records, "hybrid", neighbor_window=1)
+        self.assertEqual(without["n_total"], with_nw["n_total"])
+        # neighbors are appended past the k=10 cutoff -- ranked metrics are unaffected by
+        # construction; the real effect (evidence-set size) is a distinct reported field.
+        for k in self._KS:
+            self.assertEqual(without[f"recall@{k}"], with_nw[f"recall@{k}"])
+        self.assertEqual(without["mrr"], with_nw["mrr"])
+        self.assertEqual(without["ndcg@5"], with_nw["ndcg@5"])
+        self.assertGreater(with_nw["avg_evidence_size"], without["avg_evidence_size"])
+
     def test_multi_query_runs_without_error_and_is_off_by_default(self):
         from evaluation.run_retrieval_benchmark import run_mode
 
