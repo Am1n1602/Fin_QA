@@ -101,7 +101,8 @@ class HypothesisTester:
         query = f"{metric} {statement}"
         try:
             return self._retriever.retrieve(query, k=self._docs_per, filters=filters or None,
-                                            intent="causal", lexical_query=expand_lexical_query(query))
+                                            intent="causal", lexical_query=expand_lexical_query(query),
+                                            weighted_fusion=True)
         except Exception:
             return []
 

@@ -1,0 +1,1005 @@
+{
+  "mode": "hybrid",
+  "k": 5,
+  "n_scored": 330,
+  "n_failures": 190,
+  "failure_rate": 0.5758,
+  "distribution": {
+    "NO_COMPANY_MATCH": {
+      "count": 0,
+      "pct": 0.0
+    },
+    "MULTI_HOP_FAILURE": {
+      "count": 17,
+      "pct": 8.9
+    },
+    "TABLE_RETRIEVAL_FAILURE": {
+      "count": 27,
+      "pct": 14.2
+    },
+    "WRONG_SECTION": {
+      "count": 91,
+      "pct": 47.9
+    },
+    "WRONG_PERIOD": {
+      "count": 12,
+      "pct": 6.3
+    },
+    "STALE_DOCUMENT": {
+      "count": 0,
+      "pct": 0.0
+    },
+    "CHUNK_BOUNDARY": {
+      "count": 9,
+      "pct": 4.7
+    },
+    "LEXICAL_MISS": {
+      "count": 2,
+      "pct": 1.1
+    },
+    "SEMANTIC_MISS": {
+      "count": 4,
+      "pct": 2.1
+    },
+    "MISSING_DOCUMENT": {
+      "count": 0,
+      "pct": 0.0
+    },
+    "INSUFFICIENT_CONTEXT": {
+      "count": 28,
+      "pct": 14.7
+    }
+  },
+  "per_case": [
+    {
+      "id": "rv21-numeric-0003",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0004",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0005",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0006",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0007",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0008",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0010",
+      "intent": "numeric",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-numeric-0014",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0016",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0017",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0018",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0019",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0020",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0021",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0022",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0024",
+      "intent": "numeric",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-numeric-0025",
+      "intent": "numeric",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-numeric-0028",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0029",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0035",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0036",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0037",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0038",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0039",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-numeric-0040",
+      "intent": "numeric",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-ratio-0006",
+      "intent": "ratio",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-ratio-0007",
+      "intent": "ratio",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-ratio-0013",
+      "intent": "ratio",
+      "error_class": "WRONG_PERIOD"
+    },
+    {
+      "id": "rv21-ratio-0014",
+      "intent": "ratio",
+      "error_class": "WRONG_PERIOD"
+    },
+    {
+      "id": "rv21-ratio-0016",
+      "intent": "ratio",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-ratio-0018",
+      "intent": "ratio",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-ratio-0019",
+      "intent": "ratio",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-ratio-0020",
+      "intent": "ratio",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-ratio-0021",
+      "intent": "ratio",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-ratio-0024",
+      "intent": "ratio",
+      "error_class": "WRONG_PERIOD"
+    },
+    {
+      "id": "rv21-ratio-0025",
+      "intent": "ratio",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-ratio-0026",
+      "intent": "ratio",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-ratio-0027",
+      "intent": "ratio",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-ratio-0028",
+      "intent": "ratio",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-ratio-0030",
+      "intent": "ratio",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-trend-0002",
+      "intent": "trend",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-trend-0008",
+      "intent": "trend",
+      "error_class": "CHUNK_BOUNDARY"
+    },
+    {
+      "id": "rv21-trend-0009",
+      "intent": "trend",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-trend-0013",
+      "intent": "trend",
+      "error_class": "SEMANTIC_MISS"
+    },
+    {
+      "id": "rv21-trend-0015",
+      "intent": "trend",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-trend-0016",
+      "intent": "trend",
+      "error_class": "SEMANTIC_MISS"
+    },
+    {
+      "id": "rv21-trend-0017",
+      "intent": "trend",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-trend-0022",
+      "intent": "trend",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-trend-0023",
+      "intent": "trend",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-trend-0024",
+      "intent": "trend",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-trend-0026",
+      "intent": "trend",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-trend-0027",
+      "intent": "trend",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-trend-0028",
+      "intent": "trend",
+      "error_class": "SEMANTIC_MISS"
+    },
+    {
+      "id": "rv21-trend-0029",
+      "intent": "trend",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-trend-0030",
+      "intent": "trend",
+      "error_class": "CHUNK_BOUNDARY"
+    },
+    {
+      "id": "rv21-narrative-0001",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0004",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0005",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0006",
+      "intent": "narrative",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-narrative-0007",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0008",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0009",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0012",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0013",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0014",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0015",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0016",
+      "intent": "narrative",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-narrative-0018",
+      "intent": "narrative",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-narrative-0020",
+      "intent": "narrative",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-narrative-0022",
+      "intent": "narrative",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-narrative-0023",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0024",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0025",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0026",
+      "intent": "narrative",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-narrative-0027",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0028",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0029",
+      "intent": "narrative",
+      "error_class": "CHUNK_BOUNDARY"
+    },
+    {
+      "id": "rv21-narrative-0030",
+      "intent": "narrative",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-narrative-0031",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0032",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0033",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0034",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0035",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0036",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-narrative-0039",
+      "intent": "narrative",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0002",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0005",
+      "intent": "causal",
+      "error_class": "CHUNK_BOUNDARY"
+    },
+    {
+      "id": "rv21-causal-0006",
+      "intent": "causal",
+      "error_class": "CHUNK_BOUNDARY"
+    },
+    {
+      "id": "rv21-causal-0017",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0018",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0019",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0020",
+      "intent": "causal",
+      "error_class": "WRONG_PERIOD"
+    },
+    {
+      "id": "rv21-causal-0021",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0022",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0023",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0024",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0029",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0030",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0031",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0032",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0034",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0037",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0038",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0039",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-causal-0040",
+      "intent": "causal",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-management_commentary-0001",
+      "intent": "management_commentary",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-management_commentary-0004",
+      "intent": "management_commentary",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-management_commentary-0005",
+      "intent": "management_commentary",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-management_commentary-0006",
+      "intent": "management_commentary",
+      "error_class": "SEMANTIC_MISS"
+    },
+    {
+      "id": "rv21-management_commentary-0010",
+      "intent": "management_commentary",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-management_commentary-0012",
+      "intent": "management_commentary",
+      "error_class": "CHUNK_BOUNDARY"
+    },
+    {
+      "id": "rv21-management_commentary-0015",
+      "intent": "management_commentary",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-management_commentary-0016",
+      "intent": "management_commentary",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-management_commentary-0017",
+      "intent": "management_commentary",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-management_commentary-0018",
+      "intent": "management_commentary",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-management_commentary-0019",
+      "intent": "management_commentary",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-management_commentary-0020",
+      "intent": "management_commentary",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-management_commentary-0021",
+      "intent": "management_commentary",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-management_commentary-0023",
+      "intent": "management_commentary",
+      "error_class": "CHUNK_BOUNDARY"
+    },
+    {
+      "id": "rv21-management_commentary-0025",
+      "intent": "management_commentary",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-comparison-0002",
+      "intent": "comparison",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-comparison-0004",
+      "intent": "comparison",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-comparison-0006",
+      "intent": "comparison",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-comparison-0007",
+      "intent": "comparison",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-comparison-0008",
+      "intent": "comparison",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-comparison-0010",
+      "intent": "comparison",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-comparison-0011",
+      "intent": "comparison",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-comparison-0012",
+      "intent": "comparison",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-comparison-0013",
+      "intent": "comparison",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-comparison-0014",
+      "intent": "comparison",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-comparison-0015",
+      "intent": "comparison",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-comparison-0016",
+      "intent": "comparison",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-comparison-0017",
+      "intent": "comparison",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-comparison-0018",
+      "intent": "comparison",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-comparison-0019",
+      "intent": "comparison",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-comparison-0020",
+      "intent": "comparison",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-comparison-0021",
+      "intent": "comparison",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-comparison-0022",
+      "intent": "comparison",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-comparison-0024",
+      "intent": "comparison",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-comparison-0025",
+      "intent": "comparison",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-comparison-0026",
+      "intent": "comparison",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-comparison-0027",
+      "intent": "comparison",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-comparison-0028",
+      "intent": "comparison",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-comparison-0029",
+      "intent": "comparison",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-comparison-0030",
+      "intent": "comparison",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-cross_document-0001",
+      "intent": "cross_document",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-cross_document-0002",
+      "intent": "cross_document",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-cross_document-0003",
+      "intent": "cross_document",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-cross_document-0004",
+      "intent": "cross_document",
+      "error_class": "WRONG_PERIOD"
+    },
+    {
+      "id": "rv21-cross_document-0005",
+      "intent": "cross_document",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-cross_document-0006",
+      "intent": "cross_document",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-cross_document-0007",
+      "intent": "cross_document",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-cross_document-0008",
+      "intent": "cross_document",
+      "error_class": "LEXICAL_MISS"
+    },
+    {
+      "id": "rv21-cross_document-0016",
+      "intent": "cross_document",
+      "error_class": "WRONG_PERIOD"
+    },
+    {
+      "id": "rv21-cross_document-0017",
+      "intent": "cross_document",
+      "error_class": "WRONG_PERIOD"
+    },
+    {
+      "id": "rv21-cross_document-0018",
+      "intent": "cross_document",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-cross_document-0019",
+      "intent": "cross_document",
+      "error_class": "WRONG_SECTION"
+    },
+    {
+      "id": "rv21-cross_document-0020",
+      "intent": "cross_document",
+      "error_class": "WRONG_PERIOD"
+    },
+    {
+      "id": "rv21-cross_document-0023",
+      "intent": "cross_document",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-cross_document-0024",
+      "intent": "cross_document",
+      "error_class": "WRONG_PERIOD"
+    },
+    {
+      "id": "rv21-cross_document-0025",
+      "intent": "cross_document",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0009",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0010",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0011",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0013",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0014",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0015",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0016",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0017",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0018",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0022",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0023",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0024",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0026",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0027",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0028",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0029",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-multi_hop-0030",
+      "intent": "multi_hop",
+      "error_class": "MULTI_HOP_FAILURE"
+    },
+    {
+      "id": "rv21-table-0004",
+      "intent": "table",
+      "error_class": "CHUNK_BOUNDARY"
+    },
+    {
+      "id": "rv21-table-0013",
+      "intent": "table",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-table-0014",
+      "intent": "table",
+      "error_class": "CHUNK_BOUNDARY"
+    },
+    {
+      "id": "rv21-table-0016",
+      "intent": "table",
+      "error_class": "LEXICAL_MISS"
+    },
+    {
+      "id": "rv21-table-0019",
+      "intent": "table",
+      "error_class": "INSUFFICIENT_CONTEXT"
+    },
+    {
+      "id": "rv21-table-0020",
+      "intent": "table",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-segment-0001",
+      "intent": "segment",
+      "error_class": "WRONG_PERIOD"
+    },
+    {
+      "id": "rv21-segment-0004",
+      "intent": "segment",
+      "error_class": "WRONG_PERIOD"
+    },
+    {
+      "id": "rv21-segment-0008",
+      "intent": "segment",
+      "error_class": "WRONG_PERIOD"
+    },
+    {
+      "id": "rv21-segment-0015",
+      "intent": "segment",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-segment-0019",
+      "intent": "segment",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    },
+    {
+      "id": "rv21-segment-0020",
+      "intent": "segment",
+      "error_class": "TABLE_RETRIEVAL_FAILURE"
+    }
+  ]
+}

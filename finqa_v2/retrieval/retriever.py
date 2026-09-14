@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from finqa_v2.models import DocumentChunk
 from finqa_v2.retrieval.filters import compile_filter
 from finqa_v2.retrieval.fuse import reciprocal_rank_fusion
+from finqa_v2.retrieval.fusion_weights import get_fusion_weights as _fusion_weights
 from finqa_v2.retrieval.lexical import BM25Index
 from finqa_v2.retrieval.rerank import IdentityReranker
 from finqa_v2.retrieval.section_weights import get_topic_weight as _topic_weight
@@ -83,13 +84,19 @@ class HybridRetriever:
     def retrieve(self, query: str, *, k: int = 5, candidate_k: int = 30,
                  mode: str = "hybrid", filters: dict | None = None,
                  rerank: bool = True, intent: str | None = None,
-                 lexical_query: str | None = None) -> list[RetrievedChunk]:
+                 lexical_query: str | None = None,
+                 weighted_fusion: bool = False) -> list[RetrievedChunk]:
         """`lexical_query` (§11, default None -- every pre-existing caller keeps `query`
         for BOTH legs, unchanged): when given, the BM25 leg searches `lexical_query`
         (e.g. a synonym-expanded string from `finqa_v2.planner.terminology.
         expand_lexical_query`) while the dense/vector leg still embeds `query` as-is --
         a natural-language question and a keyword-expanded BM25 query serve their
-        respective retrieval methods differently."""
+        respective retrieval methods differently.
+
+        `weighted_fusion` (§16, default False -- every pre-existing caller keeps plain
+        unweighted RRF, unchanged): when True, the lexical/vector legs are weighted per
+        `finqa_v2.retrieval.fusion_weights.get_fusion_weights(intent)` before summing rank
+        scores, instead of the equal 1.0/1.0 weight plain RRF uses."""
         if mode == "hybrid" and "hybrid" not in self.modes:
             mode = "lexical"
         if mode not in ("lexical", "vector", "hybrid"):
@@ -103,13 +110,16 @@ class HybridRetriever:
 
         vec_ids = self._vector_hits(query, candidate_k, keep) if mode in ("vector", "hybrid") else []
 
+        fusion_weights = _fusion_weights(intent) if weighted_fusion and mode == "hybrid" else None
+
         if mode == "lexical":
             ordered = lex_ids
         elif mode == "vector":
             ordered = vec_ids
         else:
-            ordered = [cid for cid, _ in reciprocal_rank_fusion([lex_ids, vec_ids])]
-        rrf_score = {cid: s for cid, s in reciprocal_rank_fusion([lex_ids, vec_ids])} if mode == "hybrid" else {}
+            fused = reciprocal_rank_fusion([lex_ids, vec_ids], weights=fusion_weights)
+            ordered = [cid for cid, _ in fused]
+        rrf_score = {cid: s for cid, s in fused} if mode == "hybrid" else {}
 
         candidates = ordered[:candidate_k]
         chunks = self._load_chunks(candidates)

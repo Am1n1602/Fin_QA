@@ -89,7 +89,8 @@ def _multi_query_hits(retriever, repos, rec: dict, *, mode: str, rerank: bool,
 def run_mode(retriever, repos, records: list[dict], mode: str, *,
             filter_company: bool = True, rerank: bool = False,
             section_aware: bool = False, section_hints: bool = False,
-            query_expansion: bool = False, multi_query: bool = False) -> dict[str, Any]:
+            query_expansion: bool = False, multi_query: bool = False,
+            weighted_fusion: bool = False) -> dict[str, Any]:
     """`section_hints=True` (§10) additionally FILTERS candidates to the sections
     `finqa_v2.retrieval.section_weights.list_weighted_sections(intent)` names for the
     case's intent -- a harder constraint than `section_aware`'s soft re-ranking weight,
@@ -124,7 +125,7 @@ def run_mode(retriever, repos, records: list[dict], mode: str, *,
         else:
             hits = retriever.retrieve(rec["question"], k=max(_KS), candidate_k=40,
                                       mode=mode, filters=filters, rerank=rerank, intent=intent,
-                                      lexical_query=lexical_query)
+                                      lexical_query=lexical_query, weighted_fusion=weighted_fusion)
             chunk_ids = [h.chunk.chunk_id for h in hits]
         lat.append((time.perf_counter() - t0) * 1000)
         rels = [1 if cid_ in gold else 0 for cid_ in chunk_ids]
@@ -170,6 +171,8 @@ def main() -> int:
                     help="§11/§12: expand the BM25 leg's query with financial-terminology synonyms")
     ap.add_argument("--multi-query", action="store_true",
                     help="§8/§9: for multi-company records, retrieve once per company and merge")
+    ap.add_argument("--weighted-fusion", action="store_true",
+                    help="§16: weight the lexical/vector RRF legs per fusion_weights.get_fusion_weights(intent)")
     ap.add_argument("--out", type=Path, default=None, help="write a JSON report here")
     ap.add_argument("--label", default="retrieval_v21_baseline")
     args = ap.parse_args()
@@ -191,7 +194,8 @@ def main() -> int:
                                      section_aware=args.section_aware,
                                      section_hints=args.section_hints,
                                      query_expansion=args.query_expansion,
-                                     multi_query=args.multi_query)
+                                     multi_query=args.multi_query,
+                                     weighted_fusion=args.weighted_fusion)
     finally:
         repos.close()
 
@@ -226,6 +230,7 @@ def main() -> int:
             "filter_company": args.filter_company, "rerank": args.rerank,
             "section_aware": args.section_aware, "section_hints": args.section_hints,
             "query_expansion": args.query_expansion, "multi_query": args.multi_query,
+            "weighted_fusion": args.weighted_fusion,
             "results": {mode: {k: v for k, v in m.items() if k != "per_case"} for mode, m in results.items()},
         }
         args.out.parent.mkdir(parents=True, exist_ok=True)

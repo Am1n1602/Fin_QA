@@ -53,7 +53,7 @@ def register(reg, repos, retriever) -> None:
             filters["financial_year"] = m.financial_year
         lexical_query = expand_lexical_query(m.query)
         hits = retriever.retrieve(m.query, k=m.k, mode=m.mode, filters=filters or None,
-                                  intent=m.intent, lexical_query=lexical_query)
+                                  intent=m.intent, lexical_query=lexical_query, weighted_fusion=True)
         ws = EvidenceSet()
         for h in hits:
             evidence_from_retrieved_chunk(h, repos=repos, company=m.company, workspace=ws)

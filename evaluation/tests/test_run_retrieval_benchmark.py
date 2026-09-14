@@ -58,6 +58,19 @@ class RunMode(unittest.TestCase):
         with_qe = run_mode(self.retriever, self.repos, self.records, "lexical", query_expansion=True)
         self.assertEqual(without["n_total"], with_qe["n_total"])
 
+    def test_weighted_fusion_runs_without_error_and_is_off_by_default(self):
+        from evaluation.run_retrieval_benchmark import run_mode
+
+        without = run_mode(self.retriever, self.repos, self.records, "hybrid", weighted_fusion=False)
+        with_wf = run_mode(self.retriever, self.repos, self.records, "hybrid", weighted_fusion=True)
+        self.assertEqual(without["n_total"], with_wf["n_total"])
+        # not asserting recall is unchanged -- fusion_weights.yaml DOES override a few
+        # categories (management_commentary/trend/multi_hop/table, §16's real A/B winners),
+        # so this 40-row slice may legitimately score differently with the flag on. The
+        # off-by-default contract is that omitting the flag (`without`) reproduces the
+        # pre-§16 plain-RRF call byte-for-byte, which the retriever-level tests already
+        # cover directly.
+
     def test_multi_query_runs_without_error_and_is_off_by_default(self):
         from evaluation.run_retrieval_benchmark import run_mode
 

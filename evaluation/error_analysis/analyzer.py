@@ -18,6 +18,7 @@ from pathlib import Path
 
 from evaluation.error_analysis.classifier import ERROR_CLASSES, ChunkMeta, classify
 from evaluation.run_retrieval_benchmark import load_dataset
+from finqa_v2.planner.terminology import expand_lexical_query
 from finqa_v2.retrieval.evaluate import build_retriever
 from finqa_v2.sqlite import DEFAULT_V2_DB_PATH, SqliteRepositories
 
@@ -80,7 +81,8 @@ def _hit_meta(conn: sqlite3.Connection, hits) -> list[ChunkMeta]:
 
 
 def analyze(retriever, repos, records: list[dict], *, mode: str = "hybrid", k: int = 5,
-           section_aware: bool = False) -> dict:
+           section_aware: bool = False, query_expansion: bool = False,
+           weighted_fusion: bool = False) -> dict:
     conn = repos.connection
     counts: Counter = Counter()
     per_case = []
@@ -93,8 +95,10 @@ def analyze(retriever, repos, records: list[dict], *, mode: str = "hybrid", k: i
         cid, resolved = _company_id(repos, rec.get("company"))
         filters = {"company_id": cid} if cid else None
         intent = rec["intent"] if section_aware else None
+        lexical_query = expand_lexical_query(rec["question"]) if query_expansion else None
         hits = retriever.retrieve(rec["question"], k=max(k, 10), candidate_k=40,
-                                  mode=mode, filters=filters, rerank=False, intent=intent)
+                                  mode=mode, filters=filters, rerank=False, intent=intent,
+                                  lexical_query=lexical_query, weighted_fusion=weighted_fusion)
         gold_ids = set(rec["gold_chunks"])
         top = hits[:k]
         if any(h.chunk.chunk_id in gold_ids for h in top):
@@ -106,7 +110,8 @@ def analyze(retriever, repos, records: list[dict], *, mode: str = "hybrid", k: i
                 if other_mode in retriever.modes:
                     other_hits = retriever.retrieve(rec["question"], k=k, candidate_k=40,
                                                     mode=other_mode, filters=filters, rerank=False,
-                                                    intent=intent)
+                                                    intent=intent, lexical_query=lexical_query,
+                                                    weighted_fusion=weighted_fusion)
                     found = any(h.chunk.chunk_id in gold_ids for h in other_hits)
                     if flag_name == "lexical_found":
                         lexical_found = found
@@ -145,6 +150,10 @@ def main() -> int:
     ap.add_argument("--k", type=int, default=5)
     ap.add_argument("--section-aware", action="store_true",
                     help="pass each case's own intent to retrieve() for §15 section weighting")
+    ap.add_argument("--query-expansion", action="store_true",
+                    help="§11/§12: expand the BM25 leg's query with financial-terminology synonyms")
+    ap.add_argument("--weighted-fusion", action="store_true",
+                    help="§16: weight the lexical/vector RRF legs per fusion_weights.get_fusion_weights(intent)")
     ap.add_argument("--json", type=Path, default=None)
     args = ap.parse_args()
 
@@ -158,7 +167,8 @@ def main() -> int:
     try:
         retriever = build_retriever(repos, bm25_path=args.bm25, vector_dir=args.vector_dir)
         report = analyze(retriever, repos, records, mode=args.mode, k=args.k,
-                         section_aware=args.section_aware)
+                         section_aware=args.section_aware, query_expansion=args.query_expansion,
+                         weighted_fusion=args.weighted_fusion)
     finally:
         repos.close()
 

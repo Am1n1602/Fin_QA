@@ -50,6 +50,36 @@ class Analyze(unittest.TestCase):
         self.assertGreaterEqual(self.hybrid_report["failure_rate"], 0.0)
         self.assertLessEqual(self.hybrid_report["failure_rate"], 1.0)
 
+    def test_query_expansion_runs_without_error_and_is_off_by_default(self):
+        from evaluation.error_analysis.analyzer import analyze
+
+        with_qe = analyze(self.retriever, self.repos, self.records, mode="hybrid", k=5,
+                          query_expansion=True)
+        self.assertEqual(with_qe["n_scored"], self.hybrid_report["n_scored"])
+
+    def test_weighted_fusion_runs_without_error_and_is_off_by_default(self):
+        from evaluation.error_analysis.analyzer import analyze
+
+        with_wf = analyze(self.retriever, self.repos, self.records, mode="hybrid", k=5,
+                          weighted_fusion=True)
+        self.assertEqual(with_wf["n_scored"], self.hybrid_report["n_scored"])
+        # unconfigured settings (no section_aware -> intent=None everywhere) means
+        # fusion_weights.get_fusion_weights(None) falls back to the (1.0, 1.0) default
+        # block -- a true no-op, unlike the section-aware combination below.
+        self.assertEqual(with_wf["failure_rate"], self.hybrid_report["failure_rate"])
+
+    def test_weighted_fusion_with_section_aware_does_not_increase_failure_rate(self):
+        # §16's shipped overrides only fire for management_commentary/trend/multi_hop/table,
+        # which requires section_aware=True (intent must be passed) to reach at all.
+        from evaluation.error_analysis.analyzer import analyze
+
+        without = analyze(self.retriever, self.repos, self.records, mode="hybrid", k=5,
+                          section_aware=True, query_expansion=True, weighted_fusion=False)
+        with_wf = analyze(self.retriever, self.repos, self.records, mode="hybrid", k=5,
+                          section_aware=True, query_expansion=True, weighted_fusion=True)
+        self.assertEqual(with_wf["n_scored"], without["n_scored"])
+        self.assertLessEqual(with_wf["failure_rate"], without["failure_rate"])
+
 
 if __name__ == "__main__":
     unittest.main()

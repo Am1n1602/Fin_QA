@@ -171,6 +171,37 @@ class TestHybrid(unittest.TestCase):
         hits = self.r.retrieve("segment revenue", k=3, mode="lexical")
         self.assertTrue(all(h.scores["section_weight"] is None for h in hits))
 
+    def test_weighted_fusion_false_is_unchanged_from_omitting_the_argument(self):
+        query = "segment revenue retail digital services"
+        with_default = self.r.retrieve(query, k=3, mode="hybrid", rerank=False)
+        explicit_false = self.r.retrieve(query, k=3, mode="hybrid", rerank=False, weighted_fusion=False)
+        self.assertEqual([h.chunk.chunk_id for h in with_default],
+                         [h.chunk.chunk_id for h in explicit_false])
+
+    def test_weighted_fusion_with_unconfigured_intent_matches_plain_rrf(self):
+        # the shipped fusion_weights.yaml has no benchmark-earned overrides yet -- (1.0, 1.0)
+        # for every intent -- so turning the flag on must not change results until it does.
+        # intent=None here so §15's separate section/topic reordering (which DOES read the
+        # "segment" intent's config) can't confound this fusion-only comparison.
+        query = "segment revenue retail digital services"
+        plain = self.r.retrieve(query, k=5, mode="hybrid", rerank=False)
+        weighted = self.r.retrieve(query, k=5, mode="hybrid", rerank=False, weighted_fusion=True)
+        self.assertEqual([h.chunk.chunk_id for h in plain], [h.chunk.chunk_id for h in weighted])
+
+    def test_weighted_fusion_applies_configured_leg_weights(self):
+        query = "segment revenue retail digital services"
+        with mock.patch("finqa_v2.retrieval.retriever._fusion_weights", return_value=(0.0, 1.0)):
+            vector_only = self.r.retrieve(query, k=5, mode="hybrid", rerank=False, weighted_fusion=True)
+        direct_vector = self.r.retrieve(query, k=5, mode="vector", rerank=False)
+        self.assertEqual([h.chunk.chunk_id for h in vector_only], [h.chunk.chunk_id for h in direct_vector])
+
+    def test_weighted_fusion_ignored_outside_hybrid_mode(self):
+        query = "independent auditor report basis for opinion"
+        without = self.r.retrieve(query, k=3, mode="lexical", rerank=False)
+        with mock.patch("finqa_v2.retrieval.retriever._fusion_weights", return_value=(5.0, 0.1)):
+            with_flag = self.r.retrieve(query, k=3, mode="lexical", rerank=False, weighted_fusion=True)
+        self.assertEqual([h.chunk.chunk_id for h in without], [h.chunk.chunk_id for h in with_flag])
+
 
 if __name__ == "__main__":
     unittest.main()
