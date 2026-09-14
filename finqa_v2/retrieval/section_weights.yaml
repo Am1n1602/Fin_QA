@@ -63,3 +63,22 @@ cross_validation:
 multi_hop:
   segment_information: 1.3
   financial_results: 1.3
+
+# Topic weights (same intent-keyed shape, own namespace so it never collides with the
+# section weights above -- see section_weights.py:get_topic_weight()). Phase 2's error
+# analysis found TABLE_RETRIEVAL_FAILURE (gold is a `topic='table'` chunk, nothing
+# table-typed came back) at 21-29% of all failures, the second-largest category after
+# WRONG_SECTION -- this directly targets it by boosting table chunks for the intents whose
+# gold is often tabular (numeric/ratio/table/multi_hop), without needing new chunking or a
+# corpus rebuild (that's Phase 4's job, and this is far cheaper to try first).
+topics:
+  numeric:
+    table: 1.6
+  numeric_fact:
+    table: 1.6
+  ratio:
+    table: 1.4
+  table:
+    table: 2.0
+  multi_hop:
+    table: 1.3

@@ -5,10 +5,11 @@ modes: 'lexical' (BM25 only), 'vector' (dense only), 'hybrid' (both, fused). Fal
 to lexical when a vector index / embedder is not wired.
 
 `retrieve(..., intent=None)` (§15): when `intent` is given, each candidate's fused score is
-multiplied by its section's configured weight (`finqa_v2/retrieval/section_weights.yaml`)
-before the top-k cut -- e.g. a `causal` query's `mda`/`earnings_call` chunks rank higher,
-boilerplate `cover_letter` chunks rank lower, regardless of intent. `intent=None` (every
-caller that predates this) skips the step entirely, so existing behavior is unchanged.
+multiplied by its section's *and* its topic's configured weight
+(`finqa_v2/retrieval/section_weights.yaml`) before the top-k cut -- e.g. a `causal` query's
+`mda`/`earnings_call` chunks rank higher, boilerplate `cover_letter` chunks rank lower, and
+a `numeric` query's `topic='table'` chunks rank higher, regardless of section. `intent=None`
+(every caller that predates §15) skips the step entirely, so existing behavior is unchanged.
 """
 from __future__ import annotations
 
@@ -19,6 +20,7 @@ from finqa_v2.retrieval.filters import compile_filter
 from finqa_v2.retrieval.fuse import reciprocal_rank_fusion
 from finqa_v2.retrieval.lexical import BM25Index
 from finqa_v2.retrieval.rerank import IdentityReranker
+from finqa_v2.retrieval.section_weights import get_topic_weight as _topic_weight
 from finqa_v2.retrieval.section_weights import get_weight as _section_weight
 
 _META_KEYS = ("company_id", "financial_year", "document_type", "section", "segment", "topic")
@@ -108,7 +110,10 @@ class HybridRetriever:
         section_weight: dict[int, float] = {}
         if intent is not None and candidates:
             base_score = {cid: 1.0 / (pos + 1) for pos, cid in enumerate(candidates)}
-            section_weight = {cid: _section_weight(intent, chunks[cid].section) for cid in candidates}
+            section_weight = {
+                cid: _section_weight(intent, chunks[cid].section) * _topic_weight(intent, chunks[cid].topic)
+                for cid in candidates
+            }
             candidates = sorted(candidates, key=lambda cid: base_score[cid] * section_weight[cid], reverse=True)
 
         rerank_score: dict[int, float] = {}

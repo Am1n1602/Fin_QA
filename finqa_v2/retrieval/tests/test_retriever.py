@@ -139,6 +139,17 @@ class TestHybrid(unittest.TestCase):
         cover_letter_rank = next(h.rank for h in weighted if h.chunk.section == "cover_letter")
         self.assertEqual(cover_letter_rank, 3)  # demoted to last by the global 0.3x weight
 
+    def test_topic_weight_is_multiplied_into_the_combined_weight(self):
+        query = "audit report board dividend opinion"
+        with mock.patch("finqa_v2.retrieval.retriever._section_weight", return_value=1.0), \
+             mock.patch("finqa_v2.retrieval.retriever._topic_weight", return_value=0.01) as fake_topic:
+            hits = self.r.retrieve(query, k=3, mode="lexical", rerank=False, intent="whatever")
+        fake_topic.assert_called()
+        # with every candidate's topic weight forced to the same 0.01, the combined weight
+        # collapses to a constant factor -- relative order among candidates is unaffected,
+        # but this confirms _topic_weight is actually consulted and folded into the score.
+        self.assertTrue(all(h.scores["section_weight"] == 0.01 for h in hits))
+
     def test_intent_weighting_leaves_scores_empty_when_not_used(self):
         hits = self.r.retrieve("segment revenue", k=3, mode="lexical")
         self.assertTrue(all(h.scores["section_weight"] is None for h in hits))
