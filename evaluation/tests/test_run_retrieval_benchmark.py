@@ -85,6 +85,13 @@ class RunMode(unittest.TestCase):
         self.assertEqual(without["ndcg@5"], with_nw["ndcg@5"])
         self.assertGreater(with_nw["avg_evidence_size"], without["avg_evidence_size"])
 
+    def test_mmr_runs_without_error_and_is_off_by_default(self):
+        from evaluation.run_retrieval_benchmark import run_mode
+
+        without = run_mode(self.retriever, self.repos, self.records, "hybrid", mmr=False)
+        with_mmr = run_mode(self.retriever, self.repos, self.records, "hybrid", mmr=True)
+        self.assertEqual(without["n_total"], with_mmr["n_total"])
+
     def test_multi_query_runs_without_error_and_is_off_by_default(self):
         from evaluation.run_retrieval_benchmark import run_mode
 

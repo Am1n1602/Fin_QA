@@ -195,6 +195,63 @@ class TestHybrid(unittest.TestCase):
         direct_vector = self.r.retrieve(query, k=5, mode="vector", rerank=False)
         self.assertEqual([h.chunk.chunk_id for h in vector_only], [h.chunk.chunk_id for h in direct_vector])
 
+    def test_mmr_false_is_unchanged_from_omitting_the_argument(self):
+        query = "segment revenue retail digital services"
+        with_default = self.r.retrieve(query, k=3, mode="hybrid", rerank=False)
+        explicit_false = self.r.retrieve(query, k=3, mode="hybrid", rerank=False, mmr=False)
+        self.assertEqual([h.chunk.chunk_id for h in with_default],
+                         [h.chunk.chunk_id for h in explicit_false])
+
+    def test_mmr_ignored_outside_hybrid_mode(self):
+        query = "independent auditor report basis for opinion"
+        without = self.r.retrieve(query, k=3, mode="lexical", rerank=False)
+        with_flag = self.r.retrieve(query, k=3, mode="lexical", rerank=False, mmr=True)
+        self.assertEqual([h.chunk.chunk_id for h in without], [h.chunk.chunk_id for h in with_flag])
+
+    def test_mmr_ignored_when_no_vector_index(self):
+        from finqa_v2.retrieval.lexical import BM25Index
+
+        r = HybridRetriever(self.repos, bm25=BM25Index.build(self.repos))   # no vector wired
+        query = "independent auditor report basis for opinion"
+        without = r.retrieve(query, k=3, mode="hybrid", rerank=False)   # downgrades to lexical
+        with_flag = r.retrieve(query, k=3, mode="hybrid", rerank=False, mmr=True)
+        self.assertEqual([h.chunk.chunk_id for h in without], [h.chunk.chunk_id for h in with_flag])
+
+    def test_mmr_result_never_exceeds_k(self):
+        query = "segment revenue retail digital services"
+        hits = self.r.retrieve(query, k=2, mode="hybrid", rerank=False, mmr=True)
+        self.assertLessEqual(len(hits), 2)
+
+    def test_mmr_promotes_a_distinct_candidate_over_a_redundant_one(self):
+        # force two candidates to identical vectors (perfectly redundant) and a third to an
+        # orthogonal one -- low lambda should demote the redundant runner-up in favor of the
+        # distinct candidate, even though it doesn't mock relevance itself (real RRF scores).
+        query = "segment revenue retail digital services"
+        base = self.r.retrieve(query, k=3, mode="hybrid", rerank=False)
+        self.assertGreaterEqual(len(base), 3, "fixture needs >=3 hybrid hits for this test")
+        ids = [h.chunk.chunk_id for h in base]
+
+        import numpy as np
+
+        def _fake_get_vectors(chunk_ids):
+            # every candidate gets a consistent 2D vector (all same dtype/shape, so MMR's
+            # dot products never hit a dimension mismatch): top-2 collapsed onto the same
+            # vector (perfectly redundant), everything else orthogonal to them.
+            out = {}
+            for cid in chunk_ids:
+                if cid in (ids[0], ids[1]):
+                    out[cid] = np.array([1.0, 0.0])
+                else:
+                    out[cid] = np.array([0.0, 1.0])
+            return out
+
+        with mock.patch.object(self.r._vector, "get_vectors", side_effect=_fake_get_vectors):
+            diverse = self.r.retrieve(query, k=2, mode="hybrid", rerank=False, mmr=True, mmr_lambda=0.2)
+        diverse_ids = [h.chunk.chunk_id for h in diverse]
+        self.assertIn(ids[0], diverse_ids)     # top relevance always kept
+        self.assertIn(ids[2], diverse_ids)     # distinct candidate promoted over the redundant #2
+        self.assertNotIn(ids[1], diverse_ids)
+
     def test_weighted_fusion_ignored_outside_hybrid_mode(self):
         query = "independent auditor report basis for opinion"
         without = self.r.retrieve(query, k=3, mode="lexical", rerank=False)

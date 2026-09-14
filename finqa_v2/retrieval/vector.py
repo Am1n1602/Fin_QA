@@ -18,6 +18,7 @@ class VectorIndex:
         self._matrix = matrix          # np.ndarray (n, dim) float32, row-normalized
         self._faiss = faiss_index
         self.dim = int(matrix.shape[1]) if matrix is not None else 0
+        self._row_of = {cid: i for i, cid in enumerate(chunk_ids)}
 
     @property
     def available(self) -> bool:
@@ -76,6 +77,15 @@ class VectorIndex:
         for r in range(q.shape[0]):
             out.append([(self.chunk_ids[int(i)], float(s)) for i, s in zip(idxs[r], scores[r]) if int(i) >= 0])
         return out
+
+    # ------------------------------------------------------------------ #
+    def get_vectors(self, chunk_ids: list[int]) -> dict:
+        """{chunk_id: row-normalized vector} for the given ids that exist in this index
+        (§18 MMR -- diversity is computed as cosine similarity between these stored
+        embeddings, so a candidate is never re-embedded at query time). Silently omits
+        any id not present -- callers already treat a missing vector as "no diversity
+        signal available" for that chunk."""
+        return {cid: self._matrix[self._row_of[cid]] for cid in chunk_ids if cid in self._row_of}
 
     # ------------------------------------------------------------------ #
     def save(self, directory: str | Path) -> None:

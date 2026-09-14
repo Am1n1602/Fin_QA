@@ -21,6 +21,7 @@ from finqa_v2.retrieval.filters import compile_filter
 from finqa_v2.retrieval.fuse import reciprocal_rank_fusion
 from finqa_v2.retrieval.fusion_weights import get_fusion_weights as _fusion_weights
 from finqa_v2.retrieval.lexical import BM25Index
+from finqa_v2.retrieval.mmr import mmr_select
 from finqa_v2.retrieval.rerank import IdentityReranker
 from finqa_v2.retrieval.section_weights import get_topic_weight as _topic_weight
 from finqa_v2.retrieval.section_weights import get_weight as _section_weight
@@ -86,7 +87,8 @@ class HybridRetriever:
                  mode: str = "hybrid", filters: dict | None = None,
                  rerank: bool = True, intent: str | None = None,
                  lexical_query: str | None = None,
-                 weighted_fusion: bool = False, neighbor_window: int = 0) -> list[RetrievedChunk]:
+                 weighted_fusion: bool = False, neighbor_window: int = 0,
+                 mmr: bool = False, mmr_lambda: float = 0.7) -> list[RetrievedChunk]:
         """`lexical_query` (§11, default None -- every pre-existing caller keeps `query`
         for BOTH legs, unchanged): when given, the BM25 leg searches `lexical_query`
         (e.g. a synonym-expanded string from `finqa_v2.planner.terminology.
@@ -103,7 +105,16 @@ class HybridRetriever:
         returned top-k, unchanged): when > 0, each returned chunk's document neighbors
         within `chunk_index` +/- window are appended via
         `finqa_v2.retrieval.context_expander.expand_with_neighbors` -- so the result can
-        contain more than `k` chunks. Applied last, after rerank."""
+        contain more than `k` chunks. Applied last, after rerank.
+
+        `mmr` (§18, default False -- every pre-existing caller keeps the plain
+        relevance-ranked top-k, unchanged): when True and `mode == "hybrid"` with a
+        vector index available, replaces the final top-k cut with a greedy Maximal
+        Marginal Relevance selection over the full candidate pool (via
+        `finqa_v2.retrieval.mmr.mmr_select`, using each candidate's stored embedding for
+        the diversity term), trading `mmr_lambda` relevance against `1 - mmr_lambda`
+        redundancy. Silently a no-op outside hybrid mode or without a vector index --
+        there's no embedding space to diversify against."""
         if mode == "hybrid" and "hybrid" not in self.modes:
             mode = "lexical"
         if mode not in ("lexical", "vector", "hybrid"):
@@ -146,6 +157,16 @@ class HybridRetriever:
             rr = self._reranker.score(query, [chunks[cid].text for cid in candidates])
             rerank_score = dict(zip(candidates, rr))
             candidates = [cid for cid, _ in sorted(zip(candidates, rr), key=lambda x: x[1], reverse=True)]
+
+        if mmr and mode == "hybrid" and candidates and self._vector is not None and self._vector.available:
+            if rerank_score:
+                relevance = rerank_score
+            elif section_weight:
+                relevance = {cid: base_score[cid] * section_weight[cid] for cid in candidates}
+            else:
+                relevance = rrf_score
+            vectors = self._vector.get_vectors(candidates)
+            candidates = mmr_select(candidates, relevance, vectors, k=k, lam=mmr_lambda)
 
         out: list[RetrievedChunk] = []
         for i, cid in enumerate(candidates[:k], start=1):

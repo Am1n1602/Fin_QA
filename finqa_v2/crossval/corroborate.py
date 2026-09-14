@@ -33,13 +33,14 @@ def corroborate_in_docs(retriever, repos, ticker, claim, fy, *, workspace=None, 
     lexical_query = expand_lexical_query(query)
     try:
         hits = retriever.retrieve(query, k=k, filters=filters or None, intent="cross_validation",
-                                  lexical_query=lexical_query, weighted_fusion=True)
+                                  lexical_query=lexical_query, weighted_fusion=True,
+                                  mmr=True, mmr_lambda=0.5)
     except Exception:
         # retry without the FY filter (thin corpus)
         try:
             hits = retriever.retrieve(query, k=k, filters={"company_id": co.company_id} if co else None,
                                       intent="cross_validation", lexical_query=lexical_query,
-                                      weighted_fusion=True)
+                                      weighted_fusion=True, mmr=True, mmr_lambda=0.5)
         except Exception:
             return "absent", []
 

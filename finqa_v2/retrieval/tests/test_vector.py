@@ -61,5 +61,34 @@ class VectorIndexTextFn(unittest.TestCase):
         self.assertEqual(idx_raw.chunk_ids, idx_enriched.chunk_ids)
 
 
+class VectorIndexGetVectors(unittest.TestCase):
+    def setUp(self):
+        self.repos = SqliteRepositories(":memory:")
+        self.addCleanup(self.repos.close)
+        seed(self.repos)
+        self.idx = VectorIndex.build(self.repos, _RecordingEmbedder(), use_faiss=False)
+
+    def test_returns_a_vector_per_known_id(self):
+        vecs = self.idx.get_vectors(self.idx.chunk_ids[:2])
+        self.assertEqual(set(vecs), set(self.idx.chunk_ids[:2]))
+        for v in vecs.values():
+            self.assertEqual(v.shape, (self.idx.dim,))
+
+    def test_unknown_id_is_silently_omitted(self):
+        real = self.idx.chunk_ids[0]
+        vecs = self.idx.get_vectors([real, -999999])
+        self.assertEqual(set(vecs), {real})
+
+    def test_empty_input_returns_empty_dict(self):
+        self.assertEqual(self.idx.get_vectors([]), {})
+
+    def test_row_matches_the_matrix_row_for_that_chunk(self):
+        cid = self.idx.chunk_ids[3]
+        vec = self.idx.get_vectors([cid])[cid]
+        row = self.idx.chunk_ids.index(cid)
+        import numpy as np
+        self.assertTrue(np.array_equal(vec, self.idx._matrix[row]))
+
+
 if __name__ == "__main__":
     unittest.main()

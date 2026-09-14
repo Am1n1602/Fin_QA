@@ -90,7 +90,8 @@ def run_mode(retriever, repos, records: list[dict], mode: str, *,
             filter_company: bool = True, rerank: bool = False,
             section_aware: bool = False, section_hints: bool = False,
             query_expansion: bool = False, multi_query: bool = False,
-            weighted_fusion: bool = False, neighbor_window: int = 0) -> dict[str, Any]:
+            weighted_fusion: bool = False, neighbor_window: int = 0,
+            mmr: bool = False, mmr_lambda: float = 0.7) -> dict[str, Any]:
     """`section_hints=True` (§10) additionally FILTERS candidates to the sections
     `finqa_v2.retrieval.section_weights.list_weighted_sections(intent)` names for the
     case's intent -- a harder constraint than `section_aware`'s soft re-ranking weight,
@@ -127,7 +128,7 @@ def run_mode(retriever, repos, records: list[dict], mode: str, *,
             hits = retriever.retrieve(rec["question"], k=max(_KS), candidate_k=40,
                                       mode=mode, filters=filters, rerank=rerank, intent=intent,
                                       lexical_query=lexical_query, weighted_fusion=weighted_fusion,
-                                      neighbor_window=neighbor_window)
+                                      neighbor_window=neighbor_window, mmr=mmr, mmr_lambda=mmr_lambda)
             chunk_ids = [h.chunk.chunk_id for h in hits]
         lat.append((time.perf_counter() - t0) * 1000)
         evidence_sizes.append(len(chunk_ids))
@@ -187,6 +188,10 @@ def main() -> int:
                     help="§16: weight the lexical/vector RRF legs per fusion_weights.get_fusion_weights(intent)")
     ap.add_argument("--neighbor-window", type=int, default=0,
                     help="§17: append each result's document neighbors within +/- N chunk_index positions")
+    ap.add_argument("--mmr", action="store_true",
+                    help="§18: replace the final top-k cut with Maximal Marginal Relevance selection")
+    ap.add_argument("--mmr-lambda", type=float, default=0.7,
+                    help="§18: MMR relevance/diversity tradeoff (1.0 = pure relevance, 0.0 = pure diversity)")
     ap.add_argument("--out", type=Path, default=None, help="write a JSON report here")
     ap.add_argument("--label", default="retrieval_v21_baseline")
     args = ap.parse_args()
@@ -210,7 +215,8 @@ def main() -> int:
                                      query_expansion=args.query_expansion,
                                      multi_query=args.multi_query,
                                      weighted_fusion=args.weighted_fusion,
-                                     neighbor_window=args.neighbor_window)
+                                     neighbor_window=args.neighbor_window,
+                                     mmr=args.mmr, mmr_lambda=args.mmr_lambda)
     finally:
         repos.close()
 
@@ -246,6 +252,7 @@ def main() -> int:
             "section_aware": args.section_aware, "section_hints": args.section_hints,
             "query_expansion": args.query_expansion, "multi_query": args.multi_query,
             "weighted_fusion": args.weighted_fusion, "neighbor_window": args.neighbor_window,
+            "mmr": args.mmr, "mmr_lambda": args.mmr_lambda if args.mmr else None,
             "results": {mode: {k: v for k, v in m.items() if k != "per_case"} for mode, m in results.items()},
         }
         args.out.parent.mkdir(parents=True, exist_ok=True)
