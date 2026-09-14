@@ -17,6 +17,7 @@ from finqa_v2.hypothesis.detect import detect_metric_change
 from finqa_v2.hypothesis.generate import generate_candidates
 from finqa_v2.hypothesis.models import HypothesisReport
 from finqa_v2.hypothesis.validate import classify, lexical_overlap, structural_check
+from finqa_v2.planner.terminology import expand_lexical_query
 
 _FY_RE = re.compile(r"FY(\d{4})", re.I)
 
@@ -97,9 +98,10 @@ class HypothesisTester:
         filters: dict = {}
         if co is not None:
             filters["company_id"] = co.company_id
+        query = f"{metric} {statement}"
         try:
-            return self._retriever.retrieve(f"{metric} {statement}", k=self._docs_per,
-                                            filters=filters or None, intent="causal")
+            return self._retriever.retrieve(query, k=self._docs_per, filters=filters or None,
+                                            intent="causal", lexical_query=expand_lexical_query(query))
         except Exception:
             return []
 

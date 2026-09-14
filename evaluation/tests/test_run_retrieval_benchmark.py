@@ -51,6 +51,13 @@ class RunMode(unittest.TestCase):
         with_hints = run_mode(self.retriever, self.repos, self.records, "lexical", section_hints=True)
         self.assertEqual(without["n_total"], with_hints["n_total"])
 
+    def test_query_expansion_runs_without_error_and_is_off_by_default(self):
+        from evaluation.run_retrieval_benchmark import run_mode
+
+        without = run_mode(self.retriever, self.repos, self.records, "lexical", query_expansion=False)
+        with_qe = run_mode(self.retriever, self.repos, self.records, "lexical", query_expansion=True)
+        self.assertEqual(without["n_total"], with_qe["n_total"])
+
 
 if __name__ == "__main__":
     unittest.main()

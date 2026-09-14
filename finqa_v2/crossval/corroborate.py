@@ -10,6 +10,7 @@ import re
 
 from finqa_v2.evidence import evidence_from_retrieved_chunk
 from finqa_v2.hypothesis.validate import lexical_overlap
+from finqa_v2.planner.terminology import expand_lexical_query
 
 _MIN_OVERLAP = 2
 _MIN_CONF = 0.40
@@ -29,13 +30,15 @@ def corroborate_in_docs(retriever, repos, ticker, claim, fy, *, workspace=None, 
         filters["financial_year"] = fy
 
     query = " ".join(x for x in (claim.subject or "", claim.mechanism or "", claim.raw) if x)
+    lexical_query = expand_lexical_query(query)
     try:
-        hits = retriever.retrieve(query, k=k, filters=filters or None, intent="cross_validation")
+        hits = retriever.retrieve(query, k=k, filters=filters or None, intent="cross_validation",
+                                  lexical_query=lexical_query)
     except Exception:
         # retry without the FY filter (thin corpus)
         try:
             hits = retriever.retrieve(query, k=k, filters={"company_id": co.company_id} if co else None,
-                                      intent="cross_validation")
+                                      intent="cross_validation", lexical_query=lexical_query)
         except Exception:
             return "absent", []
 

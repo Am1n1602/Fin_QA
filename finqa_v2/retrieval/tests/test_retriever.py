@@ -150,6 +150,23 @@ class TestHybrid(unittest.TestCase):
         # but this confirms _topic_weight is actually consulted and folded into the score.
         self.assertTrue(all(h.scores["section_weight"] == 0.01 for h in hits))
 
+    def test_lexical_query_none_is_unchanged_from_omitting_the_argument(self):
+        with_default = self.r.retrieve("segment revenue", k=3, mode="lexical")
+        explicit_none = self.r.retrieve("segment revenue", k=3, mode="lexical", lexical_query=None)
+        self.assertEqual([h.chunk.chunk_id for h in with_default],
+                         [h.chunk.chunk_id for h in explicit_none])
+
+    def test_lexical_query_is_used_for_the_bm25_leg_only(self):
+        # "dividend" alone doesn't match the segment_information chunks at all; a query
+        # that finds nothing verbatim should still find the cover_letter chunk once the
+        # BM25 leg is redirected to a lexical_query that actually contains "dividend".
+        no_hits = self.r.retrieve("xyzxyz_no_real_word", k=3, mode="lexical", rerank=False)
+        self.assertEqual(no_hits, [])
+        redirected = self.r.retrieve("xyzxyz_no_real_word", k=3, mode="lexical", rerank=False,
+                                     lexical_query="board dividend")
+        self.assertTrue(redirected)
+        self.assertEqual(redirected[0].chunk.section, "cover_letter")
+
     def test_intent_weighting_leaves_scores_empty_when_not_used(self):
         hits = self.r.retrieve("segment revenue", k=3, mode="lexical")
         self.assertTrue(all(h.scores["section_weight"] is None for h in hits))

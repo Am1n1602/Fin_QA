@@ -26,6 +26,7 @@ from typing import Any
 from evaluation.metrics.mrr import mean_reciprocal_rank
 from evaluation.metrics.ndcg import mean_ndcg_at_k
 from evaluation.metrics.recall import mean_recall_at_k
+from finqa_v2.planner.terminology import expand_lexical_query
 from finqa_v2.retrieval.evaluate import build_retriever
 from finqa_v2.retrieval.section_weights import list_weighted_sections
 from finqa_v2.sqlite import DEFAULT_V2_DB_PATH, SqliteRepositories
@@ -62,7 +63,8 @@ def _company_id(repos, tickers: list[str] | None) -> int | None:
 
 def run_mode(retriever, repos, records: list[dict], mode: str, *,
             filter_company: bool = True, rerank: bool = False,
-            section_aware: bool = False, section_hints: bool = False) -> dict[str, Any]:
+            section_aware: bool = False, section_hints: bool = False,
+            query_expansion: bool = False) -> dict[str, Any]:
     """`section_hints=True` (§10) additionally FILTERS candidates to the sections
     `finqa_v2.retrieval.section_weights.list_weighted_sections(intent)` names for the
     case's intent -- a harder constraint than `section_aware`'s soft re-ranking weight,
@@ -88,9 +90,11 @@ def run_mode(retriever, repos, records: list[dict], mode: str, *,
                 filters["section"] = hints
         filters = filters or None
         intent = rec["intent"] if section_aware else None
+        lexical_query = expand_lexical_query(rec["question"]) if query_expansion else None
         t0 = time.perf_counter()
         hits = retriever.retrieve(rec["question"], k=max(_KS), candidate_k=40,
-                                  mode=mode, filters=filters, rerank=rerank, intent=intent)
+                                  mode=mode, filters=filters, rerank=rerank, intent=intent,
+                                  lexical_query=lexical_query)
         lat.append((time.perf_counter() - t0) * 1000)
         rels = [1 if h.chunk.chunk_id in gold else 0 for h in hits]
         first = next((i + 1 for i, r in enumerate(rels) if r), None)
@@ -131,6 +135,8 @@ def main() -> int:
                     help="pass each case's own intent to retrieve() for §15 section weighting")
     ap.add_argument("--section-hints", action="store_true",
                     help="§10: additionally FILTER to list_weighted_sections(intent), not just weight")
+    ap.add_argument("--query-expansion", action="store_true",
+                    help="§11/§12: expand the BM25 leg's query with financial-terminology synonyms")
     ap.add_argument("--out", type=Path, default=None, help="write a JSON report here")
     ap.add_argument("--label", default="retrieval_v21_baseline")
     args = ap.parse_args()
@@ -150,7 +156,8 @@ def main() -> int:
             results[mode] = run_mode(retriever, repos, records, mode,
                                      filter_company=args.filter_company, rerank=args.rerank,
                                      section_aware=args.section_aware,
-                                     section_hints=args.section_hints)
+                                     section_hints=args.section_hints,
+                                     query_expansion=args.query_expansion)
     finally:
         repos.close()
 
@@ -184,6 +191,7 @@ def main() -> int:
             "retriever_modes_available": list(retriever.modes),
             "filter_company": args.filter_company, "rerank": args.rerank,
             "section_aware": args.section_aware, "section_hints": args.section_hints,
+            "query_expansion": args.query_expansion,
             "results": {mode: {k: v for k, v in m.items() if k != "per_case"} for mode, m in results.items()},
         }
         args.out.parent.mkdir(parents=True, exist_ok=True)

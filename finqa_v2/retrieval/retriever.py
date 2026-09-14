@@ -82,14 +82,22 @@ class HybridRetriever:
     # ------------------------------------------------------------------ #
     def retrieve(self, query: str, *, k: int = 5, candidate_k: int = 30,
                  mode: str = "hybrid", filters: dict | None = None,
-                 rerank: bool = True, intent: str | None = None) -> list[RetrievedChunk]:
+                 rerank: bool = True, intent: str | None = None,
+                 lexical_query: str | None = None) -> list[RetrievedChunk]:
+        """`lexical_query` (§11, default None -- every pre-existing caller keeps `query`
+        for BOTH legs, unchanged): when given, the BM25 leg searches `lexical_query`
+        (e.g. a synonym-expanded string from `finqa_v2.planner.terminology.
+        expand_lexical_query`) while the dense/vector leg still embeds `query` as-is --
+        a natural-language question and a keyword-expanded BM25 query serve their
+        respective retrieval methods differently."""
         if mode == "hybrid" and "hybrid" not in self.modes:
             mode = "lexical"
         if mode not in ("lexical", "vector", "hybrid"):
             raise ValueError(f"unknown mode {mode!r}")
         keep = compile_filter(filters)
+        bm25_query = lexical_query if lexical_query is not None else query
 
-        lex_hits = self._bm25.search(query, candidate_k, filters=filters) if mode in ("lexical", "hybrid") else []
+        lex_hits = self._bm25.search(bm25_query, candidate_k, filters=filters) if mode in ("lexical", "hybrid") else []
         lex_ids = [h.chunk_id for h in lex_hits]
         lex_score = {h.chunk_id: h.score for h in lex_hits}
 
