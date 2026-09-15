@@ -124,7 +124,35 @@ def connect(db_path: str | Path = DEFAULT_V2_DB_PATH, *, check_same_thread: bool
 
 def init_db(conn: sqlite3.Connection) -> None:
     conn.executescript(_SCHEMA_PATH.read_text(encoding="utf-8"))
+    _migrate_restatement_columns(conn)
     conn.commit()
+
+
+def _migrate_restatement_columns(conn: sqlite3.Connection) -> None:
+    """§25: a database created before restatement tracking was added has
+    `financial_facts` without `is_superseded`/`restated_by_fact_id`/`filing_date` and
+    still has the old blanket `ux_facts_grain` unique index (which would block a
+    superseded+current pair sharing a grain). Idempotent -- a no-op on every
+    subsequent call, including on a freshly-created database where schema_v2.sql
+    already defines these columns and index."""
+    existing = {r["name"] for r in conn.execute("PRAGMA table_info(financial_facts)")}
+    for column, ddl in (
+        ("is_superseded", "ALTER TABLE financial_facts ADD COLUMN is_superseded INTEGER NOT NULL DEFAULT 0"),
+        ("restated_by_fact_id", "ALTER TABLE financial_facts ADD COLUMN restated_by_fact_id INTEGER "
+                                "REFERENCES financial_facts(fact_id) ON DELETE SET NULL"),
+        ("filing_date", "ALTER TABLE financial_facts ADD COLUMN filing_date TEXT"),
+    ):
+        if column not in existing:
+            conn.execute(ddl)
+    conn.execute("DROP INDEX IF EXISTS ux_facts_grain")
+    conn.execute(
+        """CREATE UNIQUE INDEX IF NOT EXISTS ux_facts_grain_current
+           ON financial_facts (
+               company_id, metric, basis, statement_type,
+               COALESCE(period_end, ''), COALESCE(period_start, '')
+           )
+           WHERE is_superseded = 0"""
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -198,6 +226,7 @@ def _row_source(r: sqlite3.Row) -> Source:
 
 
 def _row_fact(r: sqlite3.Row) -> FinancialFact:
+    keys = r.keys()
     return FinancialFact(
         company_id=r["company_id"],
         metric=r["metric"],
@@ -215,6 +244,10 @@ def _row_fact(r: sqlite3.Row) -> FinancialFact:
         source_id=r["source_id"],
         mapping_confidence=MappingConfidence(r["mapping_confidence"]),
         mapping_reason=r["mapping_reason"],
+        fact_id=r["fact_id"] if "fact_id" in keys else None,
+        is_superseded=_b(r["is_superseded"]) if "is_superseded" in keys else False,
+        restated_by_fact_id=r["restated_by_fact_id"] if "restated_by_fact_id" in keys else None,
+        filing_date=_d(r["filing_date"]) if "filing_date" in keys else None,
     )
 
 
@@ -503,54 +536,129 @@ class SqliteFinancialFactRepository:
     def __init__(self, conn: sqlite3.Connection) -> None:
         self._c = conn
 
+    def _params(self, f: FinancialFact) -> dict:
+        return {
+            "company_id": f.company_id,
+            "metric": f.metric,
+            "value": f.value,                       # None -> NULL, never 0
+            "unit": f.unit,
+            "currency": f.currency,
+            "period_start": _ds(f.period_start),
+            "period_end": _ds(f.period_end),
+            "financial_year": f.financial_year,
+            "quarter": f.quarter,
+            "statement_type": f.statement_type.value,
+            "basis": f.basis.value,
+            "is_annual": int(f.is_annual),
+            "is_point_in_time": int(f.is_point_in_time),
+            "source_id": f.source_id,
+            "mapping_confidence": f.mapping_confidence.value,
+            "mapping_reason": f.mapping_reason,
+            "filing_date": _ds(f.filing_date),
+        }
+
     def add_many(self, facts: Iterable[FinancialFact]) -> int:
+        """§25: never overwrites a differing value in place. A new fact whose grain
+        (company/metric/basis/statement_type/period) matches an existing CURRENT row --
+        `is_superseded = 0` -- either refreshes that row (value unchanged or was
+        previously missing: no real restatement, nothing worth preserving) or, when the
+        value genuinely differs from a previously-known one, marks the old row
+        superseded and inserts the new one as current, linked via
+        `restated_by_fact_id` -- the old value stays queryable via `history()`."""
         n = 0
         for f in facts:
-            self._c.execute(
-                """
-                INSERT INTO financial_facts
-                    (company_id, metric, value, unit, currency, period_start, period_end,
-                     financial_year, quarter, statement_type, basis, is_annual, is_point_in_time,
-                     source_id, mapping_confidence, mapping_reason)
-                VALUES
-                    (:company_id, :metric, :value, :unit, :currency, :period_start, :period_end,
-                     :financial_year, :quarter, :statement_type, :basis, :is_annual, :is_point_in_time,
-                     :source_id, :mapping_confidence, :mapping_reason)
-                ON CONFLICT (company_id, metric, basis, statement_type,
-                             COALESCE(period_end, ''), COALESCE(period_start, ''))
-                DO UPDATE SET
-                    value              = excluded.value,
-                    unit               = excluded.unit,
-                    currency           = excluded.currency,
-                    financial_year     = excluded.financial_year,
-                    quarter            = excluded.quarter,
-                    is_annual          = excluded.is_annual,
-                    is_point_in_time   = excluded.is_point_in_time,
-                    source_id          = COALESCE(excluded.source_id, financial_facts.source_id),
-                    mapping_confidence = excluded.mapping_confidence,
-                    mapping_reason     = excluded.mapping_reason
-                """,
-                {
-                    "company_id": f.company_id,
-                    "metric": f.metric,
-                    "value": f.value,                       # None -> NULL, never 0
-                    "unit": f.unit,
-                    "currency": f.currency,
-                    "period_start": _ds(f.period_start),
-                    "period_end": _ds(f.period_end),
-                    "financial_year": f.financial_year,
-                    "quarter": f.quarter,
-                    "statement_type": f.statement_type.value,
-                    "basis": f.basis.value,
-                    "is_annual": int(f.is_annual),
-                    "is_point_in_time": int(f.is_point_in_time),
-                    "source_id": f.source_id,
-                    "mapping_confidence": f.mapping_confidence.value,
-                    "mapping_reason": f.mapping_reason,
-                },
-            )
+            existing = self._c.execute(
+                """SELECT fact_id, value FROM financial_facts
+                   WHERE company_id = ? AND metric = ? AND basis = ? AND statement_type = ?
+                     AND COALESCE(period_end, '') = COALESCE(?, '')
+                     AND COALESCE(period_start, '') = COALESCE(?, '')
+                     AND is_superseded = 0""",
+                (f.company_id, f.metric, f.basis.value, f.statement_type.value,
+                 _ds(f.period_end), _ds(f.period_start)),
+            ).fetchone()
+
+            is_restatement = (existing is not None and existing["value"] is not None
+                              and f.value is not None and existing["value"] != f.value)
+
+            if is_restatement:
+                # Mark the old CURRENT row superseded FIRST -- the partial unique index
+                # only allows one is_superseded=0 row per grain, so inserting the new
+                # row before freeing up the grain would violate it.
+                self._c.execute(
+                    "UPDATE financial_facts SET is_superseded = 1 WHERE fact_id = ?",
+                    (existing["fact_id"],),
+                )
+                cur = self._c.execute(
+                    """
+                    INSERT INTO financial_facts
+                        (company_id, metric, value, unit, currency, period_start, period_end,
+                         financial_year, quarter, statement_type, basis, is_annual, is_point_in_time,
+                         source_id, mapping_confidence, mapping_reason, filing_date)
+                    VALUES
+                        (:company_id, :metric, :value, :unit, :currency, :period_start, :period_end,
+                         :financial_year, :quarter, :statement_type, :basis, :is_annual, :is_point_in_time,
+                         :source_id, :mapping_confidence, :mapping_reason, :filing_date)
+                    """,
+                    self._params(f),
+                )
+                self._c.execute(
+                    "UPDATE financial_facts SET restated_by_fact_id = ? WHERE fact_id = ?",
+                    (cur.lastrowid, existing["fact_id"]),
+                )
+            elif existing is not None:
+                params = dict(self._params(f), fact_id=existing["fact_id"])
+                self._c.execute(
+                    """UPDATE financial_facts SET
+                        value = :value, unit = :unit, currency = :currency,
+                        financial_year = :financial_year, quarter = :quarter,
+                        is_annual = :is_annual, is_point_in_time = :is_point_in_time,
+                        source_id = COALESCE(:source_id, source_id),
+                        mapping_confidence = :mapping_confidence, mapping_reason = :mapping_reason,
+                        filing_date = COALESCE(:filing_date, filing_date)
+                       WHERE fact_id = :fact_id""",
+                    params,
+                )
+            else:
+                self._c.execute(
+                    """
+                    INSERT INTO financial_facts
+                        (company_id, metric, value, unit, currency, period_start, period_end,
+                         financial_year, quarter, statement_type, basis, is_annual, is_point_in_time,
+                         source_id, mapping_confidence, mapping_reason, filing_date)
+                    VALUES
+                        (:company_id, :metric, :value, :unit, :currency, :period_start, :period_end,
+                         :financial_year, :quarter, :statement_type, :basis, :is_annual, :is_point_in_time,
+                         :source_id, :mapping_confidence, :mapping_reason, :filing_date)
+                    """,
+                    self._params(f),
+                )
             n += 1
         return n
+
+    def history(
+        self,
+        *,
+        company_id: int,
+        metric: str,
+        basis: Basis | str = Basis.CONSOLIDATED,
+        financial_year: Optional[int] = None,
+    ) -> list[FinancialFact]:
+        """§25: every version ever recorded at this grain -- current AND superseded --
+        ordered oldest first, so `restated_by_fact_id` chains read top to bottom.
+        `get()`/`latest()`/`list_facts()` only ever see the current row; this is the
+        one place the full restatement history is exposed."""
+        clauses = ["company_id = ?", "metric = ?", "basis = ?"]
+        params: list = [company_id, metric, Basis(basis).value]
+        if financial_year is not None:
+            clauses.append("financial_year = ?")
+            params.append(financial_year)
+        rows = self._c.execute(
+            f"""SELECT * FROM financial_facts
+                WHERE {' AND '.join(clauses)}
+                ORDER BY (period_end IS NULL), period_end, fact_id""",
+            params,
+        ).fetchall()
+        return [_row_fact(r) for r in rows]
 
     def get(
         self,
@@ -560,7 +668,9 @@ class SqliteFinancialFactRepository:
         basis: Basis | str = Basis.CONSOLIDATED,
         financial_year: Optional[int] = None,
     ) -> list[FinancialFact]:
-        clauses = ["company_id = ?", "metric = ?", "basis = ?"]
+        # §25: only the current (non-superseded) version of each grain -- the full
+        # restatement history is available via history(), not this default read path.
+        clauses = ["company_id = ?", "metric = ?", "basis = ?", "is_superseded = 0"]
         params: list = [company_id, metric, Basis(basis).value]
         if financial_year is not None:
             clauses.append("financial_year = ?")
@@ -583,6 +693,7 @@ class SqliteFinancialFactRepository:
         row = self._c.execute(
             """SELECT * FROM financial_facts
                WHERE company_id = ? AND metric = ? AND basis = ? AND value IS NOT NULL
+                 AND is_superseded = 0
                ORDER BY (period_end IS NULL), period_end DESC
                LIMIT 1""",
             (company_id, metric, Basis(basis).value),
@@ -591,7 +702,8 @@ class SqliteFinancialFactRepository:
 
     def metrics_for(self, company_id: int) -> list[str]:
         rows = self._c.execute(
-            "SELECT DISTINCT metric FROM financial_facts WHERE company_id = ? ORDER BY metric",
+            "SELECT DISTINCT metric FROM financial_facts WHERE company_id = ? AND is_superseded = 0 "
+            "ORDER BY metric",
             (company_id,),
         ).fetchall()
         return [r["metric"] for r in rows]
@@ -603,7 +715,7 @@ class SqliteFinancialFactRepository:
         basis: Basis | str | None = None,
         metric: str | None = None,
     ) -> list[FinancialFact]:
-        clauses = ["company_id = ?"]
+        clauses = ["company_id = ?", "is_superseded = 0"]
         params: list = [company_id]
         if basis is not None:
             clauses.append("basis = ?")

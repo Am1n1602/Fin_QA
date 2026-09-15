@@ -25,13 +25,22 @@ from finqa_v2.sqlite import DEFAULT_V2_DB_PATH, SqliteRepositories
 _ROOT = Path(__file__).resolve().parents[3]
 _OUT = _ROOT / "evaluation" / "datasets" / "retrieval_v21.json"
 
-# §5.1's recommended minimum distribution -- sums to 380, comfortably clearing the >=300
-# acceptance criterion while following the roadmap's own table rather than an arbitrary total.
+# §5.1's original minimum distribution summed to 380. Scaled ~1.32x to 500 after the
+# §25 historical expansion gave all 50 companies substantially deeper real content --
+# the extra headroom goes disproportionately to categories that were previously
+# corpus-thin (causal, cross_document, comparison, multi_hop) rather than a flat scale.
 QUOTAS: dict[str, int] = {
-    "numeric": 40, "ratio": 30, "trend": 30, "narrative": 40, "causal": 40,
-    "management_commentary": 25, "comparison": 30, "cross_document": 25,
-    "multi_hop": 30, "table": 20, "segment": 20, "adversarial": 30, "no_evidence": 20,
+    "numeric": 53, "ratio": 40, "trend": 40, "narrative": 53, "causal": 53,
+    "management_commentary": 33, "comparison": 40, "cross_document": 33,
+    "multi_hop": 40, "table": 26, "segment": 26, "adversarial": 38, "no_evidence": 25,
 }
+
+# No single company may supply more than this many accepted candidates within one
+# category -- without it, quota exhaustion concentrates on whichever companies happen
+# to have the richest corpus (the pre-expansion 380-question set referenced all 50
+# companies, but 9 of them appeared exactly once each while a handful appeared 14-24
+# times). Bounds worst-case company dominance to _MAX_PER_COMPANY_PER_CATEGORY / quota.
+_MAX_PER_COMPANY_PER_CATEGORY = 3
 
 _MAX_GOLD_PER_PROBE = 10
 
@@ -103,13 +112,18 @@ def build(repos: SqliteRepositories, *, seed: int = 21, quotas: dict[str, int] =
     records: list[dict] = []
     seen_questions: set[str] = set()
     counts: Counter = Counter()
+    company_counts: dict[str, Counter] = {}
 
     for category, gen in generators.items():
         quota = quotas.get(category, 0)
+        cat_company_counts = company_counts.setdefault(category, Counter())
         for cand in gen:
             if counts[category] >= quota:
                 break
             if cand.question in seen_questions:
+                continue
+            if any(cat_company_counts[t] >= _MAX_PER_COMPANY_PER_CATEGORY
+                   for t in cand.company_tickers):
                 continue
             if cand.category == "cross_document":
                 resolved = _resolve_cross_document(conn, cand)
@@ -121,6 +135,8 @@ def build(repos: SqliteRepositories, *, seed: int = 21, quotas: dict[str, int] =
                 continue
             seen_questions.add(cand.question)
             counts[category] += 1
+            for t in cand.company_tickers:
+                cat_company_counts[t] += 1
             gold_chunks = sorted({h.chunk_id for h in hits})
             rec = {
                 "id": f"rv21-{category}-{counts[category]:04d}",

@@ -42,6 +42,14 @@ class TestTitleParsing(unittest.TestCase):
                           filename="2026-04-30T13_52_59.09_Outcome_Of_Board_Meeting.pdf")[1],
             2027,
         )
+        # §25: archive/data_extraction's BSE downloader names files with a plain
+        # YYYY-MM-DD_ prefix (no ISO "T") -- must resolve just like the timestamp form.
+        self.assertEqual(
+            period_and_fy("2023-06-07 annual report Reg. 34 1 Annual Report.",
+                          filename="2023-06-07_annual_report_Reg._34__1__Annual_Report..pdf"),
+            ("2023-06-07", 2024),
+        )
+        self.assertIsNone(period_and_fy("x", filename="not_a_date_prefixed_file.pdf")[1])
 
 
 class TestIngest(unittest.TestCase):

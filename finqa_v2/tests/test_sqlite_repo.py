@@ -169,6 +169,70 @@ class TestFinancialFactRepo(RepoTestCase):
         self.assertEqual(got[0].value, 0.0)
         self.assertFalse(got[0].is_missing)
 
+    def test_restatement_preserves_the_old_value_as_history(self):
+        # §25: a differing value at the same grain is a real restatement -- the old
+        # figure must survive, not be silently overwritten.
+        self.repos.facts.add_many([self._fact(value=100.0)])
+        self.repos.facts.add_many([self._fact(value=105.0)])
+        hist = self.repos.facts.history(company_id=self.cid, metric="revenue")
+        self.assertEqual(len(hist), 2)
+        self.assertEqual({h.value for h in hist}, {100.0, 105.0})
+
+    def test_restatement_marks_the_old_row_superseded_and_links_it_forward(self):
+        self.repos.facts.add_many([self._fact(value=100.0)])
+        self.repos.facts.add_many([self._fact(value=105.0)])
+        hist = self.repos.facts.history(company_id=self.cid, metric="revenue")
+        old = next(h for h in hist if h.value == 100.0)
+        new = next(h for h in hist if h.value == 105.0)
+        self.assertTrue(old.is_superseded)
+        self.assertFalse(new.is_superseded)
+        self.assertEqual(old.restated_by_fact_id, new.fact_id)
+
+    def test_get_latest_list_facts_and_metrics_for_only_see_the_current_value(self):
+        self.repos.facts.add_many([self._fact(value=100.0)])
+        self.repos.facts.add_many([self._fact(value=105.0)])
+        self.assertEqual([f.value for f in self.repos.facts.get(company_id=self.cid, metric="revenue")], [105.0])
+        self.assertEqual(self.repos.facts.latest(company_id=self.cid, metric="revenue").value, 105.0)
+        self.assertEqual([f.value for f in self.repos.facts.list_facts(self.cid, metric="revenue")], [105.0])
+        self.assertEqual(self.repos.facts.metrics_for(self.cid), ["revenue"])
+
+    def test_re_reporting_the_same_value_is_not_a_restatement(self):
+        self.repos.facts.add_many([self._fact(value=100.0)])
+        self.repos.facts.add_many([self._fact(value=100.0)])   # identical figure, e.g. a later filing repeats it
+        hist = self.repos.facts.history(company_id=self.cid, metric="revenue")
+        self.assertEqual(len(hist), 1)                          # no history fork -- nothing actually changed
+        self.assertFalse(hist[0].is_superseded)
+
+    def test_filling_in_a_previously_missing_value_is_not_a_restatement(self):
+        self.repos.facts.add_many([self._fact(value=None)])
+        self.repos.facts.add_many([self._fact(value=100.0)])
+        hist = self.repos.facts.history(company_id=self.cid, metric="revenue")
+        self.assertEqual(len(hist), 1)
+        self.assertEqual(hist[0].value, 100.0)
+
+    def test_multiple_restatements_chain_in_order(self):
+        self.repos.facts.add_many([self._fact(value=100.0)])
+        self.repos.facts.add_many([self._fact(value=105.0)])
+        self.repos.facts.add_many([self._fact(value=110.0)])
+        hist = sorted(self.repos.facts.history(company_id=self.cid, metric="revenue"), key=lambda f: f.fact_id)
+        self.assertEqual([h.value for h in hist], [100.0, 105.0, 110.0])
+        self.assertEqual(hist[0].restated_by_fact_id, hist[1].fact_id)
+        self.assertEqual(hist[1].restated_by_fact_id, hist[2].fact_id)
+        self.assertIsNone(hist[2].restated_by_fact_id)
+        self.assertTrue(hist[0].is_superseded)
+        self.assertTrue(hist[1].is_superseded)
+        self.assertFalse(hist[2].is_superseded)
+
+    def test_restatement_is_scoped_to_its_own_grain(self):
+        # restating FY2026 must not touch FY2025's own history at the same metric.
+        self.repos.facts.add_many([self._fact(value=90.0, period_end=date(2025, 3, 31), financial_year=2025)])
+        self.repos.facts.add_many([self._fact(value=100.0, period_end=date(2026, 3, 31), financial_year=2026)])
+        self.repos.facts.add_many([self._fact(value=105.0, period_end=date(2026, 3, 31), financial_year=2026)])
+        hist_2025 = self.repos.facts.history(company_id=self.cid, metric="revenue", financial_year=2025)
+        hist_2026 = self.repos.facts.history(company_id=self.cid, metric="revenue", financial_year=2026)
+        self.assertEqual(len(hist_2025), 1)
+        self.assertEqual(len(hist_2026), 2)
+
 
 class TestDocumentRepo(RepoTestCase):
     def test_upsert_and_query(self):

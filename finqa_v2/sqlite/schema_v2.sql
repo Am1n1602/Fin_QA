@@ -82,14 +82,22 @@ CREATE TABLE IF NOT EXISTS financial_facts (
     is_point_in_time   INTEGER NOT NULL DEFAULT 0,
     source_id          INTEGER REFERENCES sources(source_id) ON DELETE SET NULL,
     mapping_confidence TEXT    NOT NULL DEFAULT 'exact',
-    mapping_reason     TEXT
+    mapping_reason     TEXT,
+    -- §25 restatement provenance: a grain (company/metric/basis/statement_type/period)
+    -- can accumulate multiple rows over time -- one CURRENT (is_superseded=0) and any
+    -- number of superseded historical ones, never overwritten in place. See
+    -- ux_facts_grain_current below and FinancialFactRepository.history().
+    is_superseded      INTEGER NOT NULL DEFAULT 0,
+    restated_by_fact_id INTEGER REFERENCES financial_facts(fact_id) ON DELETE SET NULL,
+    filing_date        TEXT                          -- ISO date the restating filing was dated, if known
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS ux_facts_grain
-    ON financial_facts (
-        company_id, metric, basis, statement_type,
-        COALESCE(period_end, ''), COALESCE(period_start, '')
-    );
+-- The "only one CURRENT row per grain" partial unique index is created in
+-- finqa_v2.sqlite.repo._migrate_restatement_columns(), not here -- on a database
+-- created before §25 (existing financial_facts table, no is_superseded column yet),
+-- creating it in this script would fail before that column exists; the Python
+-- migration step runs after ensuring the columns are present, for both fresh and
+-- pre-existing databases.
 
 -- ---------------------------------------------------------------------------
 -- Segments  (§12 -- reportable business segments; revenue only for now)

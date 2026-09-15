@@ -69,13 +69,15 @@ def period_and_fy(title: str, *, filename: str | None = None) -> tuple[str | Non
         yy = m.group(1)
         fy = int(yy) if len(yy) == 4 else 2000 + int(yy)
         return m.group(0), fy
-    # fall back to the filing timestamp (YYYY-MM-DDT...) baked into the filename
+    # fall back to a leading YYYY-MM-DD date baked into the filename -- either an ISO
+    # timestamp (YYYY-MM-DDT...) or a plain date prefix (YYYY-MM-DD_..., the format
+    # archive/data_extraction's BSE downloader names files with).
     if filename:
-        fm = re.match(r"(\d{4})-(\d{2})-(\d{2})T", filename)
+        fm = re.match(r"(\d{4})-(\d{2})-(\d{2})(?=T|_|$)", filename)
         if fm:
             y, mo, d = map(int, fm.groups())
             try:
-                return fm.group(0)[:10], fiscal_year(date(y, mo, d))
+                return fm.group(0), fiscal_year(date(y, mo, d))
             except ValueError:
                 pass
     return None, None

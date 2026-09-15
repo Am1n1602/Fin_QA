@@ -62,7 +62,7 @@ def _company_id(repos, tickers: list[str] | None) -> int | None:
 
 
 def _multi_query_hits(retriever, repos, rec: dict, *, mode: str, rerank: bool,
-                      intent: str | None, query_expansion: bool):
+                      intent: str | None, query_expansion: bool, candidate_k: int = 40):
     """§8/§9: for a multi-company record, retrieve once PER company (mirroring
     `finqa_v2.planner.decompose.decompose()`'s comparison branch) and merge by
     chunk_id, keeping each chunk's best (lowest) rank across the sub-queries -- the
@@ -77,7 +77,7 @@ def _multi_query_hits(retriever, repos, rec: dict, *, mode: str, rerank: bool,
         cid = _company_id(repos, [co])
         filters = {"company_id": cid} if cid else None
         lexical_query = expand_lexical_query(sub_q) if query_expansion else None
-        hits = retriever.retrieve(sub_q, k=max(_KS), candidate_k=40, mode=mode,
+        hits = retriever.retrieve(sub_q, k=max(_KS), candidate_k=candidate_k, mode=mode,
                                   filters=filters, rerank=rerank, intent=intent,
                                   lexical_query=lexical_query)
         for h in hits:
@@ -92,7 +92,7 @@ def run_mode(retriever, repos, records: list[dict], mode: str, *,
             query_expansion: bool = False, multi_query: bool = False,
             weighted_fusion: bool = False, neighbor_window: int = 0,
             mmr: bool = False, mmr_lambda: float = 0.7,
-            adaptive_pool: bool = False) -> dict[str, Any]:
+            adaptive_pool: bool = False, candidate_k: int = 40) -> dict[str, Any]:
     """`section_hints=True` (§10) additionally FILTERS candidates to the sections
     `finqa_v2.retrieval.section_weights.list_weighted_sections(intent)` names for the
     case's intent -- a harder constraint than `section_aware`'s soft re-ranking weight,
@@ -123,10 +123,11 @@ def run_mode(retriever, repos, records: list[dict], mode: str, *,
         t0 = time.perf_counter()
         if multi_query and len(rec.get("company") or []) >= 2:
             merged = _multi_query_hits(retriever, repos, rec, mode=mode, rerank=rerank,
-                                       intent=intent, query_expansion=query_expansion)
+                                       intent=intent, query_expansion=query_expansion,
+                                       candidate_k=candidate_k)
             chunk_ids = [cid_ for cid_, _ in merged][:max(_KS)]
         else:
-            hits = retriever.retrieve(rec["question"], k=max(_KS), candidate_k=40,
+            hits = retriever.retrieve(rec["question"], k=max(_KS), candidate_k=candidate_k,
                                       mode=mode, filters=filters, rerank=rerank, intent=intent,
                                       lexical_query=lexical_query, weighted_fusion=weighted_fusion,
                                       neighbor_window=neighbor_window, mmr=mmr, mmr_lambda=mmr_lambda,
@@ -198,6 +199,9 @@ def main() -> int:
                     help="§18: MMR relevance/diversity tradeoff (1.0 = pure relevance, 0.0 = pure diversity)")
     ap.add_argument("--adaptive-pool", action="store_true",
                     help="§20: size candidate_k per intent via candidate_pool.get_candidate_k (needs --section-aware for intent to be passed)")
+    ap.add_argument("--candidate-k", type=int, default=40,
+                    help="pre-fusion candidate pool size per leg (bm25/vector), before the final top-k cut; "
+                         "the --adaptive-pool per-intent sizes fall back to this when an intent isn't configured")
     ap.add_argument("--out", type=Path, default=None, help="write a JSON report here")
     ap.add_argument("--label", default="retrieval_v21_baseline")
     args = ap.parse_args()
@@ -223,7 +227,8 @@ def main() -> int:
                                      weighted_fusion=args.weighted_fusion,
                                      neighbor_window=args.neighbor_window,
                                      mmr=args.mmr, mmr_lambda=args.mmr_lambda,
-                                     adaptive_pool=args.adaptive_pool)
+                                     adaptive_pool=args.adaptive_pool,
+                                     candidate_k=args.candidate_k)
     finally:
         repos.close()
 
@@ -261,7 +266,7 @@ def main() -> int:
             "query_expansion": args.query_expansion, "multi_query": args.multi_query,
             "weighted_fusion": args.weighted_fusion, "neighbor_window": args.neighbor_window,
             "mmr": args.mmr, "mmr_lambda": args.mmr_lambda if args.mmr else None,
-            "adaptive_pool": args.adaptive_pool,
+            "adaptive_pool": args.adaptive_pool, "candidate_k": args.candidate_k,
             "results": {mode: {k: v for k, v in m.items() if k != "per_case"} for mode, m in results.items()},
         }
         args.out.parent.mkdir(parents=True, exist_ok=True)

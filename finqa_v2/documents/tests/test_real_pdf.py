@@ -14,13 +14,17 @@ _RAW = Path(__file__).resolve().parents[3] / "data_extraction" / "data" / "raw"
 
 
 def _first_pdf():
+    """The LARGEST pdf anywhere under the raw corpus, not "alphabetically first" -- a
+    corpus can (and, as of §25's historical backfill, does) contain short filings
+    (single-page transcript-posted notices, brief intimations) that happen to sort
+    early and would make this smoke test's own thresholds (page_count > 3, chunks > 5)
+    flaky depending on unrelated corpus growth, not on any real extraction bug."""
     if not _RAW.exists():
         return None
-    for sub in sorted(_RAW.iterdir()):
-        pdfs = sorted(sub.glob("*.pdf"))
-        if pdfs:
-            return sub.name, pdfs[0]
-    return None
+    candidates = [(sub.name, p) for sub in sorted(_RAW.iterdir()) for p in sub.glob("*.pdf")]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda sp: sp[1].stat().st_size)
 
 
 @unittest.skipUnless(_first_pdf(), "no raw PDFs present")

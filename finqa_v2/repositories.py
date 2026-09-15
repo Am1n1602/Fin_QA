@@ -73,7 +73,10 @@ class SourceRepository(Protocol):
 class FinancialFactRepository(Protocol):
     def add_many(self, facts: Iterable[FinancialFact]) -> int:
         """Upsert facts, keyed by (company_id, metric, basis, period_end, period_start,
-        statement_type). Returns the count written. `value is None` round-trips as NULL."""
+        statement_type). Returns the count written. `value is None` round-trips as NULL.
+        §25: a fact whose value genuinely differs from the existing current one at that
+        grain is NEVER overwritten in place -- the old row is marked superseded and kept
+        (see `history()`), and the new value becomes the current row."""
 
     def get(
         self,
@@ -83,7 +86,20 @@ class FinancialFactRepository(Protocol):
         basis: Basis | str = Basis.CONSOLIDATED,
         financial_year: Optional[int] = None,
     ) -> list[FinancialFact]:
-        """All matching facts, ordered by period_end ascending (NULLs last)."""
+        """All matching CURRENT (non-superseded) facts, ordered by period_end ascending
+        (NULLs last)."""
+
+    def history(
+        self,
+        *,
+        company_id: int,
+        metric: str,
+        basis: Basis | str = Basis.CONSOLIDATED,
+        financial_year: Optional[int] = None,
+    ) -> list[FinancialFact]:
+        """§25: every version ever recorded at this grain, current and superseded,
+        oldest first -- the restatement provenance trail `get()`/`latest()`/
+        `list_facts()` intentionally hide."""
 
     def latest(
         self,

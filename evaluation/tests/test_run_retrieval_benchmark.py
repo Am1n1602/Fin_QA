@@ -101,6 +101,17 @@ class RunMode(unittest.TestCase):
         with_mmr = run_mode(self.retriever, self.repos, self.records, "hybrid", mmr=True)
         self.assertEqual(without["n_total"], with_mmr["n_total"])
 
+    def test_candidate_k_defaults_to_40_and_widening_it_never_shrinks_recall(self):
+        from evaluation.run_retrieval_benchmark import run_mode
+
+        default = run_mode(self.retriever, self.repos, self.records, "hybrid")
+        explicit_40 = run_mode(self.retriever, self.repos, self.records, "hybrid", candidate_k=40)
+        wider = run_mode(self.retriever, self.repos, self.records, "hybrid", candidate_k=200)
+        self.assertEqual(default["recall@5"], explicit_40["recall@5"])
+        # a strictly larger pre-fusion pool can only add candidates, never remove ones the
+        # narrower pool already had -- so recall@10 (same ranked-metric cutoff) can't drop.
+        self.assertGreaterEqual(wider["recall@10"], explicit_40["recall@10"])
+
     def test_multi_query_runs_without_error_and_is_off_by_default(self):
         from evaluation.run_retrieval_benchmark import run_mode
 

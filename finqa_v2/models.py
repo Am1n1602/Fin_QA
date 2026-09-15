@@ -148,6 +148,14 @@ class FinancialFact:
     source_id: int | None = None
     mapping_confidence: MappingConfidence = MappingConfidence.EXACT
     mapping_reason: str | None = None
+    # §25 restatement provenance -- see SqliteFinancialFactRepository.add_many()/history().
+    # `fact_id` is the surrogate key assigned on insert (unset on a fact you're about to
+    # write); `is_superseded`/`restated_by_fact_id` are populated by the repository, never
+    # by a caller constructing a fact to write.
+    fact_id: int | None = _UNSET_ID
+    is_superseded: bool = False
+    restated_by_fact_id: int | None = None
+    filing_date: date | None = None
 
     def __post_init__(self) -> None:
         if not self.metric:
