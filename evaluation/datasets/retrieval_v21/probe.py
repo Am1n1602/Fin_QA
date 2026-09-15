@@ -37,12 +37,21 @@ def probe(
     keyword: str | None = None,
     financial_year: int | None = None,
     limit: int = 5,
+    prefer_recent: bool = False,
 ) -> list[ChunkHit]:
     """Return up to `limit` real `document_chunks` rows matching every given filter.
 
     `keyword` matches case-insensitively as a substring of chunk text -- SQLite's LIKE is
     already ASCII case-insensitive, so no extra lower()/collation handling is needed.
-    """
+
+    `prefer_recent=False` (default) orders by `chunk_id` -- roughly the order documents
+    were ingested in, which for this corpus is roughly chronological-ASCENDING (oldest
+    filings first). That default silently picked stale gold for period-unconstrained
+    "what is X's current Y" questions once a company had several years of history: the
+    real answer a system should give is the LATEST filing, but gold could be an older
+    one. `prefer_recent=True` orders `financial_year DESC` (nulls last) first, so gold
+    for categories whose real answer is "the current value" (build.py picks which
+    categories) reflects the most recently filed matching chunk instead."""
     where: list[str] = []
     params: list = []
     if company_id is not None:
@@ -60,9 +69,10 @@ def probe(
         where.append("text LIKE ? ESCAPE '\\'")
         params.append(f"%{_escape_like(keyword)}%")
     clause = " AND ".join(where) if where else "1=1"
+    order = "(financial_year IS NULL), financial_year DESC, chunk_id" if prefer_recent else "chunk_id"
     sql = (
         "SELECT chunk_id, company_id, document_id, section, document_type, topic, financial_year "
-        f"FROM document_chunks WHERE {clause} ORDER BY chunk_id LIMIT ?"
+        f"FROM document_chunks WHERE {clause} ORDER BY {order} LIMIT ?"
     )
     params.append(limit)
     rows = conn.execute(sql, params).fetchall()

@@ -44,6 +44,17 @@ _MAX_PER_COMPANY_PER_CATEGORY = 3
 
 _MAX_GOLD_PER_PROBE = 10
 
+# Categories whose natural-language phrasing implies "the current/latest value" (a bare
+# "What was X's revenue..." or "...during the year" means the most recent one, not any
+# historical instance) -- probe() prefers financial_year DESC for these so gold reflects
+# the answer a real system should give, not whichever chunk happens to have the lowest
+# chunk_id (roughly oldest-ingested-first for this corpus). Left at the chronological
+# default for categories whose content is more evergreen/structural (narrative topics
+# like governance/risk recur near-identically across years; segment names and management
+# commentary aren't tied to "the latest" the same way) -- deliberately NOT every category,
+# see docs/file-guide.md's Phase 20 follow-up for the reasoning and the A/B that led here.
+_PREFER_RECENT_CATEGORIES = {"numeric", "ratio", "causal", "trend", "comparison", "table"}
+
 
 def _period_from_hits(hits, fallback: tuple[str, ...]) -> list[str]:
     years = sorted({h.financial_year for h in hits if h.financial_year})
@@ -71,12 +82,14 @@ def _resolve_cross_document(conn, cand: C.Candidate) -> C.Candidate | None:
 def _verify(conn, cand: C.Candidate) -> tuple[bool, list, list[str]]:
     """Run every probe in `cand`; return (accepted, gold_hits, gold_sections)."""
     all_hits = []
+    prefer_recent = cand.category in _PREFER_RECENT_CATEGORIES
     for spec in cand.probes:
         hits = probe(
             conn, company_id=spec.company_id, sections=list(spec.sections) if spec.sections else None,
             document_types=list(spec.document_types) if spec.document_types else None,
             topics=list(spec.topics) if spec.topics else None, keyword=spec.keyword,
             financial_year=spec.financial_year, limit=_MAX_GOLD_PER_PROBE,
+            prefer_recent=prefer_recent,
         )
         all_hits.extend(hits)
     if cand.expect_hits:

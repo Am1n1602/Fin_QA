@@ -1,0 +1,33 @@
+"""Per-intent recency decay config (§20 follow-up) -- loaded from YAML, never hardcoded
+in retrieval logic. See finqa_v2/retrieval/recency_weights.yaml for the actual decay
+values and `HybridRetriever.retrieve(..., weighted_recency=True)` for where it's applied.
+"""
+from __future__ import annotations
+
+from functools import lru_cache
+from pathlib import Path
+
+import yaml
+
+DEFAULT_PATH = Path(__file__).with_name("recency_weights.yaml")
+
+
+@lru_cache(maxsize=8)
+def _load(path: str) -> dict:
+    p = Path(path)
+    if not p.exists():
+        return {}
+    return yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+
+
+def get_recency_decay(intent: str | None, *, path: Path | str = DEFAULT_PATH) -> float:
+    """1.0 (no-op) whenever `intent` is falsy, the config file is missing, or neither
+    `intent` nor a `default:` key in the config is set."""
+    if not intent:
+        return 1.0
+    cfg = _load(str(path))
+    if intent in cfg:
+        return float(cfg[intent])
+    if "default" in cfg:
+        return float(cfg["default"])
+    return 1.0

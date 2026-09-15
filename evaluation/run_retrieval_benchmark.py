@@ -92,12 +92,20 @@ def run_mode(retriever, repos, records: list[dict], mode: str, *,
             query_expansion: bool = False, multi_query: bool = False,
             weighted_fusion: bool = False, neighbor_window: int = 0,
             mmr: bool = False, mmr_lambda: float = 0.7,
-            adaptive_pool: bool = False, candidate_k: int = 40) -> dict[str, Any]:
+            adaptive_pool: bool = False, candidate_k: int = 40,
+            default_latest_period: bool = False, weighted_recency: bool = False) -> dict[str, Any]:
     """`section_hints=True` (§10) additionally FILTERS candidates to the sections
     `finqa_v2.retrieval.section_weights.list_weighted_sections(intent)` names for the
     case's intent -- a harder constraint than `section_aware`'s soft re-ranking weight,
     and only meaningful combined with it (a case whose intent has no configured hints
-    gets no filter either way)."""
+    gets no filter either way).
+
+    `default_latest_period=True` mirrors `ReasoningOrchestrator`'s period-defaulting
+    fix: none of this dataset's questions name a period in their text (categories.py's
+    generators never do), so for single-company records this applies
+    `repos.documents.latest_financial_year(company_id)` as an extra `financial_year`
+    filter -- the same fix, exercised here since this benchmark calls the retriever
+    directly and never goes through the orchestrator."""
     if mode not in retriever.modes:
         return {"skipped": f"mode '{mode}' unavailable (modes={retriever.modes})"}
     first_ranks: list[int | None] = []
@@ -113,6 +121,10 @@ def run_mode(retriever, repos, records: list[dict], mode: str, *,
         filters: dict[str, Any] = {}
         if cid:
             filters["company_id"] = cid
+            if default_latest_period:
+                fy = repos.documents.latest_financial_year(cid)
+                if fy is not None:
+                    filters["financial_year"] = fy
         if section_hints:
             hints = list_weighted_sections(rec["intent"])
             if hints:
@@ -131,7 +143,7 @@ def run_mode(retriever, repos, records: list[dict], mode: str, *,
                                       mode=mode, filters=filters, rerank=rerank, intent=intent,
                                       lexical_query=lexical_query, weighted_fusion=weighted_fusion,
                                       neighbor_window=neighbor_window, mmr=mmr, mmr_lambda=mmr_lambda,
-                                      adaptive_pool=adaptive_pool)
+                                      adaptive_pool=adaptive_pool, weighted_recency=weighted_recency)
             chunk_ids = [h.chunk.chunk_id for h in hits]
         lat.append((time.perf_counter() - t0) * 1000)
         evidence_sizes.append(len(chunk_ids))
@@ -202,6 +214,14 @@ def main() -> int:
     ap.add_argument("--candidate-k", type=int, default=40,
                     help="pre-fusion candidate pool size per leg (bm25/vector), before the final top-k cut; "
                          "the --adaptive-pool per-intent sizes fall back to this when an intent isn't configured")
+    ap.add_argument("--default-latest-period", action="store_true",
+                    help="mirror the orchestrator's period-defaulting fix: filter single-company records to "
+                         "the company's latest financial_year")
+    ap.add_argument("--weighted-recency", action="store_true",
+                    help="§20 follow-up: soft-boost each candidate toward the most recent financial_year "
+                         "present in its own candidate pool, per finqa_v2.retrieval.recency_weights.yaml "
+                         "(needs --section-aware for intent to be passed) -- a re-ranking boost, not a "
+                         "filter, replacing the hard --default-latest-period filter that regressed recall")
     ap.add_argument("--out", type=Path, default=None, help="write a JSON report here")
     ap.add_argument("--label", default="retrieval_v21_baseline")
     args = ap.parse_args()
@@ -228,7 +248,9 @@ def main() -> int:
                                      neighbor_window=args.neighbor_window,
                                      mmr=args.mmr, mmr_lambda=args.mmr_lambda,
                                      adaptive_pool=args.adaptive_pool,
-                                     candidate_k=args.candidate_k)
+                                     candidate_k=args.candidate_k,
+                                     default_latest_period=args.default_latest_period,
+                                     weighted_recency=args.weighted_recency)
     finally:
         repos.close()
 
@@ -267,6 +289,8 @@ def main() -> int:
             "weighted_fusion": args.weighted_fusion, "neighbor_window": args.neighbor_window,
             "mmr": args.mmr, "mmr_lambda": args.mmr_lambda if args.mmr else None,
             "adaptive_pool": args.adaptive_pool, "candidate_k": args.candidate_k,
+            "default_latest_period": args.default_latest_period,
+            "weighted_recency": args.weighted_recency,
             "results": {mode: {k: v for k, v in m.items() if k != "per_case"} for mode, m in results.items()},
         }
         args.out.parent.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,23 @@
+# Per-intent recency decay (§20 follow-up). A candidate's weight is
+# `decay ** (max_financial_year_in_pool - chunk_financial_year)` -- 1.0 (no penalty) for
+# the most recent year present in this query's own candidate pool, shrinking for older
+# years. `decay: 1.0` (or an unlisted intent) is a pure no-op, unchanged from before this
+# existed. A chunk with no financial_year is never penalized (nothing to compare).
+#
+# Deliberately NOT a hard filter -- REJECTED that approach first (benchmarked, see
+# docs/file-guide.md's Phase 20 follow-up): filtering retrieval to latest-year-only made
+# gold that legitimately lives in an older filing unreachable and regressed recall
+# 0.245->0.174. A soft multiplicative boost can only re-rank within the pool a hard
+# filter already returned; it can never make a chunk unreachable.
+#
+# Scoped to the same categories retrieval_v21/build.py's `_PREFER_RECENT_CATEGORIES`
+# treats as "the current/latest value" -- narrative/segment/management_commentary/
+# multi_hop/cross_document are left at 1.0 (their real matches aren't tied to recency).
+default: 1.0
+numeric: 0.85
+numeric_fact: 0.85
+ratio: 0.85
+causal: 0.8
+trend: 0.8
+comparison: 0.85
+table: 0.85

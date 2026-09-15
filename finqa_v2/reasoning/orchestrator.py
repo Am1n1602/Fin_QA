@@ -6,6 +6,7 @@ evidence by the deterministic synthesizer.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import asdict
 from time import perf_counter
 
@@ -28,6 +29,33 @@ from finqa_v2.tools import build_default_registry
 from finqa_v2.verification import Verifier
 
 _UNIVERSE_CAP = 12
+
+_FY_RE = re.compile(r"FY(\d{4})(?:Q[1-4])?", re.I)
+
+
+def _resolve_financial_year(period, company_id, repos) -> int | None:
+    """Resolves a concrete financial_year from the same period string `_tool_calls`
+    computes for the numeric tools (`plan.periods[0]` or the `"latest_annual"` fallback).
+    `FY2026`/`FY2026Q1` parse directly; `"latest"/"latest_annual"/"latest_quarter"` (or
+    anything else unrecognized) fall back to `repos.documents.latest_financial_year()`.
+
+    TESTED TOOLING, NOT WIRED into `search_documents` -- benchmarked (n=500) as a HARD
+    filter and REJECTED: `retrieval_v21`'s own gold selection (`probe()`, ascending
+    chunk_id) skews toward a company's OLDER filings for several categories (narrative,
+    segment, table, trend, management_commentary, multi_hop), so filtering retrieval to
+    latest-year-only made their gold literally unreachable -- narrative recall@5 hit
+    0.0. Net effect across the full set was a regression (0.245->0.174), even though
+    numeric/ratio/causal (whose real matches concentrate in 1-2 recent years) improved.
+    A SOFT preference (boost recency, don't exclude other years) is the more promising
+    next attempt, scoped as its own future benchmarked experiment -- see docs/file-guide.md
+    and evaluation/results/retrieval_v21_500q_default_latest_period.json for the numbers."""
+    if isinstance(period, int):
+        return period
+    if isinstance(period, str):
+        m = _FY_RE.fullmatch(period.strip())
+        if m:
+            return int(m.group(1))
+    return repos.documents.latest_financial_year(company_id)
 
 
 class ReasoningOrchestrator:

@@ -252,6 +252,26 @@ class TestDocumentRepo(RepoTestCase):
         self.assertEqual(len(self.repos.documents.for_company(cid, document_type="annual_report")), 1)
         self.assertEqual(len(self.repos.documents.for_company(cid, document_type="transcript")), 0)
 
+    def test_latest_financial_year_is_the_max_across_all_documents(self):
+        cid = self.repos.companies.upsert(Company(name="Infosys", ticker="INFY")).company_id
+        self.repos.documents.upsert(
+            DocumentMeta(company_id=cid, document_type="annual_report",
+                         title="INFY Annual Report FY2024", financial_year=2024)
+        )
+        self.repos.documents.upsert(
+            DocumentMeta(company_id=cid, document_type="transcript",
+                         title="INFY Q1 Transcript FY2026", financial_year=2026)
+        )
+        self.repos.documents.upsert(
+            DocumentMeta(company_id=cid, document_type="annual_report",
+                         title="INFY Annual Report FY2025", financial_year=2025)
+        )
+        self.assertEqual(self.repos.documents.latest_financial_year(cid), 2026)
+
+    def test_latest_financial_year_is_none_with_no_documents(self):
+        cid = self.repos.companies.upsert(Company(name="Wipro", ticker="WIPRO")).company_id
+        self.assertIsNone(self.repos.documents.latest_financial_year(cid))
+
 
 class TestProtocolConformance(RepoTestCase):
     def test_runtime_checkable(self):

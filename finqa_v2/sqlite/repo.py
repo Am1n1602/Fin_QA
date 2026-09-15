@@ -938,6 +938,13 @@ class SqliteDocumentRepository:
             ).fetchall()
         return [_row_document(r) for r in rows]
 
+    def latest_financial_year(self, company_id: int) -> Optional[int]:
+        row = self._c.execute(
+            "SELECT MAX(financial_year) FROM documents WHERE company_id = ?",
+            (company_id,),
+        ).fetchone()
+        return row[0] if row and row[0] is not None else None
+
     def find(self, company_id: int, *, title: str | None = None, source_id: int | None = None):
         if source_id is not None:
             row = self._c.execute(

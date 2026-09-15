@@ -177,6 +177,12 @@ class DocumentRepository(Protocol):
         self, company_id: int, *, document_type: Optional[str] = None
     ) -> list[DocumentMeta]: ...
 
+    def latest_financial_year(self, company_id: int) -> Optional[int]:
+        """The most recent financial_year among this company's documents, or None if it
+        has no documents with a known year. Cheap company-wide lookup for defaulting an
+        unspecified period, distinct from `for_company()[0].financial_year` (which also
+        materializes every document row just to read one field)."""
+
     def find(
         self, company_id: int, *, title: Optional[str] = None, source_id: Optional[int] = None
     ) -> Optional[DocumentMeta]:

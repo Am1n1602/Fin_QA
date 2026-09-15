@@ -97,6 +97,17 @@ class TestOrchestrator(OrchestratorTestCase):
         self.assertEqual(len(searches), 1, searches)
         self.assertEqual(searches[0], "Why did TEST net profit rise in FY2026?")
 
+    def test_search_documents_never_gets_a_financial_year_filter(self):
+        # `_resolve_financial_year()` is deliberately NOT wired into search_documents --
+        # benchmarked as a hard filter and REJECTED (regressed overall recall@5 0.245->
+        # 0.174: retrieval_v21's own gold skews toward older filings for several
+        # categories, so latest-year-only filtering made that gold unreachable). See
+        # `_resolve_financial_year`'s docstring and docs/file-guide.md for the numbers.
+        r = self.orch.answer("Why did TEST net profit rise in FY2026?")
+        search_args = [c["args"] for c in r.trace if c["tool"] == "search_documents"]
+        self.assertEqual(len(search_args), 1, search_args)
+        self.assertNotIn("financial_year", search_args[0])
+
     def test_non_causal_has_no_hypothesis_report(self):
         r = self.orch.answer("What was TEST revenue in FY2026?")
         self.assertIsNone(r.hypothesis_report)
@@ -166,6 +177,45 @@ class TestOrchestrator(OrchestratorTestCase):
         orch = ReasoningOrchestrator(self.repos, max_tools=1)
         r = orch.answer("Give me a fundamental overview of TEST.")   # rules plan wants 4 tools
         self.assertLessEqual(len(r.tools_run), 1)
+
+
+class TestResolveFinancialYear(OrchestratorTestCase):
+    """`_resolve_financial_year()` is tested tooling, deliberately NOT wired into
+    search_documents (see its docstring: benchmarked as a hard filter and rejected)."""
+
+    def test_an_explicit_fy_string_parses_directly(self):
+        from finqa_v2.reasoning.orchestrator import _resolve_financial_year
+
+        cid = self.repos.companies.get_by_ticker("TEST").company_id
+        self.assertEqual(_resolve_financial_year("FY2025", cid, self.repos), 2025)
+        self.assertEqual(_resolve_financial_year("FY2025Q1", cid, self.repos), 2025)
+
+    def test_an_int_period_passes_through_unchanged(self):
+        from finqa_v2.reasoning.orchestrator import _resolve_financial_year
+
+        cid = self.repos.companies.get_by_ticker("TEST").company_id
+        self.assertEqual(_resolve_financial_year(2024, cid, self.repos), 2024)
+
+    def test_latest_annual_falls_back_to_the_companys_latest_filed_document(self):
+        from finqa_v2.models import DocumentMeta
+        from finqa_v2.reasoning.orchestrator import _resolve_financial_year
+
+        cid = self.repos.companies.get_by_ticker("TEST").company_id
+        self.repos.documents.upsert(
+            DocumentMeta(company_id=cid, document_type="annual_report",
+                         title="TEST Annual Report FY2025", financial_year=2025)
+        )
+        self.repos.documents.upsert(
+            DocumentMeta(company_id=cid, document_type="transcript",
+                         title="TEST Q1 Transcript FY2027", financial_year=2027)
+        )
+        self.assertEqual(_resolve_financial_year("latest_annual", cid, self.repos), 2027)
+
+    def test_no_documents_resolves_to_none(self):
+        from finqa_v2.reasoning.orchestrator import _resolve_financial_year
+
+        cid = self.repos.companies.get_by_ticker("TEST").company_id
+        self.assertIsNone(_resolve_financial_year("latest_annual", cid, self.repos))
 
 
 if __name__ == "__main__":

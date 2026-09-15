@@ -306,6 +306,86 @@ class TestHybrid(unittest.TestCase):
             with_flag = self.r.retrieve(query, k=3, mode="lexical", rerank=False, weighted_fusion=True)
         self.assertEqual([h.chunk.chunk_id for h in without], [h.chunk.chunk_id for h in with_flag])
 
+    def test_weighted_recency_false_is_unchanged_from_omitting_the_argument(self):
+        query = "segment revenue retail digital services"
+        with_default = self.r.retrieve(query, k=3, mode="lexical", rerank=False, intent="numeric")
+        explicit_false = self.r.retrieve(query, k=3, mode="lexical", rerank=False, intent="numeric",
+                                         weighted_recency=False)
+        self.assertEqual([h.chunk.chunk_id for h in with_default],
+                         [h.chunk.chunk_id for h in explicit_false])
+
+    def test_weighted_recency_ignored_without_intent(self):
+        query = "segment revenue retail digital services"
+        without_intent = self.r.retrieve(query, k=3, mode="lexical", rerank=False, weighted_recency=True)
+        self.assertTrue(all(h.scores["section_weight"] is None for h in without_intent))
+
+
+class TestWeightedRecency(unittest.TestCase):
+    """§20 follow-up: a soft per-candidate recency boost, deliberately distinct from the
+    hard latest-year-only filter tried first and REJECTED (see recency_weights.yaml).
+    Uses its own tiny corpus (2 chunks, identical text/section/topic, differing only in
+    financial_year) rather than the shared fixture, so financial_year is the ONLY thing
+    that can explain a ranking change."""
+
+    def setUp(self):
+        self.repos = SqliteRepositories(":memory:")
+        self.addCleanup(self.repos.close)
+        from finqa_v2.models import Company, DocumentChunk, DocumentMeta
+
+        cid = self.repos.companies.upsert(Company(name="Testco", ticker="TEST")).company_id
+        old_doc = self.repos.documents.upsert(
+            DocumentMeta(company_id=cid, document_type="results_pdf", title="Old", financial_year=2024)
+        ).document_id
+        new_doc = self.repos.documents.upsert(
+            DocumentMeta(company_id=cid, document_type="results_pdf", title="New", financial_year=2026)
+        ).document_id
+        text = "Revenue from operations grew steadily during the reporting period."
+        self.repos.documents.add_chunks([
+            DocumentChunk(document_id=old_doc, company_id=cid, chunk_index=0, text=text,
+                          section="financial_results", financial_year=2024, topic="prose"),
+            DocumentChunk(document_id=new_doc, company_id=cid, chunk_index=0, text=text,
+                          section="financial_results", financial_year=2026, topic="prose"),
+            # filler chunks unrelated to the query text -- BM25's IDF goes to zero/negative
+            # when a term appears in nearly every document of a TINY corpus (N=2, df=2 here
+            # would score every candidate identically at 0), so these exist purely to give
+            # the corpus enough size for "revenue from operations" to score as distinctive.
+            DocumentChunk(document_id=old_doc, company_id=cid, chunk_index=1,
+                          text="Segment information for the reporting period by geography.",
+                          section="segment_information", financial_year=2024, topic="segment"),
+            DocumentChunk(document_id=new_doc, company_id=cid, chunk_index=1,
+                          text="Risk factors relating to foreign exchange volatility.",
+                          section="risk_factors", financial_year=2026, topic="prose"),
+            DocumentChunk(document_id=new_doc, company_id=cid, chunk_index=2,
+                          text="Corporate governance report and board composition details.",
+                          section="corporate_governance", financial_year=2026, topic="prose"),
+        ])
+        self.repos.commit()
+        self.bm25 = BM25Index.build(self.repos)
+        self.r = HybridRetriever(self.repos, bm25=self.bm25)
+
+    def test_both_tied_candidates_are_found_before_recency_weighting_is_applied(self):
+        # two chunks with byte-identical text score identically on BM25 -- confirms the
+        # fixture is a genuine tie (both present, order unasserted) before recency
+        # weighting gets a chance to break it.
+        hits = self.r.retrieve("revenue from operations", k=2, mode="lexical", rerank=False)
+        self.assertEqual({h.chunk.financial_year for h in hits}, {2024, 2026})
+
+    def test_weighted_recency_promotes_the_more_recent_of_two_tied_candidates(self):
+        with mock.patch("finqa_v2.retrieval.retriever._recency_decay", return_value=0.5):
+            hits = self.r.retrieve("revenue from operations", k=2, mode="lexical", rerank=False,
+                                   intent="numeric", weighted_recency=True)
+        self.assertEqual(hits[0].chunk.financial_year, 2026)
+        self.assertEqual(hits[1].chunk.financial_year, 2024)
+
+    def test_weighted_recency_decay_of_one_is_a_no_op(self):
+        # decay=1.0 (the shipped default for an unconfigured intent) means
+        # `1.0 ** anything == 1.0` -- ties stay ties, order falls back to whatever the
+        # unweighted pool already had.
+        without = self.r.retrieve("revenue from operations", k=2, mode="lexical", rerank=False)
+        with_flag = self.r.retrieve("revenue from operations", k=2, mode="lexical", rerank=False,
+                                    intent="unconfigured_intent", weighted_recency=True)
+        self.assertEqual([h.chunk.chunk_id for h in without], [h.chunk.chunk_id for h in with_flag])
+
 
 if __name__ == "__main__":
     unittest.main()

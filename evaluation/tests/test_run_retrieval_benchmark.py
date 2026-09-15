@@ -112,6 +112,24 @@ class RunMode(unittest.TestCase):
         # narrower pool already had -- so recall@10 (same ranked-metric cutoff) can't drop.
         self.assertGreaterEqual(wider["recall@10"], explicit_40["recall@10"])
 
+    def test_default_latest_period_runs_without_error_and_is_off_by_default(self):
+        from evaluation.run_retrieval_benchmark import run_mode
+
+        without = run_mode(self.retriever, self.repos, self.records, "hybrid",
+                           default_latest_period=False)
+        with_period = run_mode(self.retriever, self.repos, self.records, "hybrid",
+                               default_latest_period=True)
+        self.assertEqual(without["n_total"], with_period["n_total"])
+
+    def test_weighted_recency_runs_without_error_and_is_off_by_default(self):
+        from evaluation.run_retrieval_benchmark import run_mode
+
+        without = run_mode(self.retriever, self.repos, self.records, "hybrid",
+                           section_aware=True, weighted_recency=False)
+        with_recency = run_mode(self.retriever, self.repos, self.records, "hybrid",
+                                section_aware=True, weighted_recency=True)
+        self.assertEqual(without["n_total"], with_recency["n_total"])
+
     def test_multi_query_runs_without_error_and_is_off_by_default(self):
         from evaluation.run_retrieval_benchmark import run_mode
 

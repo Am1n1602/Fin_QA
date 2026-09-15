@@ -1,5 +1,5 @@
-"""HybridRetriever (§16-17): metadata pre-filter -> BM25 + vector -> RRF -> section
-weighting -> rerank -> top-k.
+"""HybridRetriever (§16-17): metadata pre-filter -> BM25 + vector -> RRF -> section/
+recency weighting -> rerank -> top-k.
 
 modes: 'lexical' (BM25 only), 'vector' (dense only), 'hybrid' (both, fused). Falls back
 to lexical when a vector index / embedder is not wired.
@@ -23,6 +23,7 @@ from finqa_v2.retrieval.fuse import reciprocal_rank_fusion
 from finqa_v2.retrieval.fusion_weights import get_fusion_weights as _fusion_weights
 from finqa_v2.retrieval.lexical import BM25Index
 from finqa_v2.retrieval.mmr import mmr_select
+from finqa_v2.retrieval.recency_weights import get_recency_decay as _recency_decay
 from finqa_v2.retrieval.rerank import IdentityReranker
 from finqa_v2.retrieval.section_weights import get_topic_weight as _topic_weight
 from finqa_v2.retrieval.section_weights import get_weight as _section_weight
@@ -90,7 +91,7 @@ class HybridRetriever:
                  lexical_query: str | None = None,
                  weighted_fusion: bool = False, neighbor_window: int = 0,
                  mmr: bool = False, mmr_lambda: float = 0.7,
-                 adaptive_pool: bool = False) -> list[RetrievedChunk]:
+                 adaptive_pool: bool = False, weighted_recency: bool = False) -> list[RetrievedChunk]:
         """`lexical_query` (§11, default None -- every pre-existing caller keeps `query`
         for BOTH legs, unchanged): when given, the BM25 leg searches `lexical_query`
         (e.g. a synonym-expanded string from `finqa_v2.planner.terminology.
@@ -123,7 +124,17 @@ class HybridRetriever:
         `candidate_k` is replaced per
         `finqa_v2.retrieval.candidate_pool.get_candidate_k(intent, default=candidate_k)`
         -- e.g. a wider net for `multi_hop`/`comparison` questions, a narrower one for
-        `numeric`. An intent with no configured size keeps the caller's own `candidate_k`."""
+        `numeric`. An intent with no configured size keeps the caller's own `candidate_k`.
+
+        `weighted_recency` (§20 follow-up, default False -- every pre-existing caller is
+        unchanged): when True and `intent` is given, each candidate's weight is ALSO
+        multiplied by `finqa_v2.retrieval.recency_weights.get_recency_decay(intent) **
+        (max_financial_year_in_this_pool - chunk_financial_year)` -- a soft boost toward
+        the most recent year actually present among this query's own candidates, not an
+        absolute date and not a hard filter (a chunk from an older year is still
+        reachable, just ranked lower). A hard latest-year-ONLY filter was tried first and
+        REJECTED (regressed recall@5 0.245->0.174 by making legitimately-older gold
+        unreachable for several categories) -- see recency_weights.yaml's own comment."""
         if mode == "hybrid" and "hybrid" not in self.modes:
             mode = "lexical"
         if mode not in ("lexical", "vector", "hybrid"):
@@ -161,6 +172,15 @@ class HybridRetriever:
                 cid: _section_weight(intent, chunks[cid].section) * _topic_weight(intent, chunks[cid].topic)
                 for cid in candidates
             }
+            if weighted_recency:
+                years = [chunks[cid].financial_year for cid in candidates if chunks[cid].financial_year]
+                if years:
+                    max_fy = max(years)
+                    decay = _recency_decay(intent)
+                    for cid in candidates:
+                        fy = chunks[cid].financial_year
+                        if fy is not None:
+                            section_weight[cid] *= decay ** (max_fy - fy)
             candidates = sorted(candidates, key=lambda cid: base_score[cid] * section_weight[cid], reverse=True)
 
         rerank_score: dict[int, float] = {}
