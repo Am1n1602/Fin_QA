@@ -40,6 +40,26 @@ class ExtractResult:
 _CAPS_LINE = re.compile(r"^[A-Z0-9][A-Z0-9 ,.'&()\-/]{4,80}$")
 _MOSTLY_DIGITS = re.compile(r"^[\d\s.,()%/₹-]+$")
 
+# PyMuPDF's find_tables() frequently sweeps a page's letterhead (CIN, registered/corporate
+# office, website, email, phone) into the same bounding box as the real data table right
+# below it -- confirmed by direct inspection of ingested chunks (retrieval_v21 Phase 20
+# investigation): every real table chunk for results-PDF companies re-embedded ~400+ chars
+# of this boilerplate before the actual figures, diluting BM25/dense-embedding signal for
+# every such chunk. These markers essentially never appear in a genuine financial-results
+# line item, so dropping any table ROW that contains one is a safe, targeted strip -- never
+# touches the surrounding prose chunks (those are handled separately by
+# section_weights.yaml's existing `cover_letter: 0.3` suppression).
+_TABLE_BOILERPLATE = re.compile(
+    r"\bCIN\s*:|\bRegistered Office\b|\bCorporate Office\b|\bWebsite\s*:|\bE-?mail\b|"
+    r"\bTelephone\b|\bFax\s*:",
+    re.IGNORECASE,
+)
+
+
+def _strip_table_boilerplate(rendered: str) -> str:
+    lines = [ln for ln in rendered.split("\n") if not _TABLE_BOILERPLATE.search(ln)]
+    return "\n".join(lines)
+
 
 def _sha256(path: Path) -> str:
     h = hashlib.sha256()
@@ -94,6 +114,7 @@ def _page_tables(page) -> list[str]:
             continue
         lines = ["\t".join((c or "").strip().replace("\n", " ") for c in row) for row in data]
         rendered = "\n".join(l for l in lines if l.strip("\t ").strip())
+        rendered = _strip_table_boilerplate(rendered)
         if len(rendered) >= 20:
             rows_out.append(rendered)
     return rows_out
