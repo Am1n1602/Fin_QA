@@ -6,7 +6,7 @@ covers the full extraction pipeline against an actual PDF.
 """
 import unittest
 
-from finqa_v2.documents.extract import _strip_table_boilerplate
+from finqa_v2.documents.extract import _group_logical_rows, _strip_table_boilerplate
 
 
 class StripTableBoilerplate(unittest.TestCase):
@@ -72,6 +72,70 @@ class StripTableBoilerplate(unittest.TestCase):
         self.assertIn("Interest income\t41.33\t190.42", result)
         # the plain company-name line has no boilerplate marker -- survives too, harmlessly
         self.assertIn("Bajaj Finserv Limited", result)
+
+
+class GroupLogicalRows(unittest.TestCase):
+    """Re-assembles raw PyMuPDF `get_text('text', clip=...)` output -- one label or
+    value per line -- into logical (label, value, value, ...) rows, tab-joined to match
+    the row-per-line shape chunk.py's table splitter expects. Fixes a real
+    pymupdf_layout bug (its own markdown cell assembly drops spaces between words --
+    "Total revenue from operations" -> "Totalrevenuefromoperations" -- confirmed by
+    direct comparison against this same raw PyMuPDF text, which has always been
+    correct)."""
+
+    def test_a_label_absorbs_its_following_numeric_values(self):
+        lines = ["Interest income", "41.33", "54.05", "57.58", "190.42", "226.02"]
+        groups = _group_logical_rows(lines)
+        self.assertEqual(groups, [["Interest income", "41.33", "54.05", "57.58", "190.42", "226.02"]])
+
+    def test_a_new_label_starts_a_new_group(self):
+        lines = ["Interest income", "41.33", "54.05", "Dividend income", "1,788.45", "2,001.58"]
+        groups = _group_logical_rows(lines)
+        self.assertEqual(groups, [
+            ["Interest income", "41.33", "54.05"],
+            ["Dividend income", "1,788.45", "2,001.58"],
+        ])
+
+    def test_dates_and_audited_tags_count_as_values_not_labels(self):
+        lines = ["Year ended", "31.03.2026", "31.03.2025", "(Unaudited)", "(Audited)", "Income"]
+        groups = _group_logical_rows(lines)
+        self.assertEqual(groups, [
+            ["Year ended", "31.03.2026", "31.03.2025", "(Unaudited)", "(Audited)"],
+            ["Income"],
+        ])
+
+    def test_a_lone_period_or_dash_placeholder_counts_as_a_value(self):
+        lines = ["Dividend income", ".", ".", "1,788.45", "2,001.58"]
+        groups = _group_logical_rows(lines)
+        self.assertEqual(groups, [["Dividend income", ".", ".", "1,788.45", "2,001.58"]])
+
+    def test_negative_parenthesized_amounts_count_as_values(self):
+        lines = ["Deferred tax", "(3.09)", "1.71", "(0.14)"]
+        groups = _group_logical_rows(lines)
+        self.assertEqual(groups, [["Deferred tax", "(3.09)", "1.71", "(0.14)"]])
+
+    def test_empty_input_returns_no_groups(self):
+        self.assertEqual(_group_logical_rows([]), [])
+
+    def test_the_real_bajajfinsv_table_groups_cleanly(self):
+        lines = [
+            "Particulars", "Quarter ended", "Year ended",
+            "31.03.2026", "31.12.2025", "31.03.2025", "31.03.2026", "31.03.2025",
+            "(Unaudited)", "(Unaudited)", "(Unaudited)", "(Audited)", "(Audited)", "1",
+            "Income",
+            "Interest income", "41.33", "54.05", "57.58", "190.42", "226.02",
+            "Total revenue from operations", "46.73", "62.62", "64.64", "2,016.23", "2,261.68",
+        ]
+        groups = _group_logical_rows(lines)
+        labels = [g[0] for g in groups]
+        self.assertIn("Total revenue from operations", labels)
+        revenue_row = next(g for g in groups if g[0] == "Total revenue from operations")
+        self.assertEqual(revenue_row, ["Total revenue from operations", "46.73", "62.62", "64.64",
+                                       "2,016.23", "2,261.68"])
+        # the tab-joined form chunk.py's splitter consumes never re-merges label+values
+        # back into a single word -- "Total revenue from operations" stays intact
+        rendered = "\n".join("\t".join(g) for g in groups)
+        self.assertIn("Total revenue from operations\t46.73", rendered)
 
 
 if __name__ == "__main__":

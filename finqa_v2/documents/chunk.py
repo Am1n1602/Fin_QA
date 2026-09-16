@@ -1,7 +1,14 @@
 """Structure-aware chunking (§15): per section, pack paragraph groups to a target size
-with small overlap, breaking only at paragraph boundaries. Tables become their own
-chunk (never split, never merged). Every chunk keeps page + section provenance and the
-§15 metadata.
+with small overlap, breaking only at paragraph boundaries. A small table stays its own
+single chunk; a LARGE one (Phase 21) splits into row-groups, each repeating the
+table's own leading lines for context, so a specific line-item query finds a small,
+concentrated chunk instead of one big chunk averaging 20-30 unrelated line items --
+the confirmed dominant cause of a retrieval-precision regression traced this session
+(see docs/file-guide.md's Phase 20 fourth/Phase 21 write-ups). Only viable with the
+pymupdf_layout-based extraction (finqa_v2/documents/extract.py): the older raw
+PyMuPDF find_tables() merged every line item into one blob with no `\n` between them
+at all, so there was nothing to split on. Every chunk keeps page + section provenance
+and the §15 metadata.
 """
 from __future__ import annotations
 
@@ -15,6 +22,50 @@ _WS = re.compile(r"[ \t]+")
 _TARGET = 900
 _OVERLAP = 120
 _MIN = 200
+
+# A table at or under this size stays exactly one chunk, unchanged from before Phase 21
+# -- the vast majority of detected tables (subsidiary lists, small summary tables) are
+# well under this and see byte-identical behavior. Smaller than prose's 900-char target
+# since tables are already denser per character.
+_TABLE_SPLIT_TARGET = 500
+# Leading lines repeated verbatim in EVERY split group so each stays interpretable
+# without its column headers -- calibrated against a real financial-results table
+# extracted via extract.py's `_group_logical_rows()` (which folds a table's own
+# period-dates/audited-status lines into whichever label preceded them): "Particulars"
+# / "Quarter ended" / "Year ended"+dates+audited-tags = 3 logical rows before the
+# first real line item; see docs/file-guide.md. For tables with fewer real header rows
+# (e.g. a 1-row subsidiary-list header), this harmlessly folds 1-2 data rows into the
+# repeated prefix too -- redundant, never lossy.
+_TABLE_HEADER_LINES = 3
+
+
+def _split_table(rendered: str, *, target: int = _TABLE_SPLIT_TARGET,
+                 header_lines: int = _TABLE_HEADER_LINES) -> list[str]:
+    """A table at/under `target` chars is returned whole (list of 1). Longer ones split
+    on `\n` (real row boundaries -- only present when extraction actually preserved
+    them) into groups near `target` chars, each prefixed with the table's own first
+    `header_lines` lines so it's still readable as "this line item, under this column
+    header" without needing the rest of the table."""
+    if len(rendered) <= target:
+        return [rendered]
+    lines = rendered.split("\n")
+    if len(lines) <= header_lines + 1:
+        return [rendered]
+    header_text = "\n".join(lines[:header_lines])
+    body = lines[header_lines:]
+    groups: list[str] = []
+    buf: list[str] = []
+    size = len(header_text)
+    for ln in body:
+        if buf and size + len(ln) > target:
+            groups.append(header_text + "\n" + "\n".join(buf))
+            buf = []
+            size = len(header_text)
+        buf.append(ln)
+        size += len(ln) + 1
+    if buf:
+        groups.append(header_text + "\n" + "\n".join(buf))
+    return groups
 
 
 def _clean(text: str) -> str:
@@ -105,11 +156,12 @@ def chunk_document(
         span_pages = [by_page[n] for n in range(span.page_start, span.page_end + 1) if n in by_page]
         if not span_pages:
             continue
-        # tables first -- one chunk each
+        # tables first -- one chunk each, unless large enough to split (Phase 21)
         for p in span_pages:
             for tbl in p.tables:
-                _add(tbl, p.page_number, p.page_number, span.section, "table",
-                     _segment_of(tbl, segment_slugs))
+                for piece in _split_table(tbl):
+                    _add(piece, p.page_number, p.page_number, span.section, "table",
+                         _segment_of(piece, segment_slugs))
         # then prose
         default_topic = "segment" if span.section == "segment_information" else "prose"
         for text, ps, pe in _pack(_paragraphs(span_pages), target, overlap, min_chunk):
