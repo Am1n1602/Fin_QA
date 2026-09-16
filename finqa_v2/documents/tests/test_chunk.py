@@ -74,7 +74,14 @@ class TestChunkDocument(unittest.TestCase):
             tail = prose[0].text[-120:]
             self.assertTrue(any(w in prose[1].text for w in tail.split()[:5]))
 
-    def test_a_large_table_splits_into_multiple_chunks(self):
+    def test_a_large_table_stays_one_chunk(self):
+        # Phase 21's _split_table() is REJECTED as the default -- measured a real
+        # end-to-end regression when applied broadly (some real tables come out of
+        # find_tables() with labels/values already misaligned on complex layouts, and
+        # splitting that content made it worse). chunk_document() keeps every table as
+        # one chunk, unchanged from before Phase 21; _split_table() itself stays
+        # tested (see the SplitTable test class below) for a future, more careful
+        # redesign.
         header = "|Particulars||Quarterended||Yearended|\n|---|---|---|---|---|\n||31.03.2026|31.12.2025|31.03.2025|31.03.2026|\n||(Unaudited)|(Unaudited)|(Unaudited)|(Audited)|"
         rows = "\n".join(f"|Line item {i}|{i*10}|{i*11}|{i*12}|{i*13}|" for i in range(40))
         big_table = header + "\n" + rows
@@ -83,15 +90,10 @@ class TestChunkDocument(unittest.TestCase):
         chunks = chunk_document(pages, sections, document_id=7, company_id=3,
                                 financial_year=2026, document_type="results_pdf")
         tables = [c for c in chunks if c.topic == "table"]
-        self.assertGreater(len(tables), 1, "a table this large should split into more than one chunk")
-        # every split piece still carries the header so it stays interpretable alone
-        for t in tables:
-            self.assertIn("Particulars", t.text)
-            self.assertIn("Quarterended", t.text)
-        # every original data row survives somewhere across the split pieces
-        combined = "\n".join(t.text for t in tables)
+        self.assertEqual(len(tables), 1)
+        self.assertEqual(tables[0].text, big_table)
         for i in range(40):
-            self.assertIn(f"Line item {i}", combined)
+            self.assertIn(f"Line item {i}", tables[0].text)
 
     def test_a_small_table_never_splits(self):
         small_table = "Metric\tFY25\tFY26\nRevenue\t1000\t1200\nProfit\t200\t250"

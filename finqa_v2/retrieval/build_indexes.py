@@ -1,10 +1,11 @@
 """Build retrieval indexes from finqa_v2.db.document_chunks.
 
-BM25 is always built (pure Python). --vector additionally builds the dense index
-(needs sentence-transformers/torch); on failure it reports and exits 3 for that part
-only, leaving the BM25 index in place.
+BM25 is built by default (pure Python, fast); pass --skip-bm25 to rebuild only the
+vector index. --vector additionally builds the dense index (needs
+sentence-transformers/torch); on failure it reports and exits 3 for that part only,
+leaving the BM25 index in place.
 
-    python -m finqa_v2.retrieval.build_indexes [--vector] [--v2-db PATH]
+    python -m finqa_v2.retrieval.build_indexes [--vector] [--skip-bm25] [--v2-db PATH]
         [--bm25-out PATH] [--vector-dir PATH] [--model NAME] [--hash-embedder]
 """
 from __future__ import annotations
@@ -25,6 +26,9 @@ def main() -> int:
     ap.add_argument("--v2-db", type=Path, default=DEFAULT_V2_DB_PATH)
     ap.add_argument("--bm25-out", type=Path, default=_BM25_OUT)
     ap.add_argument("--vector", action="store_true")
+    ap.add_argument("--skip-bm25", action="store_true",
+                    help="skip the BM25 rebuild -- e.g. to rebuild only the vector index "
+                         "after a document reingest when BM25 wasn't invalidated.")
     ap.add_argument("--vector-dir", type=Path, default=_VEC_DIR)
     ap.add_argument("--model", default="all-mpnet-base-v2")
     ap.add_argument("--device", default="auto",
@@ -43,12 +47,17 @@ def main() -> int:
 
     if not args.v2_db.exists():
         raise SystemExit(f"db not found: {args.v2_db} -- run the Phase 1-5 backfills first")
+    if args.skip_bm25 and not args.vector:
+        raise SystemExit("--skip-bm25 with no --vector leaves nothing to build")
 
     repos = SqliteRepositories(args.v2_db)
     try:
-        bm25 = BM25Index.build(repos)
-        bm25.save(args.bm25_out)
-        print(f"[bm25] {len(bm25)} chunks -> {args.bm25_out}")
+        if not args.skip_bm25:
+            bm25 = BM25Index.build(repos)
+            bm25.save(args.bm25_out)
+            print(f"[bm25] {len(bm25)} chunks -> {args.bm25_out}")
+        else:
+            print("[bm25] skipped (--skip-bm25)")
 
         if not args.vector:
             return 0

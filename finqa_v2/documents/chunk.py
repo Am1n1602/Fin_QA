@@ -156,12 +156,19 @@ def chunk_document(
         span_pages = [by_page[n] for n in range(span.page_start, span.page_end + 1) if n in by_page]
         if not span_pages:
             continue
-        # tables first -- one chunk each, unless large enough to split (Phase 21)
+        # tables first -- one chunk each. Phase 21 built _split_table() to break a large
+        # table into smaller row-groups, but measured a real end-to-end regression when
+        # applied broadly: some real tables (e.g. an annual-report notes section with a
+        # "Note No." column) already come out of PyMuPDF's find_tables() with labels and
+        # values misaligned on complex layouts, and splitting that already-imperfect
+        # content made it worse rather than better, independent of the separate
+        # word-spacing bug _split_table() itself has nothing to do with. REJECTED as
+        # the default -- _split_table() stays defined and tested for whoever redesigns
+        # this with a confidence check (only split a table verified well-formed).
         for p in span_pages:
             for tbl in p.tables:
-                for piece in _split_table(tbl):
-                    _add(piece, p.page_number, p.page_number, span.section, "table",
-                         _segment_of(piece, segment_slugs))
+                _add(tbl, p.page_number, p.page_number, span.section, "table",
+                     _segment_of(tbl, segment_slugs))
         # then prose
         default_topic = "segment" if span.section == "segment_information" else "prose"
         for text, ps, pe in _pack(_paragraphs(span_pages), target, overlap, min_chunk):
