@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Fin_QA"
-version = "0.1.0"
+version = "2.0.0"
 description = "AI-powered financial intelligence platform for NIFTY 50 equities -- natural-language QA over NSE/BSE filings, backed by a deterministic calculation engine and a RAG-grounded LLM narrative layer."
 requires-python = ">=3.11"
 readme = "README.md"
@@ -20,20 +20,30 @@ dependencies = [
     "sentence-transformers",
     "faiss-cpu",
     "pypdf",
+    "pymupdf",
     "rank-bm25",
     "numpy",
+    "psycopg[binary]>=3.1",
+    "pgvector>=0.2.5",
 ]
 
 [project.optional-dependencies]
 anthropic = ["anthropic>=0.39"]
 api = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
-ocr = ["pymupdf", "pytesseract", "pillow"]
+ocr = ["pytesseract", "pillow"]
+storage = ["boto3>=1.34"]
+observability = ["prometheus-client>=0.20"]
 
 [project.scripts]
-finqa = "fin_llm_platform.cli:main"
-finqa-pipeline = "fin_llm_platform.pipeline:main"
-finqa-setup = "fin_llm_platform.setup_scheduler:main"
-finqa-api = "api.main:run"
+# fin_llm_platform/ and api/ (v1) moved into archive/ -- still installable/runnable, just
+# no longer the primary system. Suffixed "-v1" (unlike the original bare `finqa`/
+# `finqa-api`) so the unprefixed, most-obvious-looking command never silently lands
+# someone in the retired system instead of the live one below.
+finqa-v1 = "archive.fin_llm_platform.cli:main"
+finqa-v1-pipeline = "archive.fin_llm_platform.pipeline:main"
+finqa-v1-setup = "archive.fin_llm_platform.setup_scheduler:main"
+finqa-v1-api = "archive.api.main:run"
+finqa-api-v2 = "finqa_v2.api.main:run"
 
 [tool.setuptools.packages.find]
-include = ["fin_llm_platform*", "api*"]
+include = ["archive", "archive.fin_llm_platform*", "archive.api*", "finqa_v2*"]

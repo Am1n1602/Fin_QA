@@ -1,0 +1,222 @@
+"""ReasoningOrchestrator end-to-end with NullProvider (no tokens spent)."""
+from __future__ import annotations
+
+import unittest
+
+from finqa_v2.engine.tests._fixture import seed as seed_engine
+from finqa_v2.models import Company, Index, IndexMembership
+from finqa_v2.reasoning import ReasoningOrchestrator
+from finqa_v2.sqlite import SqliteRepositories
+
+_KEYS = {"answer", "confidence", "claims", "calculations", "evidence", "sources", "limitations"}
+
+
+class OrchestratorTestCase(unittest.TestCase):
+    def setUp(self):
+        self.repos = SqliteRepositories(":memory:")
+        self.addCleanup(self.repos.close)
+        seed_engine(self.repos)                       # company TEST + FY2025/FY2026 facts + quarters
+        for name, tkr in [("Peerco", "PEER"), ("Otherco", "OTHR")]:
+            self.repos.companies.upsert(Company(name=name, ticker=tkr, sector="IT"))
+        self.repos.companies.upsert(Company(name="Testco", ticker="TEST", sector="IT"))
+        idx = self.repos.indices.upsert(Index(name="NIFTY 50", provider="NSE"))
+        for tkr in ("TEST", "PEER", "OTHR"):
+            c = self.repos.companies.get_by_ticker(tkr)
+            self.repos.indices.set_membership(IndexMembership(idx.index_id, c.company_id))
+        self.repos.commit()
+        self.orch = ReasoningOrchestrator(self.repos)   # NullProvider by default
+
+
+class TestOrchestrator(OrchestratorTestCase):
+    def test_numeric_fact(self):
+        r = self.orch.answer("What was TEST revenue in FY2026?")
+        self.assertEqual(set(r.response), _KEYS)
+        self.assertFalse(r.llm_used)
+        self.assertIn("get_metric", r.tools_run)
+        self.assertIn("1,200", r.answer)
+        self.assertTrue(r.response["evidence"])
+        self.assertTrue(r.trace)
+        self.assertGreater(r.latency_ms, 0)
+
+    def test_ratio_has_calculation(self):
+        r = self.orch.answer("What was TEST ROE in FY2026?")
+        self.assertIn("get_ratio", r.tools_run)
+        self.assertTrue(r.response["calculations"])
+        self.assertAlmostEqual(r.response["calculations"][0]["result"], 25.0)
+        self.assertIn("25.00 pct", r.answer)
+
+    def test_trend(self):
+        r = self.orch.answer("How has TEST revenue changed over the years?")
+        self.assertIn("get_growth", r.tools_run)
+        self.assertTrue(any(e["type"] == "growth" for e in r.response["evidence"]))
+
+    def test_comparison_resolves_universe(self):
+        r = self.orch.answer("Compare companies on ROE.")     # no companies named
+        self.assertIn("compare_companies", r.tools_run)
+        # get_index_members was used to resolve the universe
+        self.assertIn("get_index_members", [c["tool"] for c in r.trace])
+        cc = next(c for c in r.trace if c["tool"] == "compare_companies")
+        self.assertTrue(cc["ok"])
+
+    def test_causal_without_docs_flags_limitation(self):
+        r = self.orch.answer("Why did TEST net profit rise in FY2026?")
+        self.assertIn("get_growth", r.tools_run)
+        self.assertTrue(any("not established" in l for l in r.response["limitations"]))
+
+    def test_causal_runs_hypothesis_testing(self):
+        r = self.orch.answer("Why did TEST net profit rise in FY2026?")
+        self.assertIsNotNone(r.hypothesis_report)
+        hyps = r.hypothesis_report["hypotheses"]
+        self.assertTrue(hyps)
+        valid = {"supported", "partially_supported", "not_supported", "insufficient_evidence"}
+        self.assertTrue(all(h["status"] in valid for h in hyps))
+        self.assertEqual(r.hypothesis_report["change"]["direction"], "increase")
+        causal = [c for c in r.response["claims"] if c["kind"] == "causal"]
+        self.assertTrue(causal)
+        self.assertTrue(all(c["evidence_ids"] for c in causal))
+        # §31 core schema is unchanged for causal questions
+        self.assertEqual(set(r.response), _KEYS)
+
+    def test_complex_causal_comparison_decomposes_into_multiple_searches(self):
+        # COMPARISON intent's own tool list doesn't call search_documents at all (a
+        # pre-existing, deliberate v2 scope decision -- comparisons are numeric-only via
+        # compare_companies/get_ratio) so decomposition's effect on plain `comparison`
+        # questions only shows up via the LLM planner path, not this deterministic one.
+        # CAUSAL does call search_documents deterministically, so that's what §13's
+        # "complex causal" case is tested against here.
+        r = self.orch.answer("Why did TEST net profit margin decline compared with PEER?")
+        searches = [c["args"]["query"] for c in r.trace if c["tool"] == "search_documents"]
+        self.assertEqual(len(searches), 3, searches)
+        self.assertTrue(any("why did TEST" in q for q in searches))
+        self.assertTrue(any(q.startswith("TEST ") for q in searches))
+        self.assertTrue(any(q.startswith("PEER ") for q in searches))
+
+    def test_plain_causal_question_still_searches_once(self):
+        r = self.orch.answer("Why did TEST net profit rise in FY2026?")
+        searches = [c["args"]["query"] for c in r.trace if c["tool"] == "search_documents"]
+        self.assertEqual(len(searches), 1, searches)
+        self.assertEqual(searches[0], "Why did TEST net profit rise in FY2026?")
+
+    def test_search_documents_never_gets_a_financial_year_filter(self):
+        # `_resolve_financial_year()` is deliberately NOT wired into search_documents --
+        # benchmarked as a hard filter and REJECTED (regressed overall recall@5 0.245->
+        # 0.174: retrieval_v21's own gold skews toward older filings for several
+        # categories, so latest-year-only filtering made that gold unreachable). See
+        # `_resolve_financial_year`'s docstring and docs/file-guide.md for the numbers.
+        r = self.orch.answer("Why did TEST net profit rise in FY2026?")
+        search_args = [c["args"] for c in r.trace if c["tool"] == "search_documents"]
+        self.assertEqual(len(search_args), 1, search_args)
+        self.assertNotIn("financial_year", search_args[0])
+
+    def test_non_causal_has_no_hypothesis_report(self):
+        r = self.orch.answer("What was TEST revenue in FY2026?")
+        self.assertIsNone(r.hypothesis_report)
+        self.assertIsNone(r.cross_validation_report)
+
+    def test_cross_validation_runs(self):
+        r = self.orch.answer("Management said TEST net profit margin contracted in FY2026. "
+                             "Is that visible in the financial statements?")
+        self.assertIsNotNone(r.cross_validation_report)
+        self.assertIsNone(r.hypothesis_report)
+        cvr = r.cross_validation_report
+        self.assertIsNotNone(cvr["claim"])
+        # fixture margin rose, so a contraction claim is not supported
+        self.assertEqual(cvr["status"], "not_supported")
+        xv = [c for c in r.response["claims"] if c["kind"] == "cross_validation"]
+        self.assertTrue(xv)
+        self.assertEqual(xv[0]["status"], "not_supported")
+        self.assertEqual(set(r.response), _KEYS)
+
+    def test_unknown_question_degrades_gracefully(self):
+        r = self.orch.answer("what is the meaning of life")
+        self.assertEqual(set(r.response), _KEYS)
+        self.assertEqual(r.tools_run, [])
+        self.assertIn("not sufficient", r.answer)
+
+    def test_to_dict_roundtrip(self):
+        import json
+        r = self.orch.answer("What was TEST revenue in FY2026?")
+        json.dumps(r.to_dict())
+
+    def test_verification_attached_and_passes(self):
+        r = self.orch.answer("What was TEST ROE in FY2026?")
+        self.assertIsNotNone(r.verification)
+        self.assertEqual(r.verification["status"], "passed")
+        self.assertFalse(r.verification["abstained"])
+        # the deterministic ROE calc recomputes from its pinned inputs
+        self.assertGreaterEqual(r.verification["counts"].get("recomputed", 0), 1)
+        self.assertNotIn("[unverified]", r.answer)
+        self.assertEqual(set(r.response), _KEYS)
+
+    def test_verification_flags_a_broken_calculation(self):
+        from finqa_v2.evidence import EvidenceSet
+        from finqa_v2.verification import Verifier
+
+        r = self.orch.answer("What was TEST ROE in FY2026?")
+        resp = dict(r.response)
+        resp["calculations"] = [dict(resp["calculations"][0], result=999.0)]
+        rep = Verifier().verify(resp, EvidenceSet())
+        self.assertTrue(any(c.verdict == "does_not_recompute" for c in rep.checks))
+        self.assertLessEqual(resp["confidence"], 0.6)
+
+    def test_claim_graph_attached(self):
+        r = self.orch.answer("What was TEST ROE in FY2026?")
+        cg = r.claim_graph
+        self.assertIsNotNone(cg)
+        self.assertGreaterEqual(cg["counts"]["claims"], 1)
+        self.assertEqual(len(cg["claims"]), cg["counts"]["claims"])
+        # each claim explanation only references evidence present in the graph
+        node_ids = {n["id"] for n in cg["graph"]["nodes"]}
+        for c in cg["claims"]:
+            for e in c["evidence"]:
+                self.assertIn(e["evidence_id"], node_ids)
+            self.assertIn("claim_confidence", c["confidence_breakdown"])
+        self.assertEqual(set(r.response), _KEYS)   # §31 response unchanged
+
+    def test_max_tools_bound(self):
+        orch = ReasoningOrchestrator(self.repos, max_tools=1)
+        r = orch.answer("Give me a fundamental overview of TEST.")   # rules plan wants 4 tools
+        self.assertLessEqual(len(r.tools_run), 1)
+
+
+class TestResolveFinancialYear(OrchestratorTestCase):
+    """`_resolve_financial_year()` is tested tooling, deliberately NOT wired into
+    search_documents (see its docstring: benchmarked as a hard filter and rejected)."""
+
+    def test_an_explicit_fy_string_parses_directly(self):
+        from finqa_v2.reasoning.orchestrator import _resolve_financial_year
+
+        cid = self.repos.companies.get_by_ticker("TEST").company_id
+        self.assertEqual(_resolve_financial_year("FY2025", cid, self.repos), 2025)
+        self.assertEqual(_resolve_financial_year("FY2025Q1", cid, self.repos), 2025)
+
+    def test_an_int_period_passes_through_unchanged(self):
+        from finqa_v2.reasoning.orchestrator import _resolve_financial_year
+
+        cid = self.repos.companies.get_by_ticker("TEST").company_id
+        self.assertEqual(_resolve_financial_year(2024, cid, self.repos), 2024)
+
+    def test_latest_annual_falls_back_to_the_companys_latest_filed_document(self):
+        from finqa_v2.models import DocumentMeta
+        from finqa_v2.reasoning.orchestrator import _resolve_financial_year
+
+        cid = self.repos.companies.get_by_ticker("TEST").company_id
+        self.repos.documents.upsert(
+            DocumentMeta(company_id=cid, document_type="annual_report",
+                         title="TEST Annual Report FY2025", financial_year=2025)
+        )
+        self.repos.documents.upsert(
+            DocumentMeta(company_id=cid, document_type="transcript",
+                         title="TEST Q1 Transcript FY2027", financial_year=2027)
+        )
+        self.assertEqual(_resolve_financial_year("latest_annual", cid, self.repos), 2027)
+
+    def test_no_documents_resolves_to_none(self):
+        from finqa_v2.reasoning.orchestrator import _resolve_financial_year
+
+        cid = self.repos.companies.get_by_ticker("TEST").company_id
+        self.assertIsNone(_resolve_financial_year("latest_annual", cid, self.repos))
+
+
+if __name__ == "__main__":
+    unittest.main()

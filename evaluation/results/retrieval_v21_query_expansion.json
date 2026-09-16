@@ -1,0 +1,63 @@
+{
+  "experiment_id": "retrieval_v21_query_expansion_001",
+  "git_commit": "d897e7fc21054a496488cbafe95787ab11522904",
+  "dataset": "evaluation\\datasets\\retrieval_v21.json",
+  "n_cases": 380,
+  "retriever_modes_available": [
+    "lexical",
+    "vector",
+    "hybrid"
+  ],
+  "filter_company": true,
+  "rerank": false,
+  "section_aware": true,
+  "section_hints": false,
+  "query_expansion": true,
+  "results": {
+    "vector": {
+      "mode": "vector",
+      "n_total": 380,
+      "n_scored": 330,
+      "recall@1": 0.1848,
+      "recall@3": 0.297,
+      "recall@5": 0.3545,
+      "recall@10": 0.4303,
+      "mrr": 0.2562,
+      "ndcg@5": 0.2228,
+      "p50_ms": 20.93,
+      "p95_ms": 26.4,
+      "no_gold_cases": 50,
+      "spurious_hit_rate": 0.98
+    },
+    "lexical": {
+      "mode": "lexical",
+      "n_total": 380,
+      "n_scored": 330,
+      "recall@1": 0.1182,
+      "recall@3": 0.2667,
+      "recall@5": 0.3667,
+      "recall@10": 0.5,
+      "mrr": 0.2233,
+      "ndcg@5": 0.1957,
+      "p50_ms": 3.92,
+      "p95_ms": 91.87,
+      "no_gold_cases": 50,
+      "spurious_hit_rate": 1.0
+    },
+    "hybrid": {
+      "mode": "hybrid",
+      "n_total": 380,
+      "n_scored": 330,
+      "recall@1": 0.1909,
+      "recall@3": 0.3545,
+      "recall@5": 0.4273,
+      "recall@10": 0.5636,
+      "mrr": 0.2916,
+      "ndcg@5": 0.2591,
+      "p50_ms": 27.51,
+      "p95_ms": 122.23,
+      "no_gold_cases": 50,
+      "spurious_hit_rate": 1.0
+    }
+  }
+}

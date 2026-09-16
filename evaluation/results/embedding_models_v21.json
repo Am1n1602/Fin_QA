@@ -1,0 +1,48 @@
+{
+  "experiment_id": "embedding_models_v21_001",
+  "dataset": "evaluation/datasets/retrieval_v21.json",
+  "hardware": "NVIDIA GeForce RTX 3050 Laptop GPU, 4096 MiB VRAM",
+  "results": [
+    {
+      "model": "all-MiniLM-L6-v2 (current, KEEP)",
+      "status": "complete",
+      "index_size_mb": 47.42,
+      "query_p50_ms": 26.32,
+      "query_p95_ms": 29.67,
+      "recall@5": 0.2606,
+      "recall@10": 0.3818,
+      "mrr": 0.2022,
+      "ndcg@5": 0.1739,
+      "notes": "Full 32,224-chunk index already built and in production use. Numbers match the Phase P1 section-aware vector-mode benchmark exactly."
+    },
+    {
+      "model": "BAAI/bge-m3",
+      "status": "rejected -- impractical on this hardware",
+      "params": "568M (vs MiniLM's 22M)",
+      "attempted_batch_sizes": [8, 4],
+      "throughput_samples": [
+        {"chunks_done": 200, "elapsed_s": 20, "rate_per_s": 9.8, "eta_min": 54.4},
+        {"chunks_done": 1000, "elapsed_s": 477, "rate_per_s": 2.1, "eta_min": 248.2},
+        {"chunks_done": 2000, "elapsed_s": 1072, "rate_per_s": 1.9, "eta_min": 269.9}
+      ],
+      "notes": "Loads fine once SentenceTransformerEmbedder was patched to force use_safetensors=True (the installed torch 2.5.1 refuses a pickle-based .bin checkpoint per CVE-2025-32434; this fix is now shipped in finqa_v2/retrieval/embed.py and applies to every model, not just bge-m3). Throughput degrades sharply over the run (9.8/s -> 1.9/s in the first 2000/32224 chunks, likely thermal throttling -- GPU held at 86-88C -- and/or memory-pressure overhead near this GPU's 4GB ceiling). Extrapolated full-corpus time exceeds 4 hours. Killed before completion; no index was built. Fails the roadmap's resource/latency acceptance bar regardless of retrieval quality."
+    },
+    {
+      "model": "jinaai/jina-embeddings-v3",
+      "status": "rejected -- impractical on this hardware (also needed a compatibility patch to load at all)",
+      "params": "572M",
+      "attempted_batch_sizes": [4],
+      "load_time_issue": "First attempt crashed on load: AttributeError: 'XLMRobertaLoRA' object has no attribute 'all_tied_weights_keys'. Jina's trust_remote_code custom modeling classes (cached from https://huggingface.co/jinaai/xlm-roberta-flash-implementation) predate a transformers internal refactor and never set that attribute themselves; a newer transformers method reads it unconditionally. Worked around with an in-process monkeypatch (defaults the attribute to {} when a custom subclass didn't set it) for this evaluation only -- NOT applied to finqa_v2/retrieval/embed.py, since patching around a third-party remote-code/transformers version mismatch is not something to ship silently.",
+      "throughput_samples": [
+        {"chunks_done": 200, "elapsed_s": 9, "rate_per_s": 22.0, "eta_min": 24.3},
+        {"chunks_done": 1200, "elapsed_s": 234, "rate_per_s": 5.1, "eta_min": 100.9},
+        {"chunks_done": 2200, "elapsed_s": 485, "rate_per_s": 4.5, "eta_min": 110.4}
+      ],
+      "notes": "Starts faster than bge-m3 (22/s vs 9.8/s) but degrades the same way -- 22/s -> 4.5/s in the first 2200/32224 chunks, extrapolated ETA 110+ min and still climbing. flash_attn is not installed (PyTorch-native attention fallback, slower). Killed before completion; no index was built. Fails the resource/latency bar, and the load-time incompatibility itself is a maintainability red flag independent of speed."
+    }
+  ],
+  "decision": {
+    "verdict": "KEEP all-MiniLM-L6-v2",
+    "rationale": "Both candidate models were actually attempted (not assumed) on the real corpus and real hardware, per §7's rule. Both are rejected on resource/latency grounds alone -- neither finished embedding even 10% of the 32,224-chunk corpus in a reasonable time window, with throughput degrading further as each run progressed rather than stabilizing. This is a hardware-constrained verdict specific to this RTX 3050 4GB laptop GPU, not a claim that these models are worse in general; a stronger GPU (more VRAM, no thermal throttling) could change the outcome. Re-benchmark if the deployment target's hardware changes."
+  }
+}

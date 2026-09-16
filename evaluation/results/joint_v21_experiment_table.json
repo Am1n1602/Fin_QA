@@ -1,0 +1,36 @@
+[
+  {
+    "configuration": "v2.0 baseline (pre-v2.1)",
+    "recall@5": 0.2667,
+    "mrr": 0.1602,
+    "ndcg@5": 0.1525,
+    "retrieval_p50_ms": 27.37,
+    "answer_accuracy": 0.814,
+    "groundedness": 1.0,
+    "citation_f1": 0.0,
+    "abstention_accuracy": 0.8824,
+    "answer_p50_ms": 1.6,
+    "answer_p95_ms": 170.6,
+    "_sources": {
+      "retrieval_report": "evaluation\\results\\retrieval_v21_baseline.json",
+      "answer_report": "evaluation\\reports\\det-v2_20260911_023246.json"
+    }
+  },
+  {
+    "configuration": "current production (Phase 17)",
+    "recall@5": 0.5061,
+    "mrr": 0.3293,
+    "ndcg@5": 0.3032,
+    "retrieval_p50_ms": 31.91,
+    "answer_accuracy": 0.8372,
+    "groundedness": 1.0,
+    "citation_f1": 0.0,
+    "abstention_accuracy": 0.9792,
+    "answer_p50_ms": 1.6,
+    "answer_p95_ms": 116.05,
+    "_sources": {
+      "retrieval_report": "evaluation\\results\\retrieval_v21_p1_closeout_checkpoint.json",
+      "answer_report": "evaluation\\reports\\v2_20260914_213305.json"
+    }
+  }
+]

@@ -1,0 +1,18 @@
+{"id": "seg-01", "query": "Reliance segment revenue Oil to Chemicals Retail Digital Services", "company": "RELIANCE", "sections": ["segment_information"], "must_contain": ["segment"], "k": 5}
+{"id": "seg-02", "query": "TCS reportable segments BFSI Manufacturing", "company": "TCS", "sections": ["segment_information"], "must_contain": ["segment"], "k": 5}
+{"id": "seg-03", "query": "ITC segment information cigarettes agri business", "company": "ITC", "sections": ["segment_information"], "must_contain": ["segment"], "k": 5}
+{"id": "seg-04", "query": "HDFC Bank Treasury and Retail Banking segment results", "company": "HDFCBANK", "sections": ["segment_information"], "must_contain": ["segment"], "k": 5}
+{"id": "aud-01", "query": "independent auditor's report basis for opinion", "company": null, "sections": ["auditors_report"], "must_contain": ["opinion"], "k": 5}
+{"id": "aud-02", "query": "auditor unmodified opinion true and fair view financial results", "company": "INFY", "sections": ["auditors_report"], "must_contain": ["opinion"], "k": 5}
+{"id": "aud-03", "query": "auditors conducted audit in accordance with standards on auditing", "company": "RELIANCE", "sections": ["auditors_report"], "must_contain": ["audit"], "k": 5}
+{"id": "div-01", "query": "board recommended final dividend per equity share", "company": null, "sections": ["board_meeting_outcome", "cover_letter", "notes"], "must_contain": ["dividend"], "k": 5}
+{"id": "div-02", "query": "TCS dividend declared per share", "company": "TCS", "sections": ["board_meeting_outcome", "cover_letter", "notes", "financial_results"], "must_contain": ["dividend"], "k": 5}
+{"id": "notes-01", "query": "exceptional items during the quarter", "company": null, "sections": ["notes", "financial_results"], "must_contain": ["exceptional"], "k": 5}
+{"id": "notes-02", "query": "contingent liabilities and commitments", "company": null, "sections": ["notes"], "must_contain": ["contingent"], "k": 5}
+{"id": "notes-03", "query": "results reviewed by audit committee and approved by board of directors", "company": null, "sections": ["notes", "cover_letter"], "must_contain": ["audit committee"], "k": 5}
+{"id": "cover-01", "query": "SEBI Listing Obligations and Disclosure Requirements Regulations 2015", "company": null, "sections": ["cover_letter"], "must_contain": ["sebi"], "k": 5}
+{"id": "cover-02", "query": "outcome of board meeting financial results for the quarter", "company": null, "sections": ["cover_letter", "board_meeting_outcome"], "must_contain": ["board"], "k": 5}
+{"id": "bs-01", "query": "total assets total equity and liabilities balance sheet", "company": "RELIANCE", "sections": ["balance_sheet", "financial_results"], "must_contain": ["assets"], "k": 5}
+{"id": "cf-01", "query": "cash flow from operating investing and financing activities", "company": "INFY", "sections": ["cash_flow_statement", "financial_results"], "must_contain": ["cash"], "k": 5}
+{"id": "fr-01", "query": "revenue from operations profit for the period earnings per share", "company": "TCS", "sections": ["financial_results", "notes"], "must_contain": ["revenue"], "k": 5}
+{"id": "fr-02", "query": "provision for tax profit before tax total comprehensive income", "company": "HCLTECH", "sections": ["financial_results", "notes"], "must_contain": ["tax"], "k": 5}

@@ -1,0 +1,84 @@
+# Per-intent section weight multipliers (§15). A retrieved chunk's fused-ranking score is
+# multiplied by its section's weight for the query's intent before the final top-k cut.
+# Missing (intent, section) pairs default to 1.0 (no change) -- see section_weights.py.
+#
+# `global` applies regardless of intent -- used here to suppress boilerplate sections that
+# are essentially never useful evidence for any question. Phase 2's error analysis found
+# `cover_letter` chunks (BSE filing-transmission boilerplate) outranking real financial
+# content in the top-5 for a plain numeric query; this is the direct fix for that finding.
+global:
+  cover_letter: 0.3
+  notice: 0.4
+  annexure: 0.5
+  board_meeting_outcome: 0.5
+
+# Keyed primarily by the retrieval_v21 benchmark's own 13 categories (evaluation/datasets/
+# retrieval_v21.json) -- that's what the A/B benchmark below actually measures. A few keys
+# also cover the planner's production Intent values (finqa_v2/planner/models.py) that don't
+# already share a name with a benchmark category: numeric_fact, ranking, cross_validation,
+# research_overview.
+
+numeric:
+  financial_results: 1.4
+  balance_sheet: 1.2
+  notes: 1.1
+numeric_fact:
+  financial_results: 1.4
+  balance_sheet: 1.2
+  notes: 1.1
+ratio:
+  financial_results: 1.3
+  notes: 1.2
+table:
+  financial_results: 1.3
+  balance_sheet: 1.2
+trend:
+  mda: 1.4
+  earnings_call: 1.3
+narrative:
+  mda: 1.2
+  risk_factors: 1.1
+  corporate_governance: 1.1
+  board_report: 1.1
+research_overview:
+  mda: 1.2
+  earnings_call: 1.1
+  risk_factors: 1.05
+  financial_results: 1.1
+causal:
+  mda: 1.5
+  earnings_call: 1.4
+  financial_results: 1.1
+management_commentary:
+  earnings_call: 1.5
+segment:
+  segment_information: 1.5
+comparison:
+  financial_results: 1.3
+ranking:
+  financial_results: 1.3
+cross_validation:
+  mda: 1.3
+  earnings_call: 1.3
+multi_hop:
+  segment_information: 1.3
+  financial_results: 1.3
+
+# Topic weights (same intent-keyed shape, own namespace so it never collides with the
+# section weights above -- see section_weights.py:get_topic_weight()). Phase 2's error
+# analysis found TABLE_RETRIEVAL_FAILURE (gold is a `topic='table'` chunk, nothing
+# table-typed came back) at 21-29% of all failures, the second-largest category after
+# WRONG_SECTION -- this directly targets it by boosting table chunks for the intents whose
+# gold is often tabular (numeric/ratio/table/multi_hop), without needing new chunking or a
+# corpus rebuild (that's Phase 4's job, and this is far cheaper to try first).
+topics:
+  numeric:
+    table: 1.6
+  numeric_fact:
+    table: 1.6
+  ratio:
+    table: 1.4
+  table:
+    table: 2.0
+  multi_hop:
+    table: 1.3

@@ -1,0 +1,147 @@
+# Fin_QA v2 -- full local stack: every piece as its own container.
+#   cp .env.example .env   # then set GRAFANA_ADMIN_PASSWORD/POSTGRES_PASSWORD/MINIO_ROOT_PASSWORD
+#   cd deployment/compose
+#   docker compose up -d --build postgres minio minio-init api dashboard prometheus grafana
+#   # one-time, once postgres is up: from the repo root (needs the local venv)
+#   #   FINQA_PG_URL=postgresql://finqa:<POSTGRES_PASSWORD>@localhost:55432/finqa python -m finqa_v2.postgres.migrate
+#
+# Bind mounts point at the repo's real database/data/ and data_extraction/data/ on
+# the host (not Docker-managed volumes) -- those directories already hold the actual
+# dataset; nothing here recreates it. Paths below are relative to this file.
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: finqa-pg
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-finqa}
+      # No baked-in default -- see the Grafana entry below for why. Set it in
+      # deployment/compose/.env (see .env.example).
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deployment/compose/.env -- see .env.example}
+      POSTGRES_DB: ${POSTGRES_DB:-finqa}
+    ports:
+      - "55432:5432"
+    volumes:
+      - finqa_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-finqa} -d ${POSTGRES_DB:-finqa}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: finqa-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-finqa}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in deployment/compose/.env -- see .env.example}
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # web console
+    volumes:
+      - finqa_minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # One-shot: creates the filing-pdfs bucket, then exits. Re-running is a no-op. Credentials
+  # come in as its own container env (not baked into the command string) and are expanded by
+  # the shell at runtime ($$ so compose doesn't try to interpolate them itself at parse time).
+  minio-init:
+    image: minio/mc:latest
+    container_name: finqa-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-finqa}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in deployment/compose/.env -- see .env.example}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 \"$$MINIO_ROOT_USER\" \"$$MINIO_ROOT_PASSWORD\" &&
+      mc mb -p local/filing-pdfs &&
+      echo 'bucket ready'
+      "
+
+  api:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/api.Dockerfile
+    container_name: finqa-api-v2
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      FINQA_PG_URL: postgresql://${POSTGRES_USER:-finqa}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deployment/compose/.env -- see .env.example}@postgres:5432/${POSTGRES_DB:-finqa}
+      FINQA_V2_API_CORS_ORIGINS: "*"
+      FINQA_V2_LOG_JSON: "1"
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports:
+      - "8010:8010"
+    volumes:
+      # read-only: the API never writes to the dataset, only the retrieval index
+      # files and (unused here, since FINQA_PG_URL is set) the SQLite fallback live
+      # under this path.
+      - ../../database/data:/app/database/data:ro
+
+  dashboard:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/dashboard.Dockerfile
+      # no VITE_API_BASE_URL override -- the Dockerfile's own default ("") is what we
+      # want here: same-origin calls that nginx.conf reverse-proxies to the api
+      # container internally, not the browser hitting the published host port.
+    container_name: finqa-dashboard-v2
+    depends_on:
+      - api
+    ports:
+      - "5174:80"
+
+  # Not started by `up` -- run on demand: `docker compose run --rm worker <cmd>`.
+  worker:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/worker.Dockerfile
+    profiles: ["tools"]
+    environment:
+      FINQA_PG_URL: postgresql://${POSTGRES_USER:-finqa}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deployment/compose/.env -- see .env.example}@postgres:5432/${POSTGRES_DB:-finqa}
+    volumes:
+      - ../../database/data:/app/database/data
+      - ../../data_extraction/data:/app/data_extraction/data
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: finqa-prometheus
+    depends_on:
+      - api
+    volumes:
+      - ../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - finqa_prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: finqa-grafana
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      # No baked-in default -- `docker compose up` refuses to start Grafana rather than
+      # fall back to a known password. Set it in deployment/compose/.env (see .env.example).
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in deployment/compose/.env -- see .env.example}
+    volumes:
+      - ../observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - finqa_grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+
+volumes:
+  finqa_pg_data:
+  finqa_minio_data:
+  finqa_prometheus_data:
+  finqa_grafana_data:

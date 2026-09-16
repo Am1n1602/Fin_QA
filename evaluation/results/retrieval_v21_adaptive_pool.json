@@ -1,0 +1,41 @@
+{
+  "experiment_id": "retrieval_v21_adaptive_pool",
+  "git_commit": "4032e1ac857c6eca4b0d34c16cfc723415d48cab",
+  "dataset": "D:\\Usr\\Project_VSC\\Financial_Statement_LLM_NLP\\evaluation\\datasets\\retrieval_v21.json",
+  "n_cases": 380,
+  "retriever_modes_available": [
+    "lexical",
+    "vector",
+    "hybrid"
+  ],
+  "filter_company": true,
+  "rerank": false,
+  "rerank_model": null,
+  "section_aware": true,
+  "section_hints": false,
+  "query_expansion": true,
+  "multi_query": false,
+  "weighted_fusion": true,
+  "neighbor_window": 0,
+  "mmr": true,
+  "mmr_lambda": 0.5,
+  "adaptive_pool": true,
+  "results": {
+    "hybrid": {
+      "mode": "hybrid",
+      "n_total": 380,
+      "n_scored": 330,
+      "recall@1": 0.2061,
+      "recall@3": 0.4152,
+      "recall@5": 0.503,
+      "recall@10": 0.6212,
+      "mrr": 0.3307,
+      "ndcg@5": 0.2992,
+      "p50_ms": 28.27,
+      "p95_ms": 134.68,
+      "no_gold_cases": 50,
+      "spurious_hit_rate": 1.0,
+      "avg_evidence_size": 10.0
+    }
+  }
+}

@@ -1,114 +1,162 @@
-# Fin_QA — Indian Equities Intelligence Platform
+# Fin·QA
 
-A local-first pipeline that turns raw NSE/BSE regulatory filings into a natural‑language question‑answering system for Indian listed companies — e.g. *"What is TCS's ROE?"*, *"Compare AXISBANK and HDFCBANK on leverage"*, *"Why did HCLTECH's profitability decline?"*.
+**[Live demo](https://finqa-dashboard-public.onrender.com/)** (Disable ublock origin for this to load) — a free-tier deployment
+covering 12 of the NIFTY 50 companies (TCS, INFY, HCLTECH, WIPRO, RELIANCE, ONGC,
+HDFCBANK, ICICIBANK, SBIN, ITC, M&M, SBILIFE), lexical-only retrieval, LLM synthesis on
+by default. First load can take up to a minute — the backend sleeps after inactivity on
+Render's free tier. See [`deployment/README.md`](deployment/README.md#public-demo-render)
+for what's deliberately scoped down for this deployment and why.
 
-Every financial number comes from a **deterministic calculation engine**, never from an LLM. The LLM layer is only ever used to write up numbers that have already been computed and verified — and every LLM-written answer is mechanically checked against its source data before it's shown to you.
+Financial research API and dashboard for the NIFTY 50 universe. Ask it things like *"What
+was TCS's ROE?"*, *"Compare RELIANCE and ONGC on leverage"*, or *"Why did HCLTECH's
+profitability decline?"* and it answers with the calculation behind every number and the
+filing passage behind every claim.
+
+The core design constraint: an LLM never computes or invents a figure. All arithmetic
+happens in a plain deterministic Python engine over normalized XBRL data; the LLM's only
+job is to read the numbers and documents that engine and retrieval layer already produced
+and write them up, citing which evidence each sentence came from. A separate verification
+pass then independently checks the arithmetic and every citation before the answer goes
+out, downgrading or abstaining on anything it can't confirm. Every code path also has a
+no-LLM fallback, so the system still answers — more plainly — with zero model calls and $0
+spend.
+
+[**MANUAL.md**](MANUAL.md) has the full technical reference: every module, every config
+variable, the API and metrics reference, deployment, and known limitations. This README is
+the short version.
+
+> **Two systems live in this repo.** Everything from here on — the architecture, the
+> features, `finqa_v2/` + `dashboard_v2/` — describes the one that's live. An earlier
+> iteration is kept untouched under `archive/` as a runnable reference, not part of what's
+> running or described below; see [Project layout](#project-layout) for what's in it.
+
+## Architecture
 
 ```
-BSE / NSE filings (XBRL + PDF)
+BSE/NSE XBRL filings + results PDFs + investor transcripts/presentations
         │
         ▼
- XBRL parsing + normalization  ──────────►  SQLite database
-        │                                         │
-        ▼                                         │
- Deterministic Financial Engine  ◄────────────────┘
- (ratios · trends · peer comparison · ranking · Piotroski/Altman)
+XBRL normalization ──────────► SQLite (dev) or PostgreSQL + pgvector (prod)
+        │                              │
+        ▼                              │
+Deterministic Financial Engine ◄───────┘
+(ratios · growth/CAGR · valuation · segments · DuPont decomposition)
         │
-        ├──────────────► PDF text → chunks → embeddings → FAISS index
-        │                          (RAG: narrative / "why" answers)
+        ├──► PDF → structure-aware chunks → BM25 + dense embeddings
+        │         → hybrid retrieval (+ optional reranking)
         ▼
-   QA Router (classifies each question, picks a path)
-        │
-        ├── numeric fact / trend / ranking / health  →  structured DB query (no LLM)
-        └── narrative / complex synthesis            →  RAG + Hybrid LLM (Ollama local / Groq or Anthropic cloud)
-        │
+Query Planner (rules-based, LLM-assisted when a key is configured)
         ▼
-  grounded, source-checked answer
-        │
-        ├──────────────► `finqa` CLI (interactive or one-off questions)
-        ├──────────────► `finqa-api` — FastAPI REST layer (thin transport only, computes nothing itself)
-        └──────────────► Dashboard — React/Vite SPA over the API (Home, Company page, Rankings, Financial QA)
+Tool Registry — 15 typed functions; the only path any answer touches data or documents
+        ▼
+Reasoning Orchestrator
+        ├── causal "why" questions       → hypothesis decomposition + structural testing
+        ├── "is management's claim true" → cross-validation against reported figures
+        └── everything else              → evidence assembly + LLM (or deterministic) synthesis
+        ▼
+Verification — independently checks calculations and citations, abstains on mismatch
+        ▼
+FastAPI ──► React/Vite dashboard (chat + per-company drill-down, claim-level evidence)
 ```
 
----
+## What it does
 
-## What this is, concretely
-
-- **Data**: pulls quarterly/annual XBRL filings and results PDFs directly from NSE/BSE for the NIFTY 50 universe (auto-refreshed, not a hand-maintained list).
-- **Facts, not guesses**: XBRL tags are mapped to a canonical schema; anything that can't be cleanly mapped is left as `null` with a reason — never zero-filled or approximated.
-- **Analysis**: a single Financial Engine computes every ratio, growth figure, peer percentile, fundamental ranking score, and financial-health score (Piotroski F-Score, partial Altman Z''). No other module recomputes these — they only consume the engine's output.
-- **Document intelligence**: filing PDFs are chunked, embedded, indexed (FAISS), and retrieved with a hybrid search (semantic + BM25 + phrase overlap) and cross-encoder reranker, for the qualitative content XBRL can't capture (management commentary, litigation, deal narratives).
-- **QA Router**: classifies each question and decides whether it needs a structured DB lookup, a RAG retrieval, or both plus an LLM to synthesize the final answer.
-- **Hybrid LLM**: local Ollama handles cheap/simple tasks; a cloud model (Groq by default — free tier; Anthropic optional) handles complex reasoning and narrative writing. Every cloud-written numeric claim is automatically checked against the source figures/units before being returned.
-- **Ships as a real CLI**: `pip install -e .` gives you `finqa` (ask questions), `finqa-pipeline` (refresh data), `finqa-setup` (schedule automatic refreshes), and `finqa-api` (serve the REST API) as console commands, usable from anywhere.
-- **REST API + web dashboard**: a FastAPI layer (`api/`) exposes every read path above — financials, ratios, trends, peer comparison, ranking, financial health, research reports, sector comparison, and QA — as a thin, computation-free transport over the same deterministic engine the CLI uses. A React/Vite dashboard (`dashboard/`) sits on top of it for local, no-code use of the whole platform.
-
----
+- **Deterministic financial engine.** 17 ratios (ROE, ROCE, margins, leverage, coverage,
+  liquidity), valuation multiples, YoY/QoQ growth, CAGR, segment attribution, and a
+  DuPont/net-margin decomposition, each traceable to the exact source facts and formula
+  used. A metric that can't be computed cleanly comes back `null` with a stated reason —
+  never zero, never an approximation. Banks and insurers get their own handling (e.g.
+  `total_income` in place of `revenue`) instead of being silently misreported.
+- **Document retrieval with real citations.** Filing PDFs, investor decks, and
+  earnings-call transcripts are chunked with page/section provenance and indexed both
+  lexically (BM25) and semantically, so a "why" answer can point to the actual paragraph
+  it came from.
+- **Causal analysis that checks itself.** A "why did profitability decline" question
+  decomposes the metric into candidate drivers (cost lines, segment mix, DuPont factors)
+  and structurally tests each one against the numbers before calling anything supported.
+- **Claim cross-validation.** "Management said growth was driven by BFSI — is that true?"
+  is checked against both the segment data and the filing text, landing on `supported` /
+  `partially_supported` / `not_supported` / `insufficient_evidence`.
+- **Post-hoc verification.** Before an answer ships, the verifier independently attempts
+  to recompute every calculation (a formula whose inputs aren't all pinned values is
+  flagged `not_recomputable` rather than silently trusted) and reconciles every number in
+  the prose against its source evidence; a claim that fails is downgraded, and an answer
+  that fails as a whole is abstained rather than shown. Measured on the 850-question
+  benchmark below: 99.7% of claims are fully grounded (every evidence id they cite
+  resolves to real, unflagged evidence).
+- **REST API and dashboard**, both pure transport over the same engine — neither computes
+  anything on its own.
+- **Cost-aware LLM layer.** Groq's free tier by default (a 60-request/session, 180k
+  token/day budget, enforced in code, not just documented), or an optional Anthropic path
+  with a hard $3 spend cap that refuses a call rather than risk exceeding it.
+- **462 unit tests, 0 failures** (`python -m unittest discover -s finqa_v2`, last verified
+  2026-09-13), plus the evaluation suite below, which runs against the live engine and
+  retrieval stack rather than mocks.
+- **An 850-question internal benchmark** across factual, numerical, comparison, causal,
+  cross-validation, and adversarial categories, all 50 NIFTY 50 companies — see
+  [Evaluation](#evaluation) for what running it actually shows, including where the
+  numbers are weaker.
 
 ## Project layout
 
-The project is nine sibling folders plus one thin packaging layer, sharing a single Python virtual environment (**no per-folder venvs**) — `api/` and `dashboard/` are purely additive: neither modifies any of the folders below it:
+```
+finqa_v2/            The system described above.
+├── engine/           Ratios, growth, valuation, segments, decomposition
+├── normalize/        XBRL → canonical facts
+├── documents/        PDF extraction, section detection, chunking
+├── retrieval/        BM25 + embeddings + hybrid fusion + reranking
+├── tools/            Typed Tool Registry — the sanctioned data/document access path
+├── planner/          Query planning (rules + LLM)
+├── reasoning/        Orchestrator, prompt construction, deterministic synthesis
+├── hypothesis/       Causal "why" question workflow
+├── crossval/         Management-claim verification workflow
+├── evidence/         Evidence/Claim/Calculation models and the Claim Graph
+├── verification/     Recomputation and citation checks
+├── llm/              Provider abstraction (Groq, Anthropic), rate/cost budgets
+├── sqlite/, postgres/  Interchangeable repository implementations
+├── dataset/          One-command rebuild + coverage audit
+└── api/              FastAPI app
 
-| Folder | Responsibility |
-|---|---|
-| `data_extraction/` | Fetches NSE/BSE filings (XBRL + PDF) for the live NIFTY 50 universe; parses XBRL into canonical financial facts |
-| `data_analysis/` | Financial Engine: ratios, valuation, historical trends, peer comparison, fundamental ranking, financial health (Piotroski/Altman), report aggregation |
-| `database/` | Shared SQLite database (`financial_intelligence.db`) both of the above load into; query helpers for the rest of the system |
-| `rag/` | Extracts text from filing PDFs, chunks it, embeds it, builds a FAISS index, retrieves and reranks passages |
-| `qa_router/` | Classifies incoming questions and routes them to the right combination of structured query / RAG / LLM |
-| `llm_router/` | The hybrid LLM layer — local Ollama client, cloud client (Groq / Anthropic), routing logic, prompt templates, verification checks |
-| `orchestrator/` | Chains fetch → extract → analyze → load → RAG-ingest into one unattended, resumable pipeline run |
-| `fin_llm_platform/` | Thin packaging shell installed by `pip install -e .` — wires the above into console commands, nothing reimplemented |
-| `api/` | FastAPI REST layer over the whole engine — one router per resource (companies, financials, ratios, trends, peers, ranking, health, reports, sectors, QA); computes nothing itself, only reads already-verified data |
-| `dashboard/` | React (Vite) single-page app calling the API — Home/market overview, a per-company page, a rankings leaderboard, and a chat-style Financial QA page |
+dashboard_v2/         React (Vite) frontend
+evaluation/           Internal benchmark, evaluators, baseline comparisons
+deployment/           Docker Compose stack (API, Postgres, dashboard, Prometheus, Grafana)
 
----
+archive/              NOT LIVE — an earlier iteration (data_analysis/, rag/, qa_router/,
+                      llm_router/, orchestrator/, fin_llm_platform/, its own api/ and
+                      dashboard/), kept untouched as a runnable reference rather than
+                      deleted. Nothing above depends on it or modifies it.
+```
 
-## Build status
+`finqa_v2/` and `archive/` share only the raw XBRL/PDF inputs under
+`data_extraction/data/` and `database/data/` — `finqa_v2` writes its own `finqa_v2.db`,
+separate from `archive`'s `financial_intelligence.db`. See
+[`MANUAL.md §2`](MANUAL.md#2-repository-layout) for the full per-file breakdown.
 
-| Stage | What it delivers | Status |
-|---|---|---|
-| 0–1. Preserve & stabilize extraction pipeline | Reliable XBRL → canonical facts | ✅ |
-| 2. Normalization + database | Shared SQLite store | ✅ |
-| 3. Financial calculation engine | Deterministic ratios/valuation, single source of truth | ✅ |
-| 4. Historical trends | QoQ/YoY growth, trend detection | ✅ |
-| 5. Peer comparison | Cross-sectional comparison across a peer set | ✅ |
-| 6. Fundamental ranking | Percentile-based composite scoring (QMJ-style) | ✅ |
-| 7. Financial health | Piotroski F-Score (8/9 criteria), partial Altman Z'' | ✅ |
-| 8. Automated research reports | Part A — structured JSON report aggregation | ✅ Part A · Part B (LLM narrative) folded into Stage 11 |
-| 9. RAG | PDF ingestion, chunking, embeddings, dual FAISS index, hybrid retrieval + reranking | ✅ |
-| 10. QA Router | Question classification → structured / RAG / LLM routing | ✅ |
-| 11. Hybrid LLM | Ollama (local) + Groq/Anthropic (cloud) router, numeric & unit verification guardrails | ✅ |
-| 12. Scale to NIFTY 50 + production CLI | Live universe sourcing, full pipeline orchestration, rate-limit sizing, performance validation at scale, CLI robustness, `pip install`-able package with scheduler | ✅ |
-| 13. API | REST API over financials/ratios/trends/peers/ranking/health/reports/sectors/QA, thin transport only | ✅ |
-| 14. Dashboard | React/Vite web frontend over the API | 🚧 in progress — Home, Company page, Rankings, and Financial QA are built and live-tested; a final polish pass (loading/error consistency, responsive layout) is what's left |
+## Design principles
 
-
----
-
-## Core design principles
-
-- **Deterministic financial layer.** Every ratio, growth figure, ranking, and health score is computed by plain Python, never by an LLM. The Financial Engine (`data_analysis/src/analysis/`) is the single source of truth — no other module recalculates a metric it already produces.
-- **No silent approximation.** When a clean, unambiguous XBRL tag doesn't exist for something, that feature is excluded and documented as excluded — never zero-filled, never estimated with a proxy.
-- **Consolidated is primary.** Standalone financials are kept as a diagnostic/secondary view only; several real distortions (e.g. one-off "other income" inflating standalone margins) confirmed this is the right default.
-- **LLM as interpreter, not calculator.** The hybrid LLM layer only classifies, routes, summarizes, and writes up numbers the deterministic engine has already produced — and every LLM-produced numeric claim is automatically checked against its source before being shown.
-- **RAG for narrative, structured queries for facts.** "What was TCS's ROE?" never touches the document index; "Why did HCLTECH's margin decline?" does. The QA router enforces this split.
-
-**Known scope limits (current, not bugs):**
-- The ranking/valuation/health framework (Capital Employed, Enterprise Value, current-liabilities-based safety checks) is built for non-financial companies. Banks/NBFCs need a different framework (e.g. CAMEL-style) and aren't meaningfully covered yet.
-- Multi-year (5-year) history and CAGR-based metrics are limited by what NSE/BSE actually expose for older periods; Growth is intentionally left out of the ranking formula for this reason rather than approximated.
-- The default install is CPU-only (`torch`/`faiss-cpu`); a CUDA GPU speeds up RAG ingestion if you install a CUDA build of `torch` yourself.
-
----
+- The LLM never computes or invents a number — every figure traces to the engine or a
+  retrieved passage.
+- A metric that isn't cleanly available returns `null` with a reason, never zero and never
+  a substitute.
+- Every claim carries its own evidence chain, down to a specific evidence id.
+- Verification runs independently after synthesis and doesn't trust the writer's
+  arithmetic or citations.
+- Consolidated and standalone financials are never silently swapped for each other — a
+  company that files only one basis shows the other as genuinely unavailable.
+- Data-coverage gaps are stated plainly rather than papered over with the nearest
+  available period.
 
 ## Getting started
 
 ### Prerequisites
 
-- **Python 3.11+**
-- A **Groq API key** (free tier) — the default cloud LLM provider. An Anthropic API key works too if you'd rather use Claude for the cloud path.
-- *Optional:* a local [Ollama](https://ollama.com) install for fully local LLM synthesis with no cloud calls — if it's not installed, the router falls back to the cloud provider automatically.
-- *Optional:* a CUDA-capable GPU for faster RAG ingestion (embedding + reranking).
+- Python 3.11+ — needed at least once, to build the local dataset (`finqa_v2.db`).
+- Node 18+, unless you're running everything through Docker Compose (see below), which
+  also covers the API, PostgreSQL, and monitoring.
+- A Groq API key (free) — the default LLM provider. An Anthropic key also works, with a
+  configurable spend cap.
+- Optional: a CUDA GPU for faster embedding/reranking during ingestion. The default
+  install is CPU-only.
 
 ### Install
 
@@ -117,133 +165,176 @@ git clone https://github.com/Am1n1602/Fin_QA
 cd Fin_QA
 
 python -m venv venv
-
-# Windows
-venv\Scripts\activate
-# macOS/Linux
-source venv/bin/activate
+venv\Scripts\activate        # Windows
+# source venv/bin/activate   # macOS/Linux
 
 pip install -e .
-# or, to also enable the Anthropic/Claude cloud path:
+# add the Anthropic path too:
 pip install -e ".[anthropic]"
 ```
 
-This installs every dependency across all six sibling projects from a single root `pyproject.toml`, and registers three console commands: `finqa`, `finqa-pipeline`, `finqa-setup`. It's an **editable** install — the sibling project folders stay on disk exactly where they are; don't move `fin_llm_platform/` away from them after installing.
-
-### Configure your LLM key
-
-Copy the example config and set your API key as a real environment variable — never commit it. A root-level `.env.example` is included as a template (`cp .env.example .env`, then fill in your key); the repo's `.gitignore` already excludes `.env` and the real `llm_config.yaml` from version control.
+### Configure
 
 ```bash
-cp llm_router/config/llm_config.example.yaml llm_router/config/llm_config.yaml
+cp .env.example .env
 ```
 
-```bash
-# .env or your shell's environment
+```
 GROQ_API_KEY=your-key-here
-# optional, only if using the Anthropic path
-ANTHROPIC_API_KEY=your-key-here
+ANTHROPIC_API_KEY=your-key-here   # optional
 ```
 
-### Build the database and search index
+### Build the dataset and search indexes
 
 ```bash
-finqa-pipeline
+python -m finqa_v2.dataset.build
+python -m finqa_v2.retrieval.build_indexes
 ```
 
-Runs, in order: refresh the NIFTY 50 constituent list → fetch filings for every company → extract XBRL facts → compute ratios/analysis → load into the database → ingest PDFs into the RAG index. A full 50-company run takes roughly an hour the first time (fetching is the slow part); re-running later only picks up new filings and index changes.
+The first command imports company/index metadata, normalizes XBRL facts, extracts
+segments, imports share prices, ingests filing PDFs into structured chunks, and runs a
+coverage audit — each step is idempotent and resumable (`--from segments`, `--skip-docs`,
+`--company TCS`). Run against the maintainer's own dataset, that audit currently reports
+100/100 on all 50 NIFTY 50 companies (`python -m finqa_v2.dataset.audit`) — your own build
+depends on what BSE/NSE currently serves, so re-run it yourself rather than assuming this
+holds. The second command builds the BM25 and embedding indexes the retriever needs
+(`--device cuda` if you have a GPU).
 
-Useful flags: `finqa-pipeline --only fetch`, `finqa-pipeline --skip universe`, `finqa-pipeline --dry-run`.
+Prefer PostgreSQL? See [`deployment/README.md`](deployment/README.md) — the repository
+interface is identical either way.
 
----
+## Running it
 
-## Usage
+### Everything via Docker Compose
 
 ```bash
-# one-off question
-finqa "What is TCS's ROE?"
-
-# interactive session — background workers stay warm across questions
-finqa
-> Compare AXISBANK and HDFCBANK on leverage
-> Which companies have the best financial health?
-> quit
-
-# raw JSON output, for scripting
-finqa "What is TCS's ROE?" --json
+cd deployment/compose
+docker compose up -d --build postgres minio minio-init api dashboard prometheus grafana
 ```
 
-Question types that work today:
+| Service | URL | |
+|---|---|---|
+| Dashboard | http://localhost:5174 | |
+| API | http://localhost:8010 (`/docs` for interactive schema) | |
+| Prometheus | http://localhost:9090 | |
+| Grafana | http://localhost:3000 | login with your own `GRAFANA_ADMIN_USER`/`PASSWORD` |
 
-- **Direct numeric facts** — *"What was HDFCBANK's revenue last quarter?"*
-- **Trends** — *"How has SBILIFE's ROE trended over the last few years?"*
-- **Comparisons** — *"Compare BAJFINANCE and BAJAJFINSV on leverage"*
-- **Rankings** — *"Which companies have the best financial health?"*
-- **Full company reports** — financial health / ranking / valuation summary for a single company
-- **Narrative "why" questions**, answered from the actual filing text — *"Why did HCLTECH's profitability decline?"*
+Grafana, Postgres, and MinIO have no default passwords — copy
+`deployment/compose/.env.example` to `deployment/compose/.env` and set
+`GRAFANA_ADMIN_PASSWORD`, `POSTGRES_PASSWORD`, `MINIO_ROOT_PASSWORD` first, or `docker
+compose up` refuses to start those services. See `deployment/README.md` for details.
 
-Use each company's real NSE ticker (e.g. `BAJAJFINSV`) — name matching is alias-based.
-
-### Scheduling automatic refreshes
+One-time, once `postgres` is healthy, load your local dataset into it:
 
 ```bash
-finqa-setup --interval daily              # default 03:00 local time
-finqa-setup --interval weekly --time 02:30
-finqa-setup --interval monthly
-
-finqa-setup --status
-finqa-setup --remove
+export FINQA_PG_URL=postgresql://finqa:<POSTGRES_PASSWORD>@localhost:55432/finqa
+python -m finqa_v2.postgres.migrate
 ```
 
-Registers a real OS-level job (crontab on Linux/macOS, Task Scheduler on Windows) that runs the full pipeline on your chosen interval.
+`GROQ_API_KEY`/`ANTHROPIC_API_KEY` are read from your shell or a `.env` file in
+`deployment/compose/`. `docker compose down -v` also wipes the Postgres/MinIO volumes.
+Full detail in [`deployment/README.md`](deployment/README.md) and
+[`MANUAL.md`](MANUAL.md#14-deployment).
 
----
-
-## Web API
+### Individually, without Docker
 
 ```bash
-finqa-api
+finqa-api-v2
+# or: uvicorn finqa_v2.api.main:app --port 8010
 ```
 
-Starts the FastAPI server (default `http://0.0.0.0:8000`) with interactive docs at `/docs`. It's a thin transport layer only — every number still comes from the same deterministic engine and database the CLI uses; the API computes nothing itself.
-
-Key endpoints:
-
-- `GET /companies`, `GET /companies/{symbol}`
-- `GET /companies/{symbol}/financials`, `/ratios`, `/trends`, `/peers`, `/ranking`, `/health`, `/report`
-- `GET /rankings` (optional `sector=` filter), `GET /sectors`, `GET /sectors/{sector}/comparison`
-- `POST /qa`, `POST /companies/{symbol}/qa` — same grounded QA the CLI uses, over HTTP
-
-Configuration is environment-driven (`FINQA_API_HOST`, `FINQA_API_PORT`, `FINQA_API_CORS_ORIGINS`, `FINQA_API_KEY` — unset by default, fine for local use; set it before exposing the API beyond localhost). See `api/config.py` for the full list.
-
-## Dashboard
-
 ```bash
-cd dashboard
+cd dashboard_v2
 npm install
-npm run dev
+npm run dev -- --port 5174
 ```
 
-A React (Vite) single-page app calling the API above (`VITE_API_BASE_URL`, defaults to `http://localhost:8000`) — run `finqa-api` first. Currently ships four pages: a market overview (Home), a per-company page (overview/financials/ratios/trends/peers/ranking/health/research report, tabbed), a sortable Rankings leaderboard, and a chat-style Financial QA page that renders each answer's cited sources alongside it. Local dev only for now — no build/deploy step yet.
+Set `VITE_API_BASE_URL` in `dashboard_v2/.env.local` if the API isn't on
+`localhost:8010`. Configuration is otherwise environment-driven — see
+[`MANUAL.md §21`](MANUAL.md#21-full-environment-variable-reference) for the full list, or
+`finqa_v2/api/config.py` in source.
 
----
+### Try it
 
-## Data & validation
+- *"What was TCS's revenue in FY2026?"*
+- *"What is RELIANCE's ROE?"*
+- *"Compare TCS and Infosys on profitability."*
+- *"Which segment contributed most to Reliance's revenue growth?"*
+- *"Why did HCLTECH's profitability decline?"*
+- *"TCS management said growth was driven by the BFSI segment — is that supported?"*
 
-Originally built and cross-validated against six IT-services companies — **TCS, INFY, HCLTECH, WIPRO, TECHM, LTM** (LTIMindtree; NSE symbol changed from `LTIM` to `LTM` in Feb 2026) — then scaled to the full, live-refreshed **NIFTY 50** universe. Companies that drop out of the index on reconstitution are marked inactive, not deleted; their historical data stays queryable.
+## Evaluation
 
-Every layer has been checked against independent sources, not just internal consistency — e.g. TCS's computed TTM EPS, P/E, current ratio, and P/B all matched (within a normal range) figures independently reported by GuruFocus, TipRanks, Value Research, and Tickertape for the same periods.
+```bash
+python -m unittest discover -s evaluation
 
----
+# deterministic scoring, zero LLM calls
+python -m evaluation.runners.v2_runner --dataset evaluation/datasets/finqa_v2_eval.jsonl --no-retriever
 
-## Roadmap — what's next
+# regenerate the 850-question internal benchmark
+python -m evaluation.datasets.finqa_india.build
 
-The CLI (`finqa`), the API, and now most of the Dashboard are all real and working — this isn't a plan anymore for those three, just remaining polish and later-stage extensions:
+# compare the full pipeline against simpler baselines
+python -m evaluation.baselines.runner --dataset evaluation/datasets/finqa_india.jsonl --sample 20 --llm
+```
 
-- **Dashboard polish pass**: consistent loading/error states, a responsive layout pass, and (optionally) charts for trend lines and ranking score breakdowns.
-- **Cloud deployment**: the Dashboard and API are local-only today (dev server + `localhost:8000`); hosting either of them anywhere else is a separate, not-yet-designed stage.
-- Open, non-blocking items: a Banks/NBFC-appropriate health framework (the current ranking/valuation/health model is built for non-financial companies), deeper multi-year history (blocked on what NSE/BSE actually expose for older periods, not on this codebase), and root-causing occasional cloud-LLM latency variance on complex questions.
+The benchmark (`evaluation/datasets/finqa_india.jsonl`, 850 questions) spans factual,
+numerical, comparison, multi-step, causal, cross-document, analytical, and adversarial
+questions across all 50 NIFTY 50 names. Two real runs, both checked in under
+`evaluation/`, not cherry-picked:
 
----
+**Full benchmark, deterministic path (0 LLM calls, all 850 questions), 2026-09-10:**
 
-Licensed under MIT — see [`LICENSE`](./LICENSE).
+| Check | Result | n checked |
+|---|---|---|
+| Numerical accuracy | 100% | 200 |
+| Claim groundedness (every cited evidence id is real) | 99.7% | 625 |
+| Correct abstention (declines what it can't answer) | 99.7% | 850 |
+| Overall correctness (keyword/tolerance match to reference) | 58.0% | 800 |
+
+Correctness lands well below the other three because it's the bluntest check — a strict
+keyword/tolerance match against one reference answer — and many causal/adversarial
+questions don't have a single "correct" phrasing to match, even when the underlying
+numbers and evidence are right. Raw report:
+[`evaluation/datasets/finqa_india/baseline_deterministic.json`](evaluation/datasets/finqa_india/baseline_deterministic.json).
+
+**204-question sample, Claude Sonnet via Anthropic, $3 cost cap, 2026-09-11** — four
+pipeline variants compared on the same questions:
+
+| Pipeline | Numerical accuracy | Correctness |
+|---|---|---|
+| A — LLM only, no tools | 0.0% | 32.3% |
+| B — vector RAG + LLM | 4.2% | 33.9% |
+| C — deterministic engine + LLM, no verification | 83.3% | 83.3% |
+| D — full Fin·QA (this system) | 91.7% | 68.2% |
+
+The gap that matters: an LLM answering from its own knowledge or from retrieved passages
+alone gets financial arithmetic right essentially never (0–4%) on this dataset; adding the
+deterministic engine — regardless of whether verification/reasoning sits on top — moves
+numerical accuracy to 83–92%. D's correctness score sitting below C's is a real, unresolved
+result, not a typo: D abstains far more often (98.8% vs 93.9% correct-abstention), which
+trades some judged-correct answers for refusing ones it's less sure of — plausible, but
+not something this sample size (n=204, one seed) proves either way. Raw report:
+[`evaluation/reports/baselines-claude-sonnet5.json`](evaluation/reports/baselines-claude-sonnet5.json).
+
+A regression gate compares any new run against a pinned baseline and fails on a metric
+regression beyond tolerance. See [`MANUAL.md §17`](MANUAL.md#17-evaluation-framework) for
+the evaluator definitions, the regression harness, and baseline-comparison detail.
+
+## Known limitations
+
+- **Historical depth**: ingested data covers the most recent annual/quarterly filings
+  only — no automated source of structured data goes back further under India's current
+  filing framework. A question about an older period gets an honest "not available."
+- **Segment margin isn't shown**, only segment revenue — the filings disclose one, not
+  the other, and nothing here approximates it.
+- **The consolidated/standalone toggle is manual** — a company that files only one basis
+  never has the other silently substituted in.
+- **Running components individually defaults to SQLite**; PostgreSQL is fully supported
+  but opt-in via one environment variable.
+
+Full list, with the reasoning behind each, in [`MANUAL.md §18`](MANUAL.md#18-known-limitations).
+
+## License
+
+MIT — see [`LICENSE`](./LICENSE).

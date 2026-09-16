@@ -1,0 +1,44 @@
+{
+  "experiment_id": "retrieval_v21_500q_weighted_recency",
+  "git_commit": "a1c09c3a176e0f69a986658488e671065534ef6b",
+  "dataset": "D:\\Usr\\Project_VSC\\Financial_Statement_LLM_NLP\\evaluation\\datasets\\retrieval_v21.json",
+  "n_cases": 500,
+  "retriever_modes_available": [
+    "lexical",
+    "vector",
+    "hybrid"
+  ],
+  "filter_company": true,
+  "rerank": false,
+  "rerank_model": null,
+  "section_aware": true,
+  "section_hints": false,
+  "query_expansion": true,
+  "multi_query": false,
+  "weighted_fusion": true,
+  "neighbor_window": 0,
+  "mmr": true,
+  "mmr_lambda": 0.5,
+  "adaptive_pool": false,
+  "candidate_k": 40,
+  "default_latest_period": false,
+  "weighted_recency": true,
+  "results": {
+    "hybrid": {
+      "mode": "hybrid",
+      "n_total": 500,
+      "n_scored": 437,
+      "recall@1": 0.0847,
+      "recall@3": 0.1876,
+      "recall@5": 0.2609,
+      "recall@10": 0.3432,
+      "mrr": 0.1578,
+      "ndcg@5": 0.1555,
+      "p50_ms": 149.64,
+      "p95_ms": 1386.78,
+      "no_gold_cases": 63,
+      "spurious_hit_rate": 1.0,
+      "avg_evidence_size": 10.0
+    }
+  }
+}

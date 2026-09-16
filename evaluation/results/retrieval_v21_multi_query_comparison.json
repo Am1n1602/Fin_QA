@@ -1,0 +1,48 @@
+{
+  "category": "comparison",
+  "n": 30,
+  "results": {
+    "lexical": {
+      "before": {
+        "recall@5": 0.0,
+        "recall@10": 0.0,
+        "mrr": 0.0,
+        "ndcg@5": 0.0
+      },
+      "after": {
+        "recall@5": 0.1,
+        "recall@10": 0.2,
+        "mrr": 0.1114,
+        "ndcg@5": 0.0674
+      }
+    },
+    "vector": {
+      "before": {
+        "recall@5": 0.2333,
+        "recall@10": 0.2333,
+        "mrr": 0.1639,
+        "ndcg@5": 0.1716
+      },
+      "after": {
+        "recall@5": 0.3,
+        "recall@10": 0.3333,
+        "mrr": 0.2106,
+        "ndcg@5": 0.2062
+      }
+    },
+    "hybrid": {
+      "before": {
+        "recall@5": 0.1,
+        "recall@10": 0.2333,
+        "mrr": 0.0651,
+        "ndcg@5": 0.0597
+      },
+      "after": {
+        "recall@5": 0.2333,
+        "recall@10": 0.2667,
+        "mrr": 0.1597,
+        "ndcg@5": 0.1217
+      }
+    }
+  }
+}

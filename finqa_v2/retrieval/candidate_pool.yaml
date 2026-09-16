@@ -1,0 +1,12 @@
+# Per-intent candidate pool size (§20). `default:` applies when no intent is given or the
+# intent isn't listed below. See candidate_pool.py:get_candidate_k() and
+# HybridRetriever.retrieve(..., adaptive_pool=True).
+#
+# Starting configuration is §20's own literal example; benchmarked before finalizing --
+# see evaluation/results/candidate_pool_v21_*.json.
+default: 40
+numeric: 25
+numeric_fact: 25
+narrative: 40
+comparison: 50
+multi_hop: 70

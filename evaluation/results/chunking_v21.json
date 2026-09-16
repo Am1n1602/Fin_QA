@@ -1,0 +1,56 @@
+{
+  "sample_tickers": [
+    "TCS",
+    "RELIANCE",
+    "HDFCBANK",
+    "INFY",
+    "ITC",
+    "TATASTEEL"
+  ],
+  "results": {
+    "500": {
+      "target": 500,
+      "overlap": 70,
+      "n_chunks": 715,
+      "n_gold": 22,
+      "recall@5": 0.2727,
+      "recall@10": 0.4091,
+      "mrr": 0.1345,
+      "ndcg@5": 0.1398,
+      "p50_ms": 0.83
+    },
+    "750": {
+      "target": 750,
+      "overlap": 100,
+      "n_chunks": 705,
+      "n_gold": 22,
+      "recall@5": 0.2727,
+      "recall@10": 0.4091,
+      "mrr": 0.1345,
+      "ndcg@5": 0.1398,
+      "p50_ms": 0.86
+    },
+    "900_current": {
+      "target": 900,
+      "overlap": 120,
+      "n_chunks": 697,
+      "n_gold": 22,
+      "recall@5": 0.2727,
+      "recall@10": 0.4091,
+      "mrr": 0.1345,
+      "ndcg@5": 0.1398,
+      "p50_ms": 0.8
+    },
+    "1200": {
+      "target": 1200,
+      "overlap": 160,
+      "n_chunks": 674,
+      "n_gold": 22,
+      "recall@5": 0.2727,
+      "recall@10": 0.5,
+      "mrr": 0.1426,
+      "ndcg@5": 0.1465,
+      "p50_ms": 0.86
+    }
+  }
+}
