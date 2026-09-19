@@ -85,6 +85,18 @@ class TestIntentAndTools(PlannerRulesTestCase):
     def test_planner_tag(self):
         self.assertEqual(self._plan("TCS revenue").planner, "rules")
 
+    def test_unknown_intent_with_company_falls_back_to_documents(self):
+        p = self._plan("What does TCS say about supply chain risks?")
+        self.assertIs(p.intent, Intent.UNKNOWN)
+        self.assertEqual(p.tools, ["search_documents"])
+        self.assertTrue(p.needs_documents)
+
+    def test_unknown_intent_without_company_stays_empty(self):
+        p = self._plan("What does the company say about supply chain risks?")
+        self.assertIs(p.intent, Intent.UNKNOWN)
+        self.assertEqual(p.tools, [])
+        self.assertFalse(p.needs_documents)
+
 
 class TestEvalCasesShakeout(PlannerRulesTestCase):
     def test_rules_planner_on_shipped_cases(self):

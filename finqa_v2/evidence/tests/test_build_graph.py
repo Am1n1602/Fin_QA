@@ -27,6 +27,16 @@ _ENG_FLAGGED = EngineResult(
     inputs=(FactRef("total_assets", 1e12, "FY2026", 1),),
     limitations=("total_assets: source record flagged for review (current+noncurrent mismatch)",),
 )
+_ENG_FAILED = EngineResult(
+    kind="metric", name="revenue", value=None, unit="INR", company="TCS", basis="consolidated",
+    period="FY2024", formula=None, inputs=(),
+    limitations=("no XBRL fact mapped for revenue in FY2024",),
+)
+_ENG_MISSING_INPUT = EngineResult(
+    kind="ratio", name="roe", value=25.0, unit="pct", company="TCS", basis="consolidated",
+    period="FY2026", formula="net_profit / total_equity * 100",
+    inputs=(FactRef("net_profit", 150.0, "FY2026", 11), FactRef("total_equity", None, "FY2026", 12)),
+)
 
 
 class TestEngineAdapter(unittest.TestCase):
@@ -48,6 +58,20 @@ class TestEngineAdapter(unittest.TestCase):
         ev, _ = evidence_from_engine_result(_ENG_FLAGGED, workspace=ws)
         self.assertLess(ev.confidence, 0.85)
         self.assertLessEqual(ws.by_type("financial_fact")[0].confidence, 0.75)
+
+    def test_failed_result_gets_zero_confidence_not_a_confident_empty_fact(self):
+        ws = EvidenceSet()
+        ev, calc = evidence_from_engine_result(_ENG_FAILED, workspace=ws)
+        self.assertIsNone(ev.value)
+        self.assertEqual(ev.confidence, 0.0)
+        self.assertIsNone(calc.result)
+
+    def test_none_valued_input_is_not_added_as_evidence(self):
+        ws = EvidenceSet()
+        ev, calc = evidence_from_engine_result(_ENG_MISSING_INPUT, workspace=ws)
+        self.assertEqual(len(ev.inputs), 1)                        # total_equity skipped
+        self.assertEqual(len(ws.by_type("financial_fact")), 1)
+        self.assertEqual([i["name"] for i in calc.inputs], ["net_profit"])
 
 
 class TestRetrievalAdapter(unittest.TestCase):

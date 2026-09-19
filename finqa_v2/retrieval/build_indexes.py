@@ -32,6 +32,14 @@ def main() -> int:
     ap.add_argument("--hash-embedder", action="store_true",
                     help="Build the vector index with the dependency-free HashEmbedder "
                          "(exercises the path; not semantically strong).")
+    ap.add_argument("--metadata-enriched", action="store_true",
+                    help="Prepend a company/FY/section/page header to each chunk's text "
+                         "before embedding (finqa_v2.retrieval.text_builder). Does not "
+                         "change document_chunks.text; only the embedder's input.")
+    ap.add_argument("--batch-size", type=int, default=32)
+    ap.add_argument("--trust-remote-code", action="store_true",
+                    help="Needed for models that ship custom modeling code (e.g. "
+                         "jina-embeddings-v3). Off by default -- executes remote code.")
     args = ap.parse_args()
 
     if not args.v2_db.exists():
@@ -60,10 +68,18 @@ def main() -> int:
         if args.hash_embedder:
             embedder = HashEmbedder()
         else:
-            embedder = SentenceTransformerEmbedder(args.model, device=device)
+            embedder = SentenceTransformerEmbedder(args.model, device=device,
+                                                   batch_size=args.batch_size,
+                                                   trust_remote_code=args.trust_remote_code)
             print(f"[vector] embedding with {args.model} on {device}")
+        text_fn = None
+        if args.metadata_enriched:
+            from finqa_v2.retrieval.text_builder import from_row
+
+            text_fn = from_row
+            print("[vector] embedding text is metadata-enriched (company/FY/section/page header)")
         try:
-            idx = VectorIndex.build(repos, embedder)
+            idx = VectorIndex.build(repos, embedder, text_fn=text_fn)
         except Exception as e:  # torch/paging-file/import failures land here
             print(f"[vector] FAILED to build ({type(e).__name__}: {e}).")
             print("[vector] BM25 index is still in place; retry --vector when the model "
@@ -71,7 +87,12 @@ def main() -> int:
             return 3
         idx.save(args.vector_dir)
         model_id = "hash-embedder" if args.hash_embedder else args.model
-        (args.vector_dir / "model.txt").write_text(f"{model_id}\ndevice={device}\n",
+        extra_lines = ""
+        if args.metadata_enriched:
+            extra_lines += "\nmetadata_enriched=1"
+        if args.trust_remote_code:
+            extra_lines += "\ntrust_remote_code=1"
+        (args.vector_dir / "model.txt").write_text(f"{model_id}\ndevice={device}{extra_lines}\n",
                                                    encoding="utf-8")
         print(f"[vector] {len(idx.chunk_ids)} chunks, dim={idx.dim}, model={model_id}, "
               f"faiss={'yes' if idx._faiss is not None else 'numpy'} -> {args.vector_dir}")

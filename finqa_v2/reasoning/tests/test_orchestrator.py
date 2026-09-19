@@ -148,5 +148,39 @@ class TestOrchestrator(OrchestratorTestCase):
         self.assertLessEqual(len(r.tools_run), 1)
 
 
+class _TruncatingFakeProvider:
+    """Simulates a real provider whose JSON reply got cut off at max_tokens -- valid
+    text, but not parseable JSON. Records the kwargs it was called with."""
+    name = "fake"
+
+    def __init__(self):
+        self.calls: list[dict] = []
+
+    def complete(self, prompt, *, system=None, json_object=False, temperature=0.1, max_tokens=1024):
+        self.calls.append({"max_tokens": max_tokens})
+        return '{"answer": "TCS profit rose because revenue grew and costs fell, but'
+
+
+class TestSynthesisTruncationFallback(OrchestratorTestCase):
+    def setUp(self):
+        super().setUp()
+        self.provider = _TruncatingFakeProvider()
+        self.orch = ReasoningOrchestrator(self.repos, provider=self.provider)
+
+    def test_unparseable_response_falls_back_and_is_logged(self):
+        with self.assertLogs("finqa.v2.reasoning", level="WARNING") as cm:
+            r = self.orch.answer("What was TEST revenue in FY2026?")
+        self.assertFalse(r.llm_used)
+        self.assertIn("1,200", r.answer)                     # deterministic answer still lands
+        self.assertTrue(any("unparseable" in m for m in cm.output))
+
+    def test_synthesis_requests_a_generous_token_budget(self):
+        # self.provider is also the planner's LLM (max_tokens=700 for that call) -- the
+        # synthesis call is the last one made, after planning and tool execution.
+        self.orch.answer("What was TEST revenue in FY2026?")
+        self.assertTrue(self.provider.calls)
+        self.assertGreaterEqual(self.provider.calls[-1]["max_tokens"], 2000)
+
+
 if __name__ == "__main__":
     unittest.main()

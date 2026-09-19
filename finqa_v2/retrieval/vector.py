@@ -25,16 +25,26 @@ class VectorIndex:
 
     # ------------------------------------------------------------------ #
     @classmethod
-    def build(cls, repos, embedder, *, batch: int = 256, use_faiss: bool = True) -> "VectorIndex":
+    def build(cls, repos, embedder, *, batch: int = 256, use_faiss: bool = True,
+              text_fn=None) -> "VectorIndex":
+        """`text_fn(row) -> str`, if given, computes the string actually sent to the
+        embedder from a document_chunks row joined with companies.ticker (see
+        `finqa_v2.retrieval.text_builder.from_row`) -- e.g. a metadata-enriched header.
+        `document_chunks.text` itself, `chunk_ids`, and their order are unaffected
+        either way. `text_fn=None` (every pre-existing caller) is a byte-for-byte no-op."""
         import numpy as np
 
         rows = repos.connection.execute(
-            "SELECT chunk_id, text FROM document_chunks ORDER BY chunk_id"
+            "SELECT dc.chunk_id, dc.text, dc.financial_year, dc.document_type, "
+            "dc.section, dc.page_start, c.ticker "
+            "FROM document_chunks dc JOIN companies c ON c.company_id = dc.company_id "
+            "ORDER BY dc.chunk_id"
         ).fetchall()
         ids = [r["chunk_id"] for r in rows]
+        texts = [text_fn(r) if text_fn is not None else r["text"] for r in rows]
         vecs = []
         for i in range(0, len(rows), batch):
-            vecs.append(embedder.encode([r["text"] for r in rows[i:i + batch]]))
+            vecs.append(embedder.encode(texts[i:i + batch]))
         matrix = np.vstack(vecs).astype("float32") if vecs else np.zeros((0, 0), "float32")
 
         faiss_index = None

@@ -47,11 +47,20 @@ def _flagged_metrics(limitations) -> set[str]:
 
 def evidence_from_engine_result(res, *, workspace=None, id_prefix: str = "eng"):
     """-> (result_evidence, calculation). Sub-evidence for each input fact is added to
-    the workspace (if given) and referenced from both the calculation and the result."""
+    the workspace (if given) and referenced from both the calculation and the result.
+
+    A `None` input value means that fact wasn't available -- it's skipped rather than
+    turned into a hollow "metric (None) = None" evidence row. A `None` *result* value
+    (the engine call itself failed/has nothing to report) still returns a real Evidence
+    -- callers destructure a fixed 2-tuple -- but at confidence 0.0, not the normal
+    FINANCIAL_FACT/RATIO default, so it reads to the Evidence Quality Gate and claim
+    confidence scoring as the non-fact it is, instead of a confident 0.98 "exact fact"."""
     flagged = _flagged_metrics(getattr(res, "limitations", ()))
     sub_ids: list[str] = []
     calc_inputs: list[dict] = []
     for fr in getattr(res, "inputs", ()):
+        if fr.value is None:
+            continue
         u = unit_for(fr.metric)
         ev = Evidence(
             evidence_id=_id(f"{id_prefix}-in"),
@@ -77,6 +86,10 @@ def evidence_from_engine_result(res, *, workspace=None, id_prefix: str = "eng"):
     )
     ev_type = _KIND_TO_TYPE.get(res.kind, EvidenceType.CALCULATION)
     derived = res.kind == "metric" and res.formula is not None
+    confidence = (
+        0.0 if res.value is None
+        else evidence_confidence_for_type(ev_type, derived=derived, review_flagged=bool(flagged))
+    )
     result_ev = Evidence(
         evidence_id=_id(id_prefix),
         type=ev_type,
@@ -84,8 +97,7 @@ def evidence_from_engine_result(res, *, workspace=None, id_prefix: str = "eng"):
         company=res.company, metric=res.name, period=res.period,
         value=res.value, unit=res.unit, formula=res.formula,
         inputs=tuple(sub_ids),
-        confidence=evidence_confidence_for_type(
-            ev_type, derived=derived, review_flagged=bool(flagged)),
+        confidence=confidence,
         limitations=tuple(getattr(res, "limitations", ())),
     )
     if workspace is not None:

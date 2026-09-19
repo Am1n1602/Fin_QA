@@ -109,9 +109,11 @@ def build_retriever(repos, *, bm25_path: Path, vector_dir: Path,
 
             vector = VectorIndex.load(vector_dir)
             model_txt = vector_dir / "model.txt"
-            model = (model_txt.read_text(encoding="utf-8").splitlines()[0].strip()
-                     if model_txt.exists() else "all-mpnet-base-v2")
-            embedder = SentenceTransformerEmbedder(model, device=device)
+            lines = model_txt.read_text(encoding="utf-8").splitlines() if model_txt.exists() else []
+            model = lines[0].strip() if lines else "all-mpnet-base-v2"
+            trust_remote_code = "trust_remote_code=1" in lines
+            embedder = SentenceTransformerEmbedder(model, device=device,
+                                                   trust_remote_code=trust_remote_code)
         except Exception:
             vector = embedder = None
     reranker = None

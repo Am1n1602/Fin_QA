@@ -97,6 +97,21 @@ class TestDeterministic(unittest.TestCase):
         d = deterministic_answer(plan.question, plan, w)
         self.assertTrue(any("cause is not established" in l for l in d["limitations"]))
 
+    def test_causal_with_weak_docs_flags_a_distinct_gap_message(self):
+        w = EvidenceSet()
+        w.add(Evidence(evidence_id="ev-g", type=EvidenceType.GROWTH, company="TCS",
+                       metric="revenue_yoy", period="FY2025 -> FY2026", value=4.5, unit="pct",
+                       confidence=0.9))
+        w.add(Evidence(evidence_id="ev-weak-doc", type=EvidenceType.DOCUMENT, company="TCS",
+                       document_id=9, page=1, text="unrelated boilerplate", confidence=0.2))
+        plan = QueryPlan(question="Why did TCS revenue barely grow?", intent=Intent.CAUSAL,
+                         companies=["TCS"], metrics=["revenue"], tools=["get_growth", "search_documents"])
+        d = deterministic_answer(plan.question, plan, w)
+        self.assertTrue(any("cause is not established" in l for l in d["limitations"]))
+        # distinct from the no-docs-at-all message -- names an actual reason
+        self.assertFalse(any("No supporting document passages were retrieved" in l for l in d["limitations"]))
+        self.assertTrue(any("quality bar" in l for l in d["limitations"]))
+
     def test_no_evidence(self):
         d = deterministic_answer("huh?", QueryPlan(question="huh?", intent=Intent.UNKNOWN), EvidenceSet())
         self.assertIn("not sufficient", d["answer"])

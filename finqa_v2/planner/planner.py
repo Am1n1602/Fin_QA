@@ -66,7 +66,7 @@ class QueryPlanner:
         if not llm.sub_questions:
             llm.sub_questions = rules.sub_questions
 
-        mapped_tools, needs_docs, needs_calc = _tools_for(llm.intent, llm.metrics)
+        mapped_tools, needs_docs, needs_calc = _tools_for(llm.intent, llm.metrics, bool(llm.companies))
         llm_extras = [t for t in llm.tools if t == "search_documents"]  # LLM may flag a doc need
         llm.tools = mapped_tools + [t for t in llm_extras if t not in mapped_tools]
         llm.needs_documents = llm.needs_documents or needs_docs or ("search_documents" in llm.tools)

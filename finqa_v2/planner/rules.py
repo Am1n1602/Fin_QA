@@ -185,7 +185,7 @@ def _intent(question: str, companies: list[str], metrics: list[str]) -> Intent:
     return Intent.UNKNOWN
 
 
-def _tools_for(intent: Intent, metrics: list[str]) -> tuple[list[str], bool, bool]:
+def _tools_for(intent: Intent, metrics: list[str], has_company: bool) -> tuple[list[str], bool, bool]:
     has_ratio = any((_resolve_ratio(m) in _RATIO_NAMES) or _resolve_valuation(m) for m in metrics)
     if intent is Intent.NUMERIC_FACT:
         return (["get_ratio" if has_ratio else "get_metric"], False, False)
@@ -203,6 +203,11 @@ def _tools_for(intent: Intent, metrics: list[str]) -> tuple[list[str], bool, boo
         return (["get_segment_data"], False, False)
     if intent is Intent.RESEARCH_OVERVIEW:
         return (["get_company", "get_ratio", "get_segment_data", "get_peers"], False, False)
+    if intent is Intent.UNKNOWN and has_company:
+        # Narrative/management-commentary phrasing the rules above don't recognize still
+        # names a company -- fall back to documents rather than leaving the orchestrator
+        # with nothing to do. No company resolved: correctly nothing to search or compute.
+        return (["search_documents"], True, False)
     return ([], False, False)
 
 
@@ -216,7 +221,7 @@ def plan_with_rules(question: str, *, matcher: CompanyMatcher | None = None,
     metrics = _metrics(question)
     periods, notes = _periods(question)
     intent = _intent(question, companies, metrics)
-    tools, needs_docs, needs_calc = _tools_for(intent, metrics)
+    tools, needs_docs, needs_calc = _tools_for(intent, metrics, bool(companies))
     return QueryPlan(
         question=question, intent=intent, companies=companies, periods=periods,
         metrics=metrics, tools=tools, needs_documents=needs_docs,

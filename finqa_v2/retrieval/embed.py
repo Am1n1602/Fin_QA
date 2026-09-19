@@ -49,16 +49,27 @@ class HashEmbedder:
 class SentenceTransformerEmbedder:
     name = "all-mpnet-base-v2"
 
-    def __init__(self, model_name: str = "all-mpnet-base-v2", device: str = "cpu"):
+    def __init__(self, model_name: str = "all-mpnet-base-v2", device: str = "cpu",
+                 batch_size: int = 32, trust_remote_code: bool = False):
         self.model_name = model_name
         self.device = device
+        self.batch_size = batch_size
+        self.trust_remote_code = trust_remote_code
         self._model = None
 
     def _get(self):
         if self._model is None:
             from sentence_transformers import SentenceTransformer  # lazy: pulls torch
 
-            self._model = SentenceTransformer(self.model_name, device=self.device)
+            # torch 2.5.1 refuses torch.load() on a pickled .bin checkpoint (CVE-2025-32434)
+            # even with weights_only=True; some HF repos (e.g. bge-m3) ship one alongside
+            # safetensors. Forcing safetensors is strictly safer regardless of model.
+            # trust_remote_code is needed for models that ship custom modeling code
+            # (e.g. jina-embeddings-v3); off by default since it executes remote code.
+            self._model = SentenceTransformer(
+                self.model_name, device=self.device, trust_remote_code=self.trust_remote_code,
+                model_kwargs={"use_safetensors": True},
+            )
         return self._model
 
     @property
@@ -68,6 +79,7 @@ class SentenceTransformerEmbedder:
     def encode(self, texts: Sequence[str]):
         return (
             self._get()
-            .encode(list(texts), normalize_embeddings=True, convert_to_numpy=True, batch_size=32)
+            .encode(list(texts), normalize_embeddings=True, convert_to_numpy=True,
+                   batch_size=self.batch_size)
             .astype("float32")
         )

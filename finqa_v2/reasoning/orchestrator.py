@@ -6,6 +6,7 @@ evidence by the deterministic synthesizer.
 """
 from __future__ import annotations
 
+import logging
 from dataclasses import asdict
 from time import perf_counter
 
@@ -28,6 +29,7 @@ from finqa_v2.tools import build_default_registry
 from finqa_v2.verification import Verifier
 
 _UNIVERSE_CAP = 12
+_log = logging.getLogger("finqa.v2.reasoning")
 
 
 class ReasoningOrchestrator:
@@ -132,9 +134,18 @@ class ReasoningOrchestrator:
             try:
                 raw = self._provider.complete(
                     build_prompt(question, plan, ws, analysis=analysis_block), system=SYSTEM,
-                    json_object=True, temperature=0.1, max_tokens=900,
+                    json_object=True, temperature=0.1, max_tokens=2000,
                 )
                 parsed = parse_synthesis(raw, {e.evidence_id for e in ws})
+                if parsed is None:
+                    # The model responded but the JSON didn't parse -- on evidence-rich
+                    # questions this is usually mid-string truncation at max_tokens, not a
+                    # malformed response. Log it: a silent fallback here previously hid how
+                    # often a real LLM answer was discarded for the deterministic one.
+                    _log.warning(
+                        "LLM synthesis response unparseable; falling back to deterministic "
+                        "answer (question=%r, evidence_count=%d)", question, len(ws),
+                    )
             except (LLMError, LLMBudgetExceededError):
                 parsed = None
         if parsed is None:
