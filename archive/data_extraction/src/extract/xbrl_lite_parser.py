@@ -54,6 +54,32 @@ def parse_xbrl_file(filepath: str, company: str = "") -> list[dict]:
         measure = unit.findtext(f".//{{{NS['xbrli']}}}measure")
         units[unit_id] = measure
 
+    # --- Self-declared reporting-period dates, keyed by context_id ---
+    # Some filings (confirmed 2026-09-19 on real TCS "Financial Results" /
+    # in-bse-fin taxonomy filings, pre-dating the Integrated Filing framework)
+    # either omit a <context><period> definition for the primary duration
+    # contexts entirely, or declare one that is flatly wrong: one real filing's
+    # <context id="FourD"> declared a 3-month window while every value tagged
+    # under it was a 12-month cumulative figure (confirmed against the
+    # company's actual published full-year revenue). The same filings
+    # separately self-describe each context's true period via plain facts --
+    # DateOfStartOfReportingPeriod / DateOfEndOfReportingPeriod tagged under
+    # the SAME context_id -- which were verified to match the real reported
+    # values where the <context> definition did not. Prefer these over the
+    # <context> XML's own period whenever both dates are present; otherwise
+    # fall back to <context> unchanged (a no-op for filings without this
+    # quirk, e.g. every Integrated Filing / in-capmkt document seen so far).
+    self_described: dict[str, dict] = {}
+    for elem in root.iter():
+        ctx_ref = elem.get("contextRef")
+        if ctx_ref is None:
+            continue
+        local = _local_name(elem.tag)
+        if local == "DateOfStartOfReportingPeriod":
+            self_described.setdefault(ctx_ref, {})["start"] = elem.text
+        elif local == "DateOfEndOfReportingPeriod":
+            self_described.setdefault(ctx_ref, {})["end"] = elem.text
+
     # --- Parse facts: any element with a contextRef is a fact ---
     records = []
     for elem in root.iter():
@@ -61,7 +87,10 @@ def parse_xbrl_file(filepath: str, company: str = "") -> list[dict]:
         if ctx_ref is None:
             continue  # not a fact (context/unit/schemaRef/etc.)
 
-        ctx = contexts.get(ctx_ref, {})
+        ctx = dict(contexts.get(ctx_ref, {}))
+        override = self_described.get(ctx_ref)
+        if override and override.get("start") and override.get("end"):
+            ctx["start"], ctx["end"], ctx["instant"] = override["start"], override["end"], None
         unit_ref = elem.get("unitRef")
 
         records.append({
@@ -92,10 +121,21 @@ def derive_output_name(filepath: str, company: str) -> str:
     return f"{company}_{filing_type}_{period_tag}"
 
 
-def parse_and_save(filepath: str, company: str, out_dir: str = "data/extracted") -> tuple[Path, int]:
+def parse_and_save(filepath: str, company: str, out_dir: str | None = None) -> tuple[Path, int]:
     """Parse one XBRL file and save its raw facts to disk. Returns
     (output_path, fact_count) — used by both the CLI below and
-    run_extraction.py's multi-quarter batch runner."""
+    run_extraction.py's multi-quarter batch runner.
+
+    `out_dir=None` resolves to src.config.EXTRACTED_DIR (the repo-root
+    data_extraction/data/extracted/ finqa_v2 actually reads from) -- the old
+    hardcoded relative default "data/extracted" silently wrote to
+    <cwd>/data/extracted instead once this module's package moved into
+    archive/, without ever raising an error (a stray archive/data_extraction/
+    data/extracted/ directory accumulated real output that finqa_v2 never saw)."""
+    if out_dir is None:
+        from src.config import EXTRACTED_DIR
+
+        out_dir = EXTRACTED_DIR
     recs = parse_xbrl_file(filepath, company)
     name = derive_output_name(filepath, company)
     out_path = Path(out_dir) / f"{name}_facts_raw.json"

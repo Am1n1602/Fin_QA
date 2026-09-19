@@ -74,6 +74,45 @@ def fetch_corporate_filings(nse_symbol: str, days_back: int = 1095) -> list[dict
     return records or []
 
 
+def fetch_historical_financial_results(nse_symbol: str, from_date: date, to_date: date,
+                                       period: str = "Annual") -> list[dict]:
+    """
+    Pull 'Financial Results' (pre-Integrated-Filing, Regulation 33) entries for one
+    company from NSE's OLDER, separate filing-type API. Not wrapped by jugaad_data --
+    calls it directly, reusing NSELive's already-cookie-warmed session so this doesn't
+    need its own NSE anti-bot handling.
+
+    fetch_corporate_filings() above (the "Integrated Filing- Financials" type) only has
+    data from ~FY2024-25 on. This older API has real XBRL back to FY2018-19 annual /
+    Q1 FY2019 quarterly (confirmed 2026-09-19, see project memory
+    nse-xbrl-historical-source). Records whose `xbrl` field is the placeholder
+    ".../xbrl/-" (pre-FY2018-19) carry no machine-readable file -- callers should skip
+    those.
+
+    IMPORTANT: the filter parameter is `symbol`, not `issuer` -- `issuer=<ticker>`
+    silently returns EVERY company's filings unfiltered, confirmed by direct comparison.
+    """
+    nse = NSELive()
+    url = nse.base_url + "/corporates-financial-results"
+    payload = {
+        "index": "equities", "symbol": nse_symbol, "period": period,
+        "from_date": from_date.strftime("%d-%m-%Y"), "to_date": to_date.strftime("%d-%m-%Y"),
+    }
+    try:
+        resp = nse.s.get(url, params=payload, timeout=nse.time_out)
+        resp.raise_for_status()
+        records = resp.json()
+    except Exception as e:
+        print(f"[nse_source] corporates-financial-results failed for {nse_symbol} ({period}): {e}")
+        records = []
+    time.sleep(REQUEST_DELAY_SECONDS)
+    if not isinstance(records, list):
+        return []
+    # Defense in depth even though `symbol=` is the correct param: never trust a
+    # response to be pre-filtered, given the issuer= gotcha this API already has.
+    return [r for r in records if r.get("symbol") == nse_symbol]
+
+
 def fetch_corporate_announcements(nse_symbol: str, days_back: int = 1095) -> list[dict]:
     """
     Broader net than fetch_corporate_filings: general corporate

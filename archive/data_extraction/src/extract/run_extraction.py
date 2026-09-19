@@ -14,7 +14,15 @@ from src.extract.schema import map_and_save
 
 
 def run_for_company(company: str, raw_dir: str | None = None) -> None:
-    raw_path = Path(raw_dir) if raw_dir else Path("data/raw") / company
+    if raw_dir:
+        raw_path = Path(raw_dir)
+    else:
+        # Same fix as xbrl_lite_parser.parse_and_save: the old hardcoded relative
+        # "data/raw" silently resolved against the CWD instead of the repo-root
+        # data_extraction/data/raw/ once this package moved into archive/.
+        from src.config import RAW_DIR
+
+        raw_path = RAW_DIR / company
     xbrl_files = sorted(raw_path.glob("*.xbrl")) + sorted(raw_path.glob("*.xml"))
     xbrl_files.sort(key=lambda f: 1 if "revis" in f.name.lower() else 0)
     if not xbrl_files:

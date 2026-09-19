@@ -13,21 +13,33 @@ from finqa_v2.sqlite import SqliteRepositories
 _RAW = Path(__file__).resolve().parents[3] / "data_extraction" / "data" / "raw"
 
 
-def _first_pdf():
+_MIN_SIZE = 300_000     # big enough to be a real multi-page, multi-section results PDF
+_MAX_SIZE = 3_000_000   # small enough that extraction/table-detection stays a smoke test,
+                        # not a multi-minute run over a huge annual report/investor deck
+
+
+def _largest_pdf():
+    """A substantial-but-bounded PDF on disk -- not the alphabetically-first one (a
+    short 1-2 page board-meeting-outcome notice can sort first within a company's
+    folder and starve this smoke test of real content), and not simply the largest
+    file across the whole corpus either (that can be a huge annual report that turns
+    a unit test into a multi-minute run)."""
     if not _RAW.exists():
         return None
-    for sub in sorted(_RAW.iterdir()):
-        pdfs = sorted(sub.glob("*.pdf"))
-        if pdfs:
-            return sub.name, pdfs[0]
-    return None
+    candidates = sorted(_RAW.glob("*/*.pdf"))
+    in_band = [p for p in candidates if _MIN_SIZE <= p.stat().st_size <= _MAX_SIZE]
+    pool = in_band or candidates
+    if not pool:
+        return None
+    chosen = pool[len(pool) // 2]     # deterministic, representative pick
+    return chosen.parent.name, chosen
 
 
-@unittest.skipUnless(_first_pdf(), "no raw PDFs present")
+@unittest.skipUnless(_largest_pdf(), "no raw PDFs present")
 class TestRealPdf(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.symbol, cls.pdf = _first_pdf()
+        cls.symbol, cls.pdf = _largest_pdf()
 
     def test_extract_and_sections(self):
         res = extract_pages(self.pdf)

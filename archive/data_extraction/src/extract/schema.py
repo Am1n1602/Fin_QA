@@ -228,6 +228,18 @@ def map_facts_to_canonical(facts: list[dict]) -> list[dict]:
     tag_to_canonical.update(_SECTOR_ALT_TAGS)
     tag_to_canonical.update(_DEBT_ALT_TAGS)
 
+    # Pre-Integrated-Filing XBRL (Regulation 33 "Financial Results", filed under
+    # the in-bse-fin: taxonomy rather than in-capmkt:) frequently uses the exact
+    # same LOCAL concept name under a different namespace prefix -- confirmed
+    # 2026-09-19: 24/62 TAG_MAP concepts match this way for a real TCS FY2019
+    # filing (CurrentTax, RevenueFromOperations, ProfitBeforeTax, ...). Index by
+    # local name too as a fallback; an exact full-tag match (what this map was
+    # originally built against) always wins first.
+    local_name_to_canonical: dict[str, str] = {}
+    for full_tag, canonical_name in tag_to_canonical.items():
+        local = full_tag.split(":", 1)[1] if ":" in full_tag else full_tag
+        local_name_to_canonical.setdefault(local, canonical_name)
+
     by_context = defaultdict(dict)
     context_period_info = {}
 
@@ -237,6 +249,8 @@ def map_facts_to_canonical(facts: list[dict]) -> list[dict]:
             continue
         tag = fact.get("line_item_tag")
         canonical_name = tag_to_canonical.get(tag)
+        if canonical_name is None and tag and ":" in tag:
+            canonical_name = local_name_to_canonical.get(tag.split(":", 1)[1])
         if canonical_name is None:
             continue  # not a field we're tracking
 
