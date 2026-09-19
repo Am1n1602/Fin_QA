@@ -112,6 +112,23 @@ class TestCheckAnswerNumbers(unittest.TestCase):
                                       self._ws())
         self.assertFalse(any(c.hard_fail for c in checks))
 
+    def test_yoy_and_cagr_for_the_same_base_metric_do_not_cross_match(self):
+        # revenue_yoy and revenue_cagr both canonicalize to "revenue" -- their range
+        # periods share one endpoint (FY2026). Each must reconcile against its OWN
+        # sentence, not the other's.
+        ws = EvidenceSet()
+        ws.add(Evidence(evidence_id="yoy", type=EvidenceType.GROWTH, company="TCS",
+                        metric="revenue_yoy", period="FY2025 -> FY2026", value=4.58,
+                        unit="pct", confidence=0.9))
+        ws.add(Evidence(evidence_id="cagr", type=EvidenceType.GROWTH, company="TCS",
+                        metric="revenue_cagr", period="FY2019 -> FY2026", value=8.96,
+                        unit="pct", confidence=0.9))
+        answer = ("TCS revenue yoy in FY2025 -> FY2026 was 4.58 pct. "
+                 "TCS revenue cagr in FY2019 -> FY2026 was 8.96 pct.")
+        checks = check_answer_numbers(answer, ws)
+        self.assertFalse(any(c.verdict == "mismatch" for c in checks), checks)
+        self.assertEqual(sum(1 for c in checks if c.verdict == "confirmed"), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

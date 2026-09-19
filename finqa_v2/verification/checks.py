@@ -179,7 +179,16 @@ def check_answer_numbers(answer: str, workspace) -> list[ClaimCheck]:
             if not any(w in low for w in words):
                 continue
             sent_fys = set(_FY.findall(low))
-            if sent_fys and ev_fys and not (sent_fys & ev_fys):
+            if len(ev_fys) > 1:
+                # a range period (yoy/cagr span, e.g. "FY2019 -> FY2026") -- both
+                # endpoints must match, not just one. Otherwise a yoy claim
+                # ("FY2025 -> FY2026") and a cagr claim ("FY2019 -> FY2026") for the
+                # same base metric -- both canonicalize to "revenue" above -- share
+                # the single endpoint FY2026 and would cross-match: the cagr
+                # evidence's value gets reconciled against the yoy sentence's figure.
+                if sent_fys and sent_fys != ev_fys:
+                    continue
+            elif sent_fys and ev_fys and not (sent_fys & ev_fys):
                 continue                       # the sentence is about a different period
             if sent_fys and not ev_fys and len(sent_fys) == 1:
                 continue                       # dated sentence, undated evidence -> don't guess
