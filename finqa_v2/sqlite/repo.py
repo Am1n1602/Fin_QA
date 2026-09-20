@@ -1,6 +1,7 @@
 """SQLite implementation of the finqa_v2 repositories. See docs/file-guide.md."""
 from __future__ import annotations
 
+import logging
 import sqlite3
 import threading
 from datetime import date, datetime
@@ -28,6 +29,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]          # finqa_v2/sqlite/ -> 
 # data artifacts live under database/data/ alongside v1's financial_intelligence.db
 DEFAULT_V2_DB_PATH = _REPO_ROOT / "database" / "data" / "finqa_v2.db"
 _SCHEMA_PATH = Path(__file__).with_name("schema_v2.sql")
+_log = logging.getLogger("finqa.v2.sqlite")
 
 
 # --------------------------------------------------------------------------- #
@@ -504,8 +506,35 @@ class SqliteFinancialFactRepository:
         self._c = conn
 
     def add_many(self, facts: Iterable[FinancialFact]) -> int:
+        """Upserts on the (company, metric, basis, statement_type, period) grain --
+        see roadmap Step 3 / finqa_v2.dataset.reconcile for the audit tool that
+        checks for this ACROSS source files before they ever reach here. This is
+        the last line of defence: if a fact already exists for the grain with a
+        materially different value, log it (this is a plain overwrite, not a
+        precedence decision -- the newest-processed source always wins) so a
+        genuine restatement or a source conflict is visible instead of silent."""
         n = 0
         for f in facts:
+            if f.value is not None:
+                existing = self._c.execute(
+                    """
+                    SELECT value FROM financial_facts
+                    WHERE company_id = ? AND metric = ? AND basis = ? AND statement_type = ?
+                      AND COALESCE(period_end, '') = COALESCE(?, '')
+                      AND COALESCE(period_start, '') = COALESCE(?, '')
+                    """,
+                    (f.company_id, f.metric, f.basis.value, f.statement_type.value,
+                     _ds(f.period_end), _ds(f.period_start)),
+                ).fetchone()
+                if existing is not None and existing["value"] is not None:
+                    old = existing["value"]
+                    if abs(old - f.value) > max(1.0, abs(old) * 5e-4):
+                        _log.warning(
+                            "financial_facts overwrite changes value: company_id=%s metric=%s "
+                            "basis=%s period=%s->%s old=%s new=%s source_id=%s",
+                            f.company_id, f.metric, f.basis.value, f.period_start, f.period_end,
+                            old, f.value, f.source_id,
+                        )
             self._c.execute(
                 """
                 INSERT INTO financial_facts

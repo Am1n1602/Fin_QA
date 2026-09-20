@@ -66,6 +66,8 @@ REGISTRY: dict[str, MetricSpec] = {
     "paid_up_equity_capital": _bs("Paid-up equity share capital"),
     "face_value_per_share": _bs("Face value per share", unit="per_share"),
     "debt_equity_ratio_reported": MetricSpec("x", OTHER, False, "Debt/Equity ratio (as reported)"),
+    "debt_service_coverage_ratio_reported": MetricSpec("x", OTHER, False, "Debt service coverage ratio (as reported)"),
+    "interest_service_coverage_ratio_reported": MetricSpec("x", OTHER, False, "Interest service coverage ratio (as reported)"),
 
     # --- Balance sheet (instant) ---
     "total_assets": _bs("Total assets"),

@@ -35,6 +35,8 @@ TAG_MAP = {
     "paid_up_equity_capital": "in-capmkt:PaidUpValueOfEquityShareCapital",
     "face_value_per_share": "in-capmkt:FaceValueOfEquityShareCapital",
     "debt_equity_ratio_reported": "in-capmkt:DebtEquityRatio",
+    "debt_service_coverage_ratio_reported": "in-capmkt:DebtServiceCoverageRatio",
+    "interest_service_coverage_ratio_reported": "in-capmkt:InterestServiceCoverageRatio",
 
     # Balance sheet
     "total_assets": "in-capmkt:Assets",

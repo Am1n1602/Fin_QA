@@ -169,6 +169,17 @@ class TestFinancialFactRepo(RepoTestCase):
         self.assertEqual(got[0].value, 0.0)
         self.assertFalse(got[0].is_missing)
 
+    def test_overwrite_with_a_materially_different_value_is_logged(self):
+        self.repos.facts.add_many([self._fact(value=100.0)])
+        with self.assertLogs("finqa.v2.sqlite", level="WARNING") as cm:
+            self.repos.facts.add_many([self._fact(value=999.0)])  # same grain, real change
+        self.assertTrue(any("overwrite changes value" in m for m in cm.output))
+
+    def test_overwrite_with_the_same_value_is_not_logged(self):
+        self.repos.facts.add_many([self._fact(value=100.0)])
+        with self.assertNoLogs("finqa.v2.sqlite", level="WARNING"):
+            self.repos.facts.add_many([self._fact(value=100.0000001)])  # float-noise re-write
+
 
 class TestDocumentRepo(RepoTestCase):
     def test_upsert_and_query(self):

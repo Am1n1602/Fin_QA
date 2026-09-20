@@ -34,10 +34,12 @@ class TestRegistry(unittest.TestCase):
             self.assertFalse(metrics.get(name).is_point_in_time, msg=name)
 
     def test_reported_ratio(self):
-        s = metrics.get("debt_equity_ratio_reported")
-        self.assertEqual(s.unit, "x")
-        self.assertIs(s.statement_type, StatementType.OTHER)
-        self.assertIsNone(currency_for("debt_equity_ratio_reported"))
+        for name in ("debt_equity_ratio_reported", "debt_service_coverage_ratio_reported",
+                     "interest_service_coverage_ratio_reported"):
+            s = metrics.get(name)
+            self.assertEqual(s.unit, "x", msg=name)
+            self.assertIs(s.statement_type, StatementType.OTHER, msg=name)
+            self.assertIsNone(currency_for(name), msg=name)
 
     def test_currency_for_inr_metric(self):
         self.assertEqual(currency_for("revenue"), "INR")
