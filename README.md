@@ -4,8 +4,10 @@
 covering 12 of the NIFTY 50 companies (TCS, INFY, HCLTECH, WIPRO, RELIANCE, ONGC,
 HDFCBANK, ICICIBANK, SBIN, ITC, M&M, SBILIFE), lexical-only retrieval, LLM synthesis on
 by default. First load can take up to a minute — the backend sleeps after inactivity on
-Render's free tier. See [`deployment/README.md`](deployment/README.md#public-demo-render)
-for what's deliberately scoped down for this deployment and why.
+Render's free tier. This is a **frozen, manually-built snapshot** (see
+[`deployment/README.md`](deployment/README.md#public-demo-render)) — it doesn't
+auto-update with this repo, so it may lag behind the full 50-company dataset described
+below until someone rebuilds and pushes it (same section has the exact steps).
 
 Financial research API and dashboard for the NIFTY 50 universe. Ask it things like *"What
 was TCS's ROE?"*, *"Compare RELIANCE and ONGC on leverage"*, or *"Why did HCLTECH's
@@ -85,13 +87,15 @@ FastAPI ──► React/Vite dashboard (chat + per-company drill-down, claim-lev
   benchmark below: 99.7% of claims are fully grounded (every evidence id they cite
   resolves to real, unflagged evidence).
 - **REST API and dashboard**, both pure transport over the same engine — neither computes
-  anything on its own.
+  anything on its own. The dashboard (`dashboard_v2/`) uses a sidebar layout and a
+  navy-and-gold "ledger" theme, with light/dark modes and every claim rendered as an
+  expandable evidence card.
 - **Cost-aware LLM layer.** Groq's free tier by default (a 60-request/session, 180k
   token/day budget, enforced in code, not just documented), or an optional Anthropic path
   with a hard $3 spend cap that refuses a call rather than risk exceeding it.
-- **462 unit tests, 0 failures** (`python -m unittest discover -s finqa_v2`, last verified
-  2026-09-13), plus the evaluation suite below, which runs against the live engine and
-  retrieval stack rather than mocks.
+- **500+ unit tests passing** (`python -m unittest discover -s finqa_v2`), plus the
+  evaluation suite below, which runs against the live engine and retrieval stack rather
+  than mocks.
 - **An 850-question internal benchmark** across factual, numerical, comparison, causal,
   cross-validation, and adversarial categories, all 50 NIFTY 50 companies — see
   [Evaluation](#evaluation) for what running it actually shows, including where the
@@ -280,8 +284,37 @@ python -m evaluation.baselines.runner --dataset evaluation/datasets/finqa_india.
 
 The benchmark (`evaluation/datasets/finqa_india.jsonl`, 850 questions) spans factual,
 numerical, comparison, multi-step, causal, cross-document, analytical, and adversarial
-questions across all 50 NIFTY 50 names. Two real runs, both checked in under
-`evaluation/`, not cherry-picked:
+questions across all 50 NIFTY 50 names, regenerated 2026-09-26 against the final
+50-company corpus. The 850-question deterministic run below predates that regeneration
+(2026-09-10, pre-restart data) and is due for a re-run — treat it as historical context,
+not a current number. The regression/smoke set is current:
+
+**51-question regression set, deterministic path (0 LLM calls), full production
+retrieval index (BM25 + MiniLM embeddings, built on Kaggle GPU over the complete
+261,479-chunk corpus), 2026-09-26:**
+
+| Check | Result | n checked |
+|---|---|---|
+| Numerical accuracy | 100% | 23 |
+| Claim groundedness (every cited evidence id is real) | 100% | 43 |
+| Correct abstention (declines what it can't answer) | 98.0% | 51 |
+| Overall correctness (keyword/tolerance match to reference) | 86.1% | 43 |
+
+Retrieval, same index, company-filtered:
+
+| Mode | Recall@5 | MRR | nDCG@10 |
+|---|---|---|---|
+| Lexical (BM25) | 68.2% | 0.536 | 0.557 |
+| Vector (MiniLM) | 40.9% | 0.258 | 0.301 |
+| Hybrid | 50.0% | 0.510 | 0.546 |
+
+Lexical ties or beats vector/hybrid here — a real, repeated finding in this project (near-duplicate
+boilerplate across quarterly filings dilutes embedding similarity more than it dilutes
+BM25 term matches). A cross-encoder reranker measured a real win over this at pilot scale
+(+0.13-0.18 Recall@5) but hasn't been re-validated at full scale and stays off by default.
+Raw report: [`evaluation/regression/baselines/deterministic_v2.json`](evaluation/regression/baselines/deterministic_v2.json).
+
+**Older, larger runs (pre-restart data, kept for context, not current):**
 
 **Full benchmark, deterministic path (0 LLM calls, all 850 questions), 2026-09-10:**
 
@@ -323,13 +356,19 @@ the evaluator definitions, the regression harness, and baseline-comparison detai
 
 ## Known limitations
 
-- **Historical depth**: ingested data covers the most recent annual/quarterly filings
-  only — no automated source of structured data goes back further under India's current
-  filing framework. A question about an older period gets an honest "not available."
+- **Historical depth is real but uneven.** Most of the NIFTY 50 (48/50 companies) now
+  has structured XBRL data back to FY2018-19 via NSE's older "Financial Results" API,
+  not just the most recent filings. Two exceptions: HDFCLIFE and SBILIFE (insurers) only
+  reach back to FY2025 — that NSE endpoint's own historical coverage for insurers is
+  genuinely shallower, not a gap in this pipeline. JIOFIN only reaches FY2024, matching
+  its real 2023 listing date. A question about a period before a company's own history
+  gets an honest "not available," never an approximation.
 - **Segment margin isn't shown**, only segment revenue — the filings disclose one, not
   the other, and nothing here approximates it.
 - **The consolidated/standalone toggle is manual** — a company that files only one basis
-  never has the other silently substituted in.
+  never has the other silently substituted in. Bank capital-adequacy/asset-quality ratios
+  (CET1, Tier 1, gross/net NPA) are standalone-only by regulation — asking for them
+  without saying "standalone" returns the (correctly) unavailable consolidated figure.
 - **Running components individually defaults to SQLite**; PostgreSQL is fully supported
   but opt-in via one environment variable.
 
