@@ -5,6 +5,7 @@ import unittest
 
 from finqa_v2.engine.tests._fixture import seed as seed_engine
 from finqa_v2.models import Company, Index, IndexMembership
+from finqa_v2.planner.models import Intent, QueryPlan
 from finqa_v2.reasoning import ReasoningOrchestrator
 from finqa_v2.sqlite import SqliteRepositories
 
@@ -180,6 +181,40 @@ class TestSynthesisTruncationFallback(OrchestratorTestCase):
         self.orch.answer("What was TEST revenue in FY2026?")
         self.assertTrue(self.provider.calls)
         self.assertGreaterEqual(self.provider.calls[-1]["max_tokens"], 2000)
+
+
+class TestToolCallsThreadBasis(OrchestratorTestCase):
+    """Regression test for a real bug: a question naming "standalone" or
+    "consolidated" never reached the tool call at all -- every basis-aware tool
+    silently used its own default (consolidated) regardless of what the plan said."""
+
+    def _calls(self, **plan_kwargs):
+        plan = QueryPlan(question="q", companies=["TEST"], **plan_kwargs)
+        return dict(self.orch._tool_calls(plan))
+
+    def test_basis_passed_through_when_set(self):
+        for tool, extra in [
+            ("get_metric", {"metrics": ["revenue"]}),
+            ("get_ratio", {"metrics": ["roe"]}),
+            ("get_growth", {}),
+            ("get_cagr", {}),
+            ("decompose_metric", {}),
+            ("get_segment_data", {}),
+        ]:
+            calls = self._calls(tools=[tool], basis="standalone", **extra)
+            self.assertEqual(calls[tool].get("basis"), "standalone", tool)
+
+    def test_compare_tools_get_basis_too(self):
+        plan = QueryPlan(question="q", companies=["TEST", "PEER"],
+                         tools=["compare_companies"], basis="standalone")
+        calls = dict(self.orch._tool_calls(plan))
+        self.assertEqual(calls["compare_companies"]["basis"], "standalone")
+
+    def test_unset_basis_omits_the_kwarg_entirely(self):
+        # no basis named in the question -> don't pass basis at all, so each tool's
+        # own default (consolidated) applies exactly as before this fix.
+        calls = self._calls(tools=["get_metric"], metrics=["revenue"])
+        self.assertNotIn("basis", calls["get_metric"])
 
 
 if __name__ == "__main__":

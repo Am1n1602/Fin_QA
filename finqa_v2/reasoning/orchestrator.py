@@ -186,26 +186,30 @@ class ReasoningOrchestrator:
         # A period the user actually named in the question (plan.periods) always wins.
         period = plan.periods[0] if plan.periods else "latest_annual"
 
+        # A basis the user actually named ("standalone"/"consolidated") overrides each
+        # tool's own default; unset (None) leaves that default alone.
+        basis_kw = {"basis": plan.basis} if plan.basis else {}
+
         for name in plan.tools:
             if name == "get_metric" and co:
-                yield name, {"ticker": co, "metric": metric or "revenue", "period": period}
+                yield name, {"ticker": co, "metric": metric or "revenue", "period": period, **basis_kw}
             elif name == "get_ratio" and co:
-                yield name, {"ticker": co, "ratio": metric or "roe", "period": period}
+                yield name, {"ticker": co, "ratio": metric or "roe", "period": period, **basis_kw}
             elif name == "get_growth" and co:
-                yield name, {"ticker": co, "metric": metric or "revenue", "kind": "yoy"}
+                yield name, {"ticker": co, "metric": metric or "revenue", "kind": "yoy", **basis_kw}
             elif name == "get_cagr" and co:
-                yield name, {"ticker": co, "metric": metric or "revenue"}
+                yield name, {"ticker": co, "metric": metric or "revenue", **basis_kw}
             elif name == "compare_companies":
                 m = metric or ("roe" if plan.intent is Intent.RANKING else "revenue")
-                yield name, {"metric": m, "tickers": list(plan.companies), "period": period}
+                yield name, {"metric": m, "tickers": list(plan.companies), "period": period, **basis_kw}
             elif name == "compare_periods" and co and len(plan.periods) >= 2:
                 yield name, {"ticker": co, "metrics": plan.metrics or ["revenue", "net_profit"],
-                             "a": plan.periods[0], "b": plan.periods[1]}
+                             "a": plan.periods[0], "b": plan.periods[1], **basis_kw}
             elif name == "get_segment_data" and co:
-                yield name, {"ticker": co, "period": "latest_annual"}
+                yield name, {"ticker": co, "period": "latest_annual", **basis_kw}
             elif name == "decompose_metric" and co:
                 dm = "roe" if (metric in (None, "roe", "roce", "roa")) else "net_margin"
-                yield name, {"ticker": co, "metric": dm, "period": period}
+                yield name, {"ticker": co, "metric": dm, "period": period, **basis_kw}
             elif name == "search_documents":
                 a = {"query": plan.question, "k": 5}
                 if len(plan.companies) == 1:

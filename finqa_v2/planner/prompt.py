@@ -37,7 +37,10 @@ Return a JSON object with these fields:
   "tools": [tool names from the list above, in the order they should run],
   "sub_questions": [decomposed sub-questions if the question is multi-part, else []],
   "needs_documents": true/false (does answering require filing text?),
-  "needs_calculation": true/false
+  "needs_calculation": true/false,
+  "basis": "standalone" or "consolidated" if the question explicitly says so (e.g.
+    "standalone", "unconsolidated", "parent company" -> standalone; "consolidated",
+    "group" -> consolidated), else null -- leave null rather than guessing
 }}
 
 Rules:
@@ -86,11 +89,16 @@ def parse_plan(question: str, raw: str, *, valid_tools: set[str],
     if dropped:
         notes.append(f"planner proposed unknown tools, dropped: {dropped}")
 
+    basis = data.get("basis")
+    basis = basis.strip().lower() if isinstance(basis, str) else None
+    if basis not in ("standalone", "consolidated"):
+        basis = None
+
     return QueryPlan(
         question=question, intent=intent, companies=companies,
         periods=_strlist("periods"), metrics=_strlist("metrics"), tools=tools,
         sub_questions=_strlist("sub_questions"),
         needs_documents=bool(data.get("needs_documents", False)),
         needs_calculation=bool(data.get("needs_calculation", False)),
-        planner="llm+repair" if notes else "llm", notes=notes,
+        basis=basis, planner="llm+repair" if notes else "llm", notes=notes,
     )

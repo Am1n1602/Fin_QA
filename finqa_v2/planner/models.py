@@ -28,6 +28,7 @@ class QueryPlan:
     sub_questions: list[str] = field(default_factory=list)   # for decomposition (Phase 11)
     needs_documents: bool = False
     needs_calculation: bool = False
+    basis: str | None = None                                 # 'standalone' | 'consolidated' | None (tool default)
     planner: str = "rules"                                   # 'rules' | 'llm' | 'llm+repair'
     notes: list[str] = field(default_factory=list)
 
@@ -36,6 +37,8 @@ class QueryPlan:
         # de-dup, preserve order
         for attr in ("companies", "periods", "metrics", "tools", "sub_questions"):
             setattr(self, attr, list(dict.fromkeys(getattr(self, attr))))
+        if self.basis not in (None, "standalone", "consolidated"):
+            self.basis = None
 
     def to_dict(self) -> dict:
         return {
@@ -48,6 +51,7 @@ class QueryPlan:
             "sub_questions": self.sub_questions,
             "needs_documents": self.needs_documents,
             "needs_calculation": self.needs_calculation,
+            "basis": self.basis,
             "planner": self.planner,
             "notes": self.notes,
         }

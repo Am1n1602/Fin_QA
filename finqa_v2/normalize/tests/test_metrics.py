@@ -62,6 +62,21 @@ class TestRegistry(unittest.TestCase):
         for name in ("bank_interest_earned", "bank_provisions", "advances"):
             self.assertTrue(metrics.is_known(name), msg=name)
 
+    def test_bank_capital_ratios_are_reported_ratios(self):
+        for name in ("cet1_ratio", "additional_tier1_ratio", "gross_npa_ratio",
+                     "net_npa_ratio", "return_on_assets"):
+            s = metrics.get(name)
+            self.assertEqual(s.unit, "x", msg=name)
+            self.assertIs(s.statement_type, StatementType.OTHER, msg=name)
+            self.assertFalse(s.is_point_in_time, msg=name)
+
+    def test_npa_absolute_values_are_balance_sheet_but_not_point_in_time(self):
+        for name in ("gross_npa", "net_npa"):
+            s = metrics.get(name)
+            self.assertEqual(s.unit, "INR", msg=name)
+            self.assertIs(s.statement_type, StatementType.BALANCE_SHEET, msg=name)
+            self.assertFalse(s.is_point_in_time, msg=name)
+
 
 if __name__ == "__main__":
     unittest.main()

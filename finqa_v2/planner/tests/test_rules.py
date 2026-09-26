@@ -56,6 +56,22 @@ class TestExtraction(PlannerRulesTestCase):
         self.assertIn("debt_to_equity", self._plan("which has better leverage").metrics)
 
 
+class TestBasis(PlannerRulesTestCase):
+    def test_standalone_phrasing(self):
+        for q in ("What was HDFCBANK's standalone CET1 ratio in FY2026?",
+                  "HDFCBANK unconsolidated net profit",
+                  "HDFCBANK parent-only revenue"):
+            self.assertEqual(self._plan(q).basis, "standalone", q)
+
+    def test_consolidated_phrasing(self):
+        for q in ("What was HDFCBANK's consolidated net profit?",
+                  "HDFCBANK group revenue"):
+            self.assertEqual(self._plan(q).basis, "consolidated", q)
+
+    def test_unspecified_leaves_basis_unset(self):
+        self.assertIsNone(self._plan("What was TCS revenue in FY2026?").basis)
+
+
 class TestIntentAndTools(PlannerRulesTestCase):
     CASES = [
         ("What was TCS revenue in FY2026?", Intent.NUMERIC_FACT, "get_metric"),

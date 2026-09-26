@@ -65,6 +65,24 @@ TAG_MAP = {
     "bank_employee_cost": "in-capmkt:EmployeesCost",
     "bank_other_operating_expenses": "in-capmkt:OtherOperatingExpenses",
     "advances": "in-capmkt:Advances",
+
+    # Bank capital adequacy / asset quality -- reported STANDALONE only (RBI capital
+    # regulation applies to the bank entity, not the consolidated group; confirmed
+    # 2026-09-26: all-zero on HDFCBANK's consolidated filing, real values on standalone).
+    "cet1_ratio": "in-capmkt:CET1Ratio",
+    "additional_tier1_ratio": "in-capmkt:AdditionalTier1Ratio",
+    "gross_npa": "in-capmkt:GrossNonPerformingAssets",
+    # NonPerformingAssets is the NET figure -- confirmed 2026-09-26 by cross-ratio check
+    # on real HDFCBANK data: NonPerformingAssets/GrossNonPerformingAssets ~= 0.303 matches
+    # PercentageOfNpa/PercentageOfGrossNpa ~= 0.307 almost exactly.
+    "net_npa": "in-capmkt:NonPerformingAssets",
+    "gross_npa_ratio": "in-capmkt:PercentageOfGrossNpa",
+    "net_npa_ratio": "in-capmkt:PercentageOfNpa",
+    # ReturnOnAssets ships tagged unit=iso4217:INR in the raw XBRL (a real filer error --
+    # the value itself is a plain ratio, e.g. 0.0046) but our pipeline assigns its own
+    # canonical unit from MetricSpec rather than trusting the raw tag's unit, so this is
+    # harmless.
+    "return_on_assets": "in-capmkt:ReturnOnAssets",
 }
 
 _BANK_EQUITY_AUX_TAGS = {

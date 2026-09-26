@@ -1,21 +1,22 @@
 {
-  "label": "det-v2",
-  "generated_at": "2026-09-10T21:04:35.946629+00:00",
-  "git_commit": "13e04b7a7233b5332028f46d6ce0f6b8e40dada6",
+  "label": "det-v2-full50",
+  "generated_at": "2026-09-26T18:16:48.565485+00:00",
+  "git_commit": "1bde3fb172be53f6b9572660aecd04e5dd1a3866",
   "python": "3.12.1",
   "dataset": "evaluation\\datasets\\finqa_v2_eval.jsonl",
   "config": {
     "llm": false,
     "model": null,
     "retriever": true,
+    "rerank": false,
     "v2_db": "D:\\Usr\\Project_VSC\\Financial_Statement_LLM_NLP\\database\\data\\finqa_v2.db"
   },
   "aggregates": {
     "n_questions": 51,
     "errors": 0,
     "intent_match": {
-      "checked": 47,
-      "passed": 47
+      "checked": 49,
+      "passed": 49
     },
     "numerical": {
       "passed": 23,
@@ -25,18 +26,18 @@
       "accuracy": 1.0
     },
     "correctness": {
-      "passed": 35,
-      "failed": 8,
+      "passed": 37,
+      "failed": 6,
       "warned": 0,
       "checked": 43,
-      "accuracy": 0.814
+      "accuracy": 0.8605
     },
     "groundedness": {
       "verdict": {
-        "passed": 40,
+        "passed": 43,
         "failed": 0,
         "warned": 0,
-        "checked": 40,
+        "checked": 43,
         "accuracy": 1.0
       },
       "mean_grounded_rate": 1.0
@@ -54,38 +55,38 @@
       "mean_f1": 0.0
     },
     "abstention": {
-      "passed": 45,
+      "passed": 48,
       "failed": 1,
-      "warned": 5,
+      "warned": 2,
       "checked": 51,
-      "accuracy": 0.9783
+      "accuracy": 0.9796
     },
     "unsupported_claims": {
       "verdict": {
-        "passed": 37,
+        "passed": 40,
         "failed": 2,
         "warned": 0,
-        "checked": 39,
-        "accuracy": 0.9487
+        "checked": 42,
+        "accuracy": 0.9524
       },
       "mean_rate": 0.0392
     },
     "operations": {
       "n_questions": 51,
       "latency_ms": {
-        "mean": 393.88,
-        "p50": 1.3,
-        "p95": 169.2,
-        "max": 19164.8
+        "mean": 477.45,
+        "p50": 2.5,
+        "p95": 701.3,
+        "max": 19964.8
       },
       "retrieval_latency_ms": {
-        "mean": 3180.03,
-        "p50": 36.25,
-        "p95": 14189.28,
-        "n_calls": 6
+        "mean": 2338.88,
+        "p50": 178.0,
+        "p95": 11785.69,
+        "n_calls": 9
       },
-      "tool_calls_total": 77,
-      "tool_calls_per_question": 1.51,
+      "tool_calls_total": 80,
+      "tool_calls_per_question": 1.57,
       "llm": {
         "model": null,
         "questions_using_llm": 0,
@@ -99,7 +100,7 @@
     }
   },
   "retrieval": {
-    "cases": 18,
+    "cases": 22,
     "modes_available": [
       "lexical",
       "vector",
@@ -107,83 +108,78 @@
     ],
     "lexical": {
       "mode": "lexical",
-      "n": 18,
+      "n": 22,
       "company_filter": true,
-      "recall@1": 0.6111,
-      "recall@3": 0.7778,
-      "recall@5": 0.7778,
-      "recall@10": 0.7778,
-      "mrr": 0.6759,
-      "ndcg@1": 0.6111,
-      "ndcg@3": 0.5981,
-      "ndcg@5": 0.61,
-      "ndcg@10": 0.6966,
-      "p50_ms": 4.83,
+      "recall@1": 0.4545,
+      "recall@3": 0.5909,
+      "recall@5": 0.6818,
+      "recall@10": 0.6818,
+      "mrr": 0.5356,
+      "ndcg@1": 0.4545,
+      "ndcg@3": 0.4801,
+      "ndcg@5": 0.5003,
+      "ndcg@10": 0.5571,
+      "p50_ms": 124.74,
       "per_case": [
         {
           "id": "seg-01",
           "first_relevant_rank": 1,
-          "ndcg@10": 1.0
+          "ndcg@10": 0.9896
         },
         {
           "id": "seg-02",
-          "first_relevant_rank": null,
-          "ndcg@10": 0.0
+          "first_relevant_rank": 2,
+          "ndcg@10": 0.6395
         },
         {
           "id": "seg-03",
           "first_relevant_rank": 1,
-          "ndcg@10": 0.9727
-        },
-        {
-          "id": "seg-04",
-          "first_relevant_rank": null,
-          "ndcg@10": 0.0
+          "ndcg@10": 1.0
         },
         {
           "id": "aud-01",
           "first_relevant_rank": 1,
-          "ndcg@10": 0.9933
+          "ndcg@10": 0.9888
         },
         {
           "id": "aud-02",
           "first_relevant_rank": 1,
-          "ndcg@10": 1.0
+          "ndcg@10": 0.9617
         },
         {
           "id": "aud-03",
           "first_relevant_rank": 1,
-          "ndcg@10": 1.0
+          "ndcg@10": 0.9484
         },
         {
           "id": "div-01",
-          "first_relevant_rank": 3,
-          "ndcg@10": 0.7028
+          "first_relevant_rank": 2,
+          "ndcg@10": 0.5938
         },
         {
           "id": "div-02",
-          "first_relevant_rank": 1,
-          "ndcg@10": 0.9178
+          "first_relevant_rank": 3,
+          "ndcg@10": 0.5
         },
         {
           "id": "notes-01",
           "first_relevant_rank": 1,
-          "ndcg@10": 0.9136
+          "ndcg@10": 0.9331
         },
         {
           "id": "notes-02",
           "first_relevant_rank": 1,
-          "ndcg@10": 0.7845
+          "ndcg@10": 0.8309
         },
         {
           "id": "notes-03",
-          "first_relevant_rank": 3,
-          "ndcg@10": 0.5875
+          "first_relevant_rank": 4,
+          "ndcg@10": 0.4825
         },
         {
           "id": "cover-01",
-          "first_relevant_rank": 1,
-          "ndcg@10": 1.0
+          "first_relevant_rank": 5,
+          "ndcg@10": 0.3869
         },
         {
           "id": "cover-02",
@@ -206,51 +202,71 @@
           "ndcg@10": 0.0
         },
         {
-          "id": "fr-02",
-          "first_relevant_rank": 2,
-          "ndcg@10": 0.6665
+          "id": "risk-01",
+          "first_relevant_rank": 1,
+          "ndcg@10": 1.0
+        },
+        {
+          "id": "risk-02",
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
+        },
+        {
+          "id": "risk-03",
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
+        },
+        {
+          "id": "risk-04",
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
+        },
+        {
+          "id": "mda-01",
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
+        },
+        {
+          "id": "mda-02",
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
         }
       ]
     },
     "vector": {
       "mode": "vector",
-      "n": 18,
+      "n": 22,
       "company_filter": true,
-      "recall@1": 0.3333,
-      "recall@3": 0.3333,
-      "recall@5": 0.5,
-      "recall@10": 0.5556,
-      "mrr": 0.3812,
-      "ndcg@1": 0.3333,
-      "ndcg@3": 0.3073,
-      "ndcg@5": 0.3643,
-      "ndcg@10": 0.4333,
-      "p50_ms": 25.49,
+      "recall@1": 0.1818,
+      "recall@3": 0.3182,
+      "recall@5": 0.4091,
+      "recall@10": 0.4545,
+      "mrr": 0.2576,
+      "ndcg@1": 0.1818,
+      "ndcg@3": 0.2003,
+      "ndcg@5": 0.2541,
+      "ndcg@10": 0.3007,
+      "p50_ms": 97.3,
       "per_case": [
         {
           "id": "seg-01",
-          "first_relevant_rank": 1,
-          "ndcg@10": 0.9504
+          "first_relevant_rank": 10,
+          "ndcg@10": 0.2891
         },
         {
           "id": "seg-02",
-          "first_relevant_rank": null,
-          "ndcg@10": 0.0
+          "first_relevant_rank": 1,
+          "ndcg@10": 0.9193
         },
         {
           "id": "seg-03",
-          "first_relevant_rank": 1,
-          "ndcg@10": 1.0
-        },
-        {
-          "id": "seg-04",
-          "first_relevant_rank": null,
-          "ndcg@10": 0.0
+          "first_relevant_rank": 5,
+          "ndcg@10": 0.3869
         },
         {
           "id": "aud-01",
-          "first_relevant_rank": 4,
-          "ndcg@10": 0.6632
+          "first_relevant_rank": 3,
+          "ndcg@10": 0.6861
         },
         {
           "id": "aud-02",
@@ -264,28 +280,28 @@
         },
         {
           "id": "div-01",
-          "first_relevant_rank": 4,
-          "ndcg@10": 0.4825
+          "first_relevant_rank": 1,
+          "ndcg@10": 0.7462
         },
         {
           "id": "div-02",
-          "first_relevant_rank": 4,
-          "ndcg@10": 0.5013
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
         },
         {
           "id": "notes-01",
-          "first_relevant_rank": 1,
-          "ndcg@10": 1.0
+          "first_relevant_rank": 3,
+          "ndcg@10": 0.5706
         },
         {
           "id": "notes-02",
-          "first_relevant_rank": 9,
-          "ndcg@10": 0.301
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
         },
         {
           "id": "notes-03",
-          "first_relevant_rank": null,
-          "ndcg@10": 0.0
+          "first_relevant_rank": 5,
+          "ndcg@10": 0.3869
         },
         {
           "id": "cover-01",
@@ -294,13 +310,13 @@
         },
         {
           "id": "cover-02",
-          "first_relevant_rank": 1,
-          "ndcg@10": 0.9015
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
         },
         {
           "id": "bs-01",
-          "first_relevant_rank": 1,
-          "ndcg@10": 1.0
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
         },
         {
           "id": "cf-01",
@@ -313,7 +329,32 @@
           "ndcg@10": 0.0
         },
         {
-          "id": "fr-02",
+          "id": "risk-01",
+          "first_relevant_rank": 2,
+          "ndcg@10": 0.6309
+        },
+        {
+          "id": "risk-02",
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
+        },
+        {
+          "id": "risk-03",
+          "first_relevant_rank": 1,
+          "ndcg@10": 1.0
+        },
+        {
+          "id": "risk-04",
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
+        },
+        {
+          "id": "mda-01",
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
+        },
+        {
+          "id": "mda-02",
           "first_relevant_rank": null,
           "ndcg@10": 0.0
         }
@@ -321,18 +362,18 @@
     },
     "hybrid": {
       "mode": "hybrid",
-      "n": 18,
+      "n": 22,
       "company_filter": true,
-      "recall@1": 0.5,
-      "recall@3": 0.7222,
-      "recall@5": 0.7222,
-      "recall@10": 0.7778,
-      "mrr": 0.6111,
-      "ndcg@1": 0.5,
-      "ndcg@3": 0.5515,
-      "ndcg@5": 0.5618,
-      "ndcg@10": 0.6543,
-      "p50_ms": 28.03,
+      "recall@1": 0.4545,
+      "recall@3": 0.5,
+      "recall@5": 0.5,
+      "recall@10": 0.7273,
+      "mrr": 0.5097,
+      "ndcg@1": 0.4545,
+      "ndcg@3": 0.417,
+      "ndcg@5": 0.4066,
+      "ndcg@10": 0.5463,
+      "p50_ms": 134.28,
       "per_case": [
         {
           "id": "seg-01",
@@ -341,68 +382,63 @@
         },
         {
           "id": "seg-02",
-          "first_relevant_rank": null,
-          "ndcg@10": 0.0
-        },
-        {
-          "id": "seg-03",
-          "first_relevant_rank": 1,
-          "ndcg@10": 0.9888
-        },
-        {
-          "id": "seg-04",
-          "first_relevant_rank": null,
-          "ndcg@10": 0.0
-        },
-        {
-          "id": "aud-01",
           "first_relevant_rank": 1,
           "ndcg@10": 0.9166
         },
         {
+          "id": "seg-03",
+          "first_relevant_rank": 1,
+          "ndcg@10": 0.9448
+        },
+        {
+          "id": "aud-01",
+          "first_relevant_rank": 1,
+          "ndcg@10": 0.8807
+        },
+        {
           "id": "aud-02",
           "first_relevant_rank": 1,
-          "ndcg@10": 1.0
+          "ndcg@10": 0.8667
         },
         {
           "id": "aud-03",
           "first_relevant_rank": 1,
-          "ndcg@10": 1.0
+          "ndcg@10": 0.9642
         },
         {
           "id": "div-01",
-          "first_relevant_rank": 3,
-          "ndcg@10": 0.6943
+          "first_relevant_rank": 7,
+          "ndcg@10": 0.4333
         },
         {
           "id": "div-02",
-          "first_relevant_rank": 1,
-          "ndcg@10": 0.8727
+          "first_relevant_rank": 7,
+          "ndcg@10": 0.3333
         },
         {
           "id": "notes-01",
           "first_relevant_rank": 2,
-          "ndcg@10": 0.7629
+          "ndcg@10": 0.7165
         },
         {
           "id": "notes-02",
-          "first_relevant_rank": 2,
-          "ndcg@10": 0.6309
+          "first_relevant_rank": 7,
+          "ndcg@10": 0.3333
         },
         {
           "id": "notes-03",
-          "first_relevant_rank": 6,
-          "ndcg@10": 0.3562
+          "first_relevant_rank": 7,
+          "ndcg@10": 0.3816
         },
         {
           "id": "cover-01",
           "first_relevant_rank": 1,
-          "ndcg@10": 0.8894
+          "ndcg@10": 1.0
         },
         {
           "id": "cover-02",
           "first_relevant_rank": 1,
-          "ndcg@10": 1.0
+          "ndcg@10": 0.9146
         },
         {
           "id": "bs-01",
@@ -420,9 +456,34 @@
           "ndcg@10": 0.0
         },
         {
-          "id": "fr-02",
-          "first_relevant_rank": 2,
-          "ndcg@10": 0.6665
+          "id": "risk-01",
+          "first_relevant_rank": 1,
+          "ndcg@10": 1.0
+        },
+        {
+          "id": "risk-02",
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
+        },
+        {
+          "id": "risk-03",
+          "first_relevant_rank": 7,
+          "ndcg@10": 0.3333
+        },
+        {
+          "id": "risk-04",
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
+        },
+        {
+          "id": "mda-01",
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
+        },
+        {
+          "id": "mda-02",
+          "first_relevant_rank": null,
+          "ndcg@10": 0.0
         }
       ]
     }
@@ -439,7 +500,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 7.5,
+      "latency_ms": 39.7,
       "trace": [
         {
           "tool": "get_metric",
@@ -449,9 +510,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 4.025499998533633,
+          "latency_ms": 35.09649999978137,
           "error": null,
-          "ts": "2026-09-10T21:04:04.201697+00:00"
+          "ts": "2026-09-26T18:15:06.197570+00:00"
         }
       ],
       "verification_status": "passed",
@@ -540,7 +601,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 4.6,
+      "latency_ms": 33.5,
       "trace": [
         {
           "tool": "get_ratio",
@@ -550,9 +611,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 3.7082999988342635,
+          "latency_ms": 32.43130000191741,
           "error": null,
-          "ts": "2026-09-10T21:04:04.206697+00:00"
+          "ts": "2026-09-26T18:15:06.231813+00:00"
         }
       ],
       "verification_status": "passed",
@@ -641,7 +702,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 4.8,
+      "latency_ms": 38.9,
       "trace": [
         {
           "tool": "get_ratio",
@@ -651,9 +712,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 3.9479000042774715,
+          "latency_ms": 37.86319999926491,
           "error": null,
-          "ts": "2026-09-10T21:04:04.212208+00:00"
+          "ts": "2026-09-26T18:15:06.270799+00:00"
         }
       ],
       "verification_status": "passed",
@@ -742,7 +803,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 6.4,
+      "latency_ms": 38.1,
       "trace": [
         {
           "tool": "get_ratio",
@@ -752,9 +813,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 5.687500000931323,
+          "latency_ms": 37.30109999742126,
           "error": null,
-          "ts": "2026-09-10T21:04:04.219242+00:00"
+          "ts": "2026-09-26T18:15:06.309606+00:00"
         }
       ],
       "verification_status": "passed",
@@ -843,7 +904,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 4.8,
+      "latency_ms": 21.3,
       "trace": [
         {
           "tool": "get_ratio",
@@ -853,9 +914,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 4.040100000565872,
+          "latency_ms": 20.44679999744403,
           "error": null,
-          "ts": "2026-09-10T21:04:04.223269+00:00"
+          "ts": "2026-09-26T18:15:06.330601+00:00"
         }
       ],
       "verification_status": "passed",
@@ -944,7 +1005,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 7.0,
+      "latency_ms": 31.8,
       "trace": [
         {
           "tool": "get_ratio",
@@ -954,9 +1015,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 6.150900000648107,
+          "latency_ms": 30.864699998346623,
           "error": null,
-          "ts": "2026-09-10T21:04:04.230775+00:00"
+          "ts": "2026-09-26T18:15:06.362729+00:00"
         }
       ],
       "verification_status": "passed",
@@ -1045,7 +1106,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 0.8,
+      "latency_ms": 1.1,
       "trace": [
         {
           "tool": "get_ratio",
@@ -1055,9 +1116,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.2730999985942617,
+          "latency_ms": 0.43450000157463364,
           "error": null,
-          "ts": "2026-09-10T21:04:04.231776+00:00"
+          "ts": "2026-09-26T18:15:06.363738+00:00"
         }
       ],
       "verification_status": "passed",
@@ -1146,7 +1207,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 4.9,
+      "latency_ms": 19.7,
       "trace": [
         {
           "tool": "get_ratio",
@@ -1156,9 +1217,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 4.222900002787355,
+          "latency_ms": 18.9594000003126,
           "error": null,
-          "ts": "2026-09-10T21:04:04.236776+00:00"
+          "ts": "2026-09-26T18:15:06.383757+00:00"
         }
       ],
       "verification_status": "passed",
@@ -1247,7 +1308,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 5.2,
+      "latency_ms": 19.3,
       "trace": [
         {
           "tool": "get_ratio",
@@ -1257,9 +1318,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 4.481700001633726,
+          "latency_ms": 18.543800000770716,
           "error": null,
-          "ts": "2026-09-10T21:04:04.242307+00:00"
+          "ts": "2026-09-26T18:15:06.403748+00:00"
         }
       ],
       "verification_status": "passed",
@@ -1348,7 +1409,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 1.3,
+      "latency_ms": 1.4,
       "trace": [
         {
           "tool": "get_ratio",
@@ -1358,9 +1419,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.6547000011778437,
+          "latency_ms": 0.7396000000881031,
           "error": null,
-          "ts": "2026-09-10T21:04:04.243326+00:00"
+          "ts": "2026-09-26T18:15:06.404755+00:00"
         }
       ],
       "verification_status": "passed",
@@ -1449,7 +1510,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 0.9,
+      "latency_ms": 1.0,
       "trace": [
         {
           "tool": "get_ratio",
@@ -1459,9 +1520,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.28050000400980935,
+          "latency_ms": 0.31179999859887175,
           "error": null,
-          "ts": "2026-09-10T21:04:04.244330+00:00"
+          "ts": "2026-09-26T18:15:06.405753+00:00"
         }
       ],
       "verification_status": "passed",
@@ -1550,7 +1611,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 0.9,
+      "latency_ms": 1.0,
       "trace": [
         {
           "tool": "get_ratio",
@@ -1560,9 +1621,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.2390000008745119,
+          "latency_ms": 0.2868000010494143,
           "error": null,
-          "ts": "2026-09-10T21:04:04.245329+00:00"
+          "ts": "2026-09-26T18:15:06.407755+00:00"
         }
       ],
       "verification_status": "passed",
@@ -1651,7 +1712,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 1.2,
+      "latency_ms": 1.7,
       "trace": [
         {
           "tool": "get_ratio",
@@ -1661,9 +1722,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.62929999694461,
+          "latency_ms": 0.9233999990101438,
           "error": null,
-          "ts": "2026-09-10T21:04:04.247317+00:00"
+          "ts": "2026-09-26T18:15:06.408752+00:00"
         }
       ],
       "verification_status": "passed",
@@ -1752,7 +1813,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 0.9,
+      "latency_ms": 1.1,
       "trace": [
         {
           "tool": "get_ratio",
@@ -1762,9 +1823,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.21680000645574182,
+          "latency_ms": 0.3136000013910234,
           "error": null,
-          "ts": "2026-09-10T21:04:04.248331+00:00"
+          "ts": "2026-09-26T18:15:06.409754+00:00"
         }
       ],
       "verification_status": "passed",
@@ -1863,9 +1924,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.17699999443721026,
+          "latency_ms": 0.2320000021427404,
           "error": null,
-          "ts": "2026-09-10T21:04:04.248331+00:00"
+          "ts": "2026-09-26T18:15:06.411752+00:00"
         }
       ],
       "verification_status": "passed",
@@ -1954,7 +2015,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 0.8,
+      "latency_ms": 0.7,
       "trace": [
         {
           "tool": "get_metric",
@@ -1964,9 +2025,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.25599999935366213,
+          "latency_ms": 0.1917000008688774,
           "error": null,
-          "ts": "2026-09-10T21:04:04.249333+00:00"
+          "ts": "2026-09-26T18:15:06.411752+00:00"
         }
       ],
       "verification_status": "passed",
@@ -2065,9 +2126,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.1801999969757162,
+          "latency_ms": 0.1765000015439,
           "error": null,
-          "ts": "2026-09-10T21:04:04.250857+00:00"
+          "ts": "2026-09-26T18:15:06.412752+00:00"
         }
       ],
       "verification_status": "passed",
@@ -2166,9 +2227,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.1520000005257316,
+          "latency_ms": 0.17129999832832254,
           "error": null,
-          "ts": "2026-09-10T21:04:04.251878+00:00"
+          "ts": "2026-09-26T18:15:06.413753+00:00"
         }
       ],
       "verification_status": "passed",
@@ -2257,7 +2318,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 6.8,
+      "latency_ms": 31.9,
       "trace": [
         {
           "tool": "get_metric",
@@ -2267,9 +2328,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 6.218800001079217,
+          "latency_ms": 31.25979999822448,
           "error": null,
-          "ts": "2026-09-10T21:04:04.258000+00:00"
+          "ts": "2026-09-26T18:15:06.445631+00:00"
         }
       ],
       "verification_status": "passed",
@@ -2358,7 +2419,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 0.7,
+      "latency_ms": 1.1,
       "trace": [
         {
           "tool": "get_metric",
@@ -2368,9 +2429,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.2488999962224625,
+          "latency_ms": 0.44239999988349155,
           "error": null,
-          "ts": "2026-09-10T21:04:04.259001+00:00"
+          "ts": "2026-09-26T18:15:06.447633+00:00"
         }
       ],
       "verification_status": "passed",
@@ -2459,7 +2520,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 0.7,
+      "latency_ms": 0.8,
       "trace": [
         {
           "tool": "get_metric",
@@ -2469,9 +2530,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.16739999409765005,
+          "latency_ms": 0.24779999876045622,
           "error": null,
-          "ts": "2026-09-10T21:04:04.260001+00:00"
+          "ts": "2026-09-26T18:15:06.448631+00:00"
         }
       ],
       "verification_status": "passed",
@@ -2554,13 +2615,13 @@
       "category": "numerical",
       "question": "How much did TCS revenue grow year over year in FY2026?",
       "error": null,
-      "answer": "TCS revenue in FY2025 was 2,553,240,000,000.00 INR. TCS revenue in FY2026 was 2,670,210,000,000.00 INR. TCS revenue yoy in FY2025 -> FY2026 was 4.58 pct. TCS revenue cagr in FY2025 -> FY2026 was 4.58 pct.",
-      "confidence": 0.94,
+      "answer": "TCS revenue in FY2025 was 2,553,240,000,000.00 INR. TCS revenue in FY2026 was 2,670,210,000,000.00 INR. TCS revenue yoy in FY2025 -> FY2026 was 4.58 pct. TCS revenue in FY2019 was 1,464,630,000,000.00 INR. TCS revenue cagr in FY2019 -> FY2026 was 8.96 pct.",
+      "confidence": 0.948,
       "plan_intent": "trend",
       "expected_intent": "trend",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 1.4,
+      "latency_ms": 3.2,
       "trace": [
         {
           "tool": "get_growth",
@@ -2570,9 +2631,9 @@
             "kind": "yoy"
           },
           "ok": true,
-          "latency_ms": 0.225499999942258,
+          "latency_ms": 1.1286999979347456,
           "error": null,
-          "ts": "2026-09-10T21:04:04.261514+00:00"
+          "ts": "2026-09-26T18:15:06.449633+00:00"
         },
         {
           "tool": "get_cagr",
@@ -2581,9 +2642,9 @@
             "metric": "revenue"
           },
           "ok": true,
-          "latency_ms": 0.1477999976486899,
+          "latency_ms": 0.3417000007175375,
           "error": null,
-          "ts": "2026-09-10T21:04:04.261514+00:00"
+          "ts": "2026-09-26T18:15:06.450638+00:00"
         },
         {
           "tool": "get_metric",
@@ -2593,13 +2654,13 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.12939999578520656,
+          "latency_ms": 0.31629999648430385,
           "error": null,
-          "ts": "2026-09-10T21:04:04.261514+00:00"
+          "ts": "2026-09-26T18:15:06.451634+00:00"
         }
       ],
       "verification_status": "passed",
-      "n_claims": 4,
+      "n_claims": 5,
       "n_sources": 0,
       "llm": {
         "prompt_tokens": 0,
@@ -2612,7 +2673,7 @@
             "reference_value": 4.581238,
             "figures_found": [
               4.58,
-              4.58
+              8.96
             ],
             "closest_abs_error": 0.001238,
             "rel_error_pct": 0.027,
@@ -2628,7 +2689,7 @@
             "reference_value": 4.581238,
             "figures_found": [
               4.58,
-              4.58
+              8.96
             ],
             "closest_abs_error": 0.001238,
             "rel_error_pct": 0.027,
@@ -2640,12 +2701,12 @@
         },
         "groundedness": {
           "metrics": {
-            "n_claims": 4,
-            "grounded_claims": 4,
+            "n_claims": 5,
+            "grounded_claims": 5,
             "grounded_rate": 1.0
           },
           "verdict": "pass",
-          "detail": "4/4 claims fully grounded in the workspace"
+          "detail": "5/5 claims fully grounded in the workspace"
         },
         "citation": {
           "metrics": {
@@ -2666,12 +2727,12 @@
         },
         "unsupported_claims": {
           "metrics": {
-            "n_claims": 4,
+            "n_claims": 5,
             "n_unsupported": 0,
             "unsupported_rate": 0.0
           },
           "verdict": "pass",
-          "detail": "0/4 claims unsupported or uncited"
+          "detail": "0/5 claims unsupported or uncited"
         }
       }
     },
@@ -2680,13 +2741,13 @@
       "category": "numerical",
       "question": "What was Infosys' year-over-year revenue growth in FY2026?",
       "error": null,
-      "answer": "INFY revenue in FY2025 was 1,629,900,000,000.00 INR. INFY revenue in FY2026 was 1,786,500,000,000.00 INR. INFY revenue yoy in FY2025 -> FY2026 was 9.61 pct. INFY revenue cagr in FY2025 -> FY2026 was 9.61 pct.",
-      "confidence": 0.94,
+      "answer": "INFY revenue in FY2025 was 1,629,900,000,000.00 INR. INFY revenue in FY2026 was 1,786,500,000,000.00 INR. INFY revenue yoy in FY2025 -> FY2026 was 9.61 pct. INFY revenue in FY2019 was 826,750,000,000.00 INR. INFY revenue cagr in FY2019 -> FY2026 was 11.64 pct.",
+      "confidence": 0.948,
       "plan_intent": "trend",
       "expected_intent": "trend",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 1.3,
+      "latency_ms": 1.6,
       "trace": [
         {
           "tool": "get_growth",
@@ -2696,9 +2757,9 @@
             "kind": "yoy"
           },
           "ok": true,
-          "latency_ms": 0.1982000030693598,
+          "latency_ms": 0.19109999993816018,
           "error": null,
-          "ts": "2026-09-10T21:04:04.262530+00:00"
+          "ts": "2026-09-26T18:15:06.452629+00:00"
         },
         {
           "tool": "get_cagr",
@@ -2707,9 +2768,9 @@
             "metric": "revenue"
           },
           "ok": true,
-          "latency_ms": 0.1387999946018681,
+          "latency_ms": 0.15720000010333024,
           "error": null,
-          "ts": "2026-09-10T21:04:04.262530+00:00"
+          "ts": "2026-09-26T18:15:06.452629+00:00"
         },
         {
           "tool": "get_metric",
@@ -2719,13 +2780,13 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.12689999857684597,
+          "latency_ms": 0.15840000196476467,
           "error": null,
-          "ts": "2026-09-10T21:04:04.262530+00:00"
+          "ts": "2026-09-26T18:15:06.452629+00:00"
         }
       ],
       "verification_status": "passed",
-      "n_claims": 4,
+      "n_claims": 5,
       "n_sources": 0,
       "llm": {
         "prompt_tokens": 0,
@@ -2738,7 +2799,7 @@
             "reference_value": 9.607951,
             "figures_found": [
               9.61,
-              9.61
+              11.64
             ],
             "closest_abs_error": 0.002049,
             "rel_error_pct": 0.0213,
@@ -2754,7 +2815,7 @@
             "reference_value": 9.607951,
             "figures_found": [
               9.61,
-              9.61
+              11.64
             ],
             "closest_abs_error": 0.002049,
             "rel_error_pct": 0.0213,
@@ -2766,12 +2827,12 @@
         },
         "groundedness": {
           "metrics": {
-            "n_claims": 4,
-            "grounded_claims": 4,
+            "n_claims": 5,
+            "grounded_claims": 5,
             "grounded_rate": 1.0
           },
           "verdict": "pass",
-          "detail": "4/4 claims fully grounded in the workspace"
+          "detail": "5/5 claims fully grounded in the workspace"
         },
         "citation": {
           "metrics": {
@@ -2792,12 +2853,12 @@
         },
         "unsupported_claims": {
           "metrics": {
-            "n_claims": 4,
+            "n_claims": 5,
             "n_unsupported": 0,
             "unsupported_rate": 0.0
           },
           "verdict": "pass",
-          "detail": "0/4 claims unsupported or uncited"
+          "detail": "0/5 claims unsupported or uncited"
         }
       }
     },
@@ -2806,13 +2867,13 @@
       "category": "comparison",
       "question": "Compare TCS and Infosys on profitability.",
       "error": null,
-      "answer": "TCS net profit in FY2027 Q1 was 134,200,000,000.00 INR. TCS revenue in FY2027 Q1 was 722,750,000,000.00 INR. TCS net profit margin in FY2027 Q1 was 18.57 pct.",
-      "confidence": 0.9533,
+      "answer": "TCS net profit in FY2026 was 494,540,000,000.00 INR. TCS revenue in FY2026 was 2,670,210,000,000.00 INR. TCS net profit margin in FY2026 was 18.52 pct. TCS ranked #1 on net profit margin: 18.520640698671638 pct in FY2026. INFY ranked #2 on net profit margin: 16.498180800447805 pct in FY2026.",
+      "confidence": 0.932,
       "plan_intent": "comparison",
       "expected_intent": "comparison",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 1.2,
+      "latency_ms": 2.5,
       "trace": [
         {
           "tool": "compare_companies",
@@ -2821,648 +2882,25 @@
             "tickers": [
               "TCS",
               "INFY"
-            ]
+            ],
+            "period": "latest_annual"
           },
           "ok": true,
-          "latency_ms": 0.22130000434117392,
+          "latency_ms": 0.9318000011262484,
           "error": null,
-          "ts": "2026-09-10T21:04:04.264532+00:00"
+          "ts": "2026-09-26T18:15:06.454884+00:00"
         },
         {
           "tool": "get_ratio",
           "args": {
             "ticker": "TCS",
             "ratio": "net_profit_margin",
-            "period": "latest"
-          },
-          "ok": true,
-          "latency_ms": 0.23599999985890463,
-          "error": null,
-          "ts": "2026-09-10T21:04:04.264532+00:00"
-        }
-      ],
-      "verification_status": "passed",
-      "n_claims": 3,
-      "n_sources": 0,
-      "llm": {
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0
-      },
-      "scores": {
-        "numerical": {
-          "metrics": {},
-          "verdict": "na",
-          "detail": "no numeric reference"
-        },
-        "correctness": {
-          "metrics": {
-            "mode": "keyword",
-            "coverage": 0.5,
-            "hits": [
-              "tcs"
-            ],
-            "missing": [
-              "infy"
-            ]
-          },
-          "verdict": "fail",
-          "detail": "1/2 required phrases present"
-        },
-        "groundedness": {
-          "metrics": {
-            "n_claims": 3,
-            "grounded_claims": 3,
-            "grounded_rate": 1.0
-          },
-          "verdict": "pass",
-          "detail": "3/3 claims fully grounded in the workspace"
-        },
-        "citation": {
-          "metrics": {
-            "precision": null,
-            "recall": null,
-            "n_got": 0
-          },
-          "verdict": "na",
-          "detail": "no reference citations"
-        },
-        "abstention": {
-          "metrics": {
-            "abstained": false,
-            "should_abstain": false
-          },
-          "verdict": "pass",
-          "detail": "answered, as expected"
-        },
-        "unsupported_claims": {
-          "metrics": {
-            "n_claims": 3,
-            "n_unsupported": 0,
-            "unsupported_rate": 0.0
-          },
-          "verdict": "pass",
-          "detail": "0/3 claims unsupported or uncited"
-        }
-      }
-    },
-    {
-      "id": "cmp-002",
-      "category": "comparison",
-      "question": "Compare HDFCBANK and ICICIBANK on return on equity.",
-      "error": null,
-      "answer": "HDFCBANK net profit in FY2026 Q4 was 203,507,600,000.00 INR. HDFCBANK total equity in FY2026 Q4 was 5,815,143,600,000.00 INR. HDFCBANK roe in FY2026 Q4 was 3.50 pct.",
-      "confidence": 0.9533,
-      "plan_intent": "comparison",
-      "expected_intent": "comparison",
-      "intent_verdict": "pass",
-      "llm_used": false,
-      "latency_ms": 1.0,
-      "trace": [
-        {
-          "tool": "compare_companies",
-          "args": {
-            "metric": "roe",
-            "tickers": [
-              "HDFCBANK",
-              "ICICIBANK"
-            ]
-          },
-          "ok": true,
-          "latency_ms": 0.2167999991797842,
-          "error": null,
-          "ts": "2026-09-10T21:04:04.265532+00:00"
-        },
-        {
-          "tool": "get_ratio",
-          "args": {
-            "ticker": "HDFCBANK",
-            "ratio": "roe",
-            "period": "latest"
-          },
-          "ok": true,
-          "latency_ms": 0.14519999967887998,
-          "error": null,
-          "ts": "2026-09-10T21:04:04.265532+00:00"
-        }
-      ],
-      "verification_status": "passed",
-      "n_claims": 3,
-      "n_sources": 0,
-      "llm": {
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0
-      },
-      "scores": {
-        "numerical": {
-          "metrics": {},
-          "verdict": "na",
-          "detail": "no numeric reference"
-        },
-        "correctness": {
-          "metrics": {
-            "mode": "keyword",
-            "coverage": 0.5,
-            "hits": [
-              "hdfcbank"
-            ],
-            "missing": [
-              "icicibank"
-            ]
-          },
-          "verdict": "fail",
-          "detail": "1/2 required phrases present"
-        },
-        "groundedness": {
-          "metrics": {
-            "n_claims": 3,
-            "grounded_claims": 3,
-            "grounded_rate": 1.0
-          },
-          "verdict": "pass",
-          "detail": "3/3 claims fully grounded in the workspace"
-        },
-        "citation": {
-          "metrics": {
-            "precision": null,
-            "recall": null,
-            "n_got": 0
-          },
-          "verdict": "na",
-          "detail": "no reference citations"
-        },
-        "abstention": {
-          "metrics": {
-            "abstained": false,
-            "should_abstain": false
-          },
-          "verdict": "pass",
-          "detail": "answered, as expected"
-        },
-        "unsupported_claims": {
-          "metrics": {
-            "n_claims": 3,
-            "n_unsupported": 0,
-            "unsupported_rate": 0.0
-          },
-          "verdict": "pass",
-          "detail": "0/3 claims unsupported or uncited"
-        }
-      }
-    },
-    {
-      "id": "cmp-003",
-      "category": "comparison",
-      "question": "How do TCS, Infosys and HCLTECH compare on EBITDA margin?",
-      "error": null,
-      "answer": "TCS pbt before exceptional in FY2027 Q1 was 186,120,000,000.00 INR. TCS depreciation in FY2027 Q1 was 12,390,000,000.00 INR. TCS finance costs in FY2027 Q1 was 2,730,000,000.00 INR. TCS other income in FY2027 Q1 was 15,680,000,000.00 INR. TCS revenue in FY2027 Q1 was 722,750,000,000.00 INR. TCS ebitda margin in FY2027 Q1 was 25.67 pct.",
-      "confidence": 0.9667,
-      "plan_intent": "comparison",
-      "expected_intent": "comparison",
-      "intent_verdict": "pass",
-      "llm_used": false,
-      "latency_ms": 1.3,
-      "trace": [
-        {
-          "tool": "compare_companies",
-          "args": {
-            "metric": "ebitda_margin",
-            "tickers": [
-              "TCS",
-              "INFY",
-              "HCLTECH"
-            ]
-          },
-          "ok": true,
-          "latency_ms": 0.3221000006305985,
-          "error": null,
-          "ts": "2026-09-10T21:04:04.266527+00:00"
-        },
-        {
-          "tool": "get_ratio",
-          "args": {
-            "ticker": "TCS",
-            "ratio": "ebitda_margin",
-            "period": "latest"
-          },
-          "ok": true,
-          "latency_ms": 0.1784999985829927,
-          "error": null,
-          "ts": "2026-09-10T21:04:04.266527+00:00"
-        }
-      ],
-      "verification_status": "passed",
-      "n_claims": 6,
-      "n_sources": 0,
-      "llm": {
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0
-      },
-      "scores": {
-        "numerical": {
-          "metrics": {},
-          "verdict": "na",
-          "detail": "no numeric reference"
-        },
-        "correctness": {
-          "metrics": {
-            "mode": "keyword",
-            "coverage": 0.5,
-            "hits": [
-              "tcs"
-            ],
-            "missing": [
-              "hcltech"
-            ]
-          },
-          "verdict": "fail",
-          "detail": "1/2 required phrases present"
-        },
-        "groundedness": {
-          "metrics": {
-            "n_claims": 6,
-            "grounded_claims": 6,
-            "grounded_rate": 1.0
-          },
-          "verdict": "pass",
-          "detail": "6/6 claims fully grounded in the workspace"
-        },
-        "citation": {
-          "metrics": {
-            "precision": null,
-            "recall": null,
-            "n_got": 0
-          },
-          "verdict": "na",
-          "detail": "no reference citations"
-        },
-        "abstention": {
-          "metrics": {
-            "abstained": false,
-            "should_abstain": false
-          },
-          "verdict": "pass",
-          "detail": "answered, as expected"
-        },
-        "unsupported_claims": {
-          "metrics": {
-            "n_claims": 6,
-            "n_unsupported": 0,
-            "unsupported_rate": 0.0
-          },
-          "verdict": "pass",
-          "detail": "0/6 claims unsupported or uncited"
-        }
-      }
-    },
-    {
-      "id": "cmp-004",
-      "category": "comparison",
-      "question": "Which company has better leverage, TCS or WIPRO?",
-      "error": null,
-      "answer": "TCS total equity in FY2026 Q4 was 1,084,780,000,000.00 INR. TCS debt to equity in FY2026 Q4 was 0.00 x.",
-      "confidence": 0.94,
-      "plan_intent": "comparison",
-      "expected_intent": "comparison",
-      "intent_verdict": "pass",
-      "llm_used": false,
-      "latency_ms": 0.9,
-      "trace": [
-        {
-          "tool": "compare_companies",
-          "args": {
-            "metric": "debt_to_equity",
-            "tickers": [
-              "TCS",
-              "WIPRO"
-            ]
-          },
-          "ok": true,
-          "latency_ms": 0.20190000213915482,
-          "error": null,
-          "ts": "2026-09-10T21:04:04.267535+00:00"
-        },
-        {
-          "tool": "get_ratio",
-          "args": {
-            "ticker": "TCS",
-            "ratio": "debt_to_equity",
-            "period": "latest"
-          },
-          "ok": true,
-          "latency_ms": 0.1323000033153221,
-          "error": null,
-          "ts": "2026-09-10T21:04:04.267535+00:00"
-        }
-      ],
-      "verification_status": "passed",
-      "n_claims": 2,
-      "n_sources": 0,
-      "llm": {
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0
-      },
-      "scores": {
-        "numerical": {
-          "metrics": {},
-          "verdict": "na",
-          "detail": "no numeric reference"
-        },
-        "correctness": {
-          "metrics": {
-            "mode": "keyword",
-            "coverage": 0.5,
-            "hits": [
-              "tcs"
-            ],
-            "missing": [
-              "wipro"
-            ]
-          },
-          "verdict": "fail",
-          "detail": "1/2 required phrases present"
-        },
-        "groundedness": {
-          "metrics": {
-            "n_claims": 2,
-            "grounded_claims": 2,
-            "grounded_rate": 1.0
-          },
-          "verdict": "pass",
-          "detail": "2/2 claims fully grounded in the workspace"
-        },
-        "citation": {
-          "metrics": {
-            "precision": null,
-            "recall": null,
-            "n_got": 0
-          },
-          "verdict": "na",
-          "detail": "no reference citations"
-        },
-        "abstention": {
-          "metrics": {
-            "abstained": false,
-            "should_abstain": false
-          },
-          "verdict": "pass",
-          "detail": "answered, as expected"
-        },
-        "unsupported_claims": {
-          "metrics": {
-            "n_claims": 2,
-            "n_unsupported": 0,
-            "unsupported_rate": 0.0
-          },
-          "verdict": "pass",
-          "detail": "0/2 claims unsupported or uncited"
-        }
-      }
-    },
-    {
-      "id": "rank-001",
-      "category": "multi_step",
-      "question": "Rank the IT services companies by return on equity.",
-      "error": null,
-      "answer": "The available evidence was not sufficient to answer this question.",
-      "confidence": 0.0,
-      "plan_intent": "ranking",
-      "expected_intent": "ranking",
-      "intent_verdict": "pass",
-      "llm_used": false,
-      "latency_ms": 66.4,
-      "trace": [
-        {
-          "tool": "get_index_members",
-          "args": {
-            "index_name": "NIFTY 50"
-          },
-          "ok": true,
-          "latency_ms": 1.5764000054332428,
-          "error": null,
-          "ts": "2026-09-10T21:04:04.270288+00:00"
-        },
-        {
-          "tool": "compare_companies",
-          "args": {
-            "metric": "roe",
-            "tickers": [
-              "ADANIENT",
-              "ADANIPORTS",
-              "APOLLOHOSP",
-              "ASIANPAINT",
-              "AXISBANK",
-              "BAJAJ-AUTO",
-              "BAJAJFINSV",
-              "BAJFINANCE",
-              "BEL",
-              "BHARTIARTL",
-              "CIPLA",
-              "COALINDIA"
-            ]
-          },
-          "ok": true,
-          "latency_ms": 64.3768000009004,
-          "error": null,
-          "ts": "2026-09-10T21:04:04.334637+00:00"
-        }
-      ],
-      "verification_status": "passed",
-      "n_claims": 0,
-      "n_sources": 0,
-      "llm": {
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0
-      },
-      "scores": {
-        "numerical": {
-          "metrics": {},
-          "verdict": "na",
-          "detail": "no numeric reference"
-        },
-        "correctness": {
-          "metrics": {
-            "mode": "keyword",
-            "coverage": 0.0,
-            "hits": [],
-            "missing": [
-              "tcs"
-            ]
-          },
-          "verdict": "fail",
-          "detail": "0/1 required phrases present"
-        },
-        "groundedness": {
-          "metrics": {
-            "grounded_rate": null
-          },
-          "verdict": "na",
-          "detail": "no claims"
-        },
-        "citation": {
-          "metrics": {
-            "precision": null,
-            "recall": null,
-            "n_got": 0
-          },
-          "verdict": "na",
-          "detail": "no reference citations"
-        },
-        "abstention": {
-          "metrics": {
-            "abstained": true,
-            "should_abstain": false
-          },
-          "verdict": "warn",
-          "detail": "over-abstained on an answerable question"
-        },
-        "unsupported_claims": {
-          "metrics": {
-            "n_claims": 0,
-            "n_unsupported": 0,
-            "unsupported_rate": 0.0
-          },
-          "verdict": "na",
-          "detail": "no claims"
-        }
-      }
-    },
-    {
-      "id": "rank-002",
-      "category": "multi_step",
-      "question": "Which IT companies have the strongest return on capital employed?",
-      "error": null,
-      "answer": "The available evidence was not sufficient to answer this question.",
-      "confidence": 0.0,
-      "plan_intent": "ranking",
-      "expected_intent": "ranking",
-      "intent_verdict": "pass",
-      "llm_used": false,
-      "latency_ms": 3.2,
-      "trace": [
-        {
-          "tool": "get_index_members",
-          "args": {
-            "index_name": "NIFTY 50"
-          },
-          "ok": true,
-          "latency_ms": 1.607099999091588,
-          "error": null,
-          "ts": "2026-09-10T21:04:04.337166+00:00"
-        },
-        {
-          "tool": "compare_companies",
-          "args": {
-            "metric": "roce",
-            "tickers": [
-              "ADANIENT",
-              "ADANIPORTS",
-              "APOLLOHOSP",
-              "ASIANPAINT",
-              "AXISBANK",
-              "BAJAJ-AUTO",
-              "BAJAJFINSV",
-              "BAJFINANCE",
-              "BEL",
-              "BHARTIARTL",
-              "CIPLA",
-              "COALINDIA"
-            ]
-          },
-          "ok": true,
-          "latency_ms": 1.0191999972448684,
-          "error": null,
-          "ts": "2026-09-10T21:04:04.338184+00:00"
-        }
-      ],
-      "verification_status": "passed",
-      "n_claims": 0,
-      "n_sources": 0,
-      "llm": {
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0
-      },
-      "scores": {
-        "numerical": {
-          "metrics": {},
-          "verdict": "na",
-          "detail": "no numeric reference"
-        },
-        "correctness": {
-          "metrics": {
-            "mode": "keyword",
-            "coverage": 0.0,
-            "hits": [],
-            "missing": [
-              "tcs"
-            ]
-          },
-          "verdict": "fail",
-          "detail": "0/1 required phrases present"
-        },
-        "groundedness": {
-          "metrics": {
-            "grounded_rate": null
-          },
-          "verdict": "na",
-          "detail": "no claims"
-        },
-        "citation": {
-          "metrics": {
-            "precision": null,
-            "recall": null,
-            "n_got": 0
-          },
-          "verdict": "na",
-          "detail": "no reference citations"
-        },
-        "abstention": {
-          "metrics": {
-            "abstained": true,
-            "should_abstain": false
-          },
-          "verdict": "warn",
-          "detail": "over-abstained on an answerable question"
-        },
-        "unsupported_claims": {
-          "metrics": {
-            "n_claims": 0,
-            "n_unsupported": 0,
-            "unsupported_rate": 0.0
-          },
-          "verdict": "na",
-          "detail": "no claims"
-        }
-      }
-    },
-    {
-      "id": "seg-001",
-      "category": "multi_step",
-      "question": "Which segment contributed most to Reliance's revenue growth?",
-      "error": null,
-      "answer": "RELIANCE segment revenue in FY2026 was 6,624,010,000,000.00 INR. RELIANCE segment revenue in FY2026 was 3,710,850,000,000.00 INR. RELIANCE segment revenue in FY2026 was 1,761,640,000,000.00 INR. RELIANCE segment revenue in FY2026 was 805,220,000,000.00 INR. RELIANCE segment revenue in FY2026 was 238,610,000,000.00 INR.",
-      "confidence": 0.9,
-      "plan_intent": "segment",
-      "expected_intent": "segment",
-      "intent_verdict": "pass",
-      "llm_used": false,
-      "latency_ms": 2.7,
-      "trace": [
-        {
-          "tool": "get_segment_data",
-          "args": {
-            "ticker": "RELIANCE",
             "period": "latest_annual"
           },
           "ok": true,
-          "latency_ms": 2.065799999400042,
+          "latency_ms": 0.30619999961345457,
           "error": null,
-          "ts": "2026-09-10T21:04:04.340183+00:00"
+          "ts": "2026-09-26T18:15:06.455904+00:00"
         }
       ],
       "verification_status": "passed",
@@ -3484,12 +2922,641 @@
             "mode": "keyword",
             "coverage": 1.0,
             "hits": [
-              "segment"
+              "tcs",
+              "infy"
             ],
             "missing": []
           },
           "verdict": "pass",
-          "detail": "1/1 required phrases present"
+          "detail": "2/2 required phrases present"
+        },
+        "groundedness": {
+          "metrics": {
+            "n_claims": 5,
+            "grounded_claims": 5,
+            "grounded_rate": 1.0
+          },
+          "verdict": "pass",
+          "detail": "5/5 claims fully grounded in the workspace"
+        },
+        "citation": {
+          "metrics": {
+            "precision": null,
+            "recall": null,
+            "n_got": 0
+          },
+          "verdict": "na",
+          "detail": "no reference citations"
+        },
+        "abstention": {
+          "metrics": {
+            "abstained": false,
+            "should_abstain": false
+          },
+          "verdict": "pass",
+          "detail": "answered, as expected"
+        },
+        "unsupported_claims": {
+          "metrics": {
+            "n_claims": 5,
+            "n_unsupported": 0,
+            "unsupported_rate": 0.0
+          },
+          "verdict": "pass",
+          "detail": "0/5 claims unsupported or uncited"
+        }
+      }
+    },
+    {
+      "id": "cmp-002",
+      "category": "comparison",
+      "question": "Compare HDFCBANK and ICICIBANK on return on equity.",
+      "error": null,
+      "answer": "HDFCBANK net profit in FY2026 was 760,259,700,000.00 INR. HDFCBANK total equity in FY2026 was 5,815,143,600,000.00 INR. HDFCBANK roe in FY2026 was 13.07 pct. ICICIBANK ranked #1 on roe: 15.19434935253415 pct in FY2026. HDFCBANK ranked #2 on roe: 13.073790645513897 pct in FY2026.",
+      "confidence": 0.932,
+      "plan_intent": "comparison",
+      "expected_intent": "comparison",
+      "intent_verdict": "pass",
+      "llm_used": false,
+      "latency_ms": 1.3,
+      "trace": [
+        {
+          "tool": "compare_companies",
+          "args": {
+            "metric": "roe",
+            "tickers": [
+              "HDFCBANK",
+              "ICICIBANK"
+            ],
+            "period": "latest_annual"
+          },
+          "ok": true,
+          "latency_ms": 0.3446000009716954,
+          "error": null,
+          "ts": "2026-09-26T18:15:06.456904+00:00"
+        },
+        {
+          "tool": "get_ratio",
+          "args": {
+            "ticker": "HDFCBANK",
+            "ratio": "roe",
+            "period": "latest_annual"
+          },
+          "ok": true,
+          "latency_ms": 0.16419999883510172,
+          "error": null,
+          "ts": "2026-09-26T18:15:06.456904+00:00"
+        }
+      ],
+      "verification_status": "passed",
+      "n_claims": 5,
+      "n_sources": 0,
+      "llm": {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0
+      },
+      "scores": {
+        "numerical": {
+          "metrics": {},
+          "verdict": "na",
+          "detail": "no numeric reference"
+        },
+        "correctness": {
+          "metrics": {
+            "mode": "keyword",
+            "coverage": 1.0,
+            "hits": [
+              "hdfcbank",
+              "icicibank"
+            ],
+            "missing": []
+          },
+          "verdict": "pass",
+          "detail": "2/2 required phrases present"
+        },
+        "groundedness": {
+          "metrics": {
+            "n_claims": 5,
+            "grounded_claims": 5,
+            "grounded_rate": 1.0
+          },
+          "verdict": "pass",
+          "detail": "5/5 claims fully grounded in the workspace"
+        },
+        "citation": {
+          "metrics": {
+            "precision": null,
+            "recall": null,
+            "n_got": 0
+          },
+          "verdict": "na",
+          "detail": "no reference citations"
+        },
+        "abstention": {
+          "metrics": {
+            "abstained": false,
+            "should_abstain": false
+          },
+          "verdict": "pass",
+          "detail": "answered, as expected"
+        },
+        "unsupported_claims": {
+          "metrics": {
+            "n_claims": 5,
+            "n_unsupported": 0,
+            "unsupported_rate": 0.0
+          },
+          "verdict": "pass",
+          "detail": "0/5 claims unsupported or uncited"
+        }
+      }
+    },
+    {
+      "id": "cmp-003",
+      "category": "comparison",
+      "question": "How do TCS, Infosys and HCLTECH compare on EBITDA margin?",
+      "error": null,
+      "answer": "TCS pbt before exceptional in FY2026 was 700,130,000,000.00 INR. TCS depreciation in FY2026 was 55,600,000,000.00 INR. TCS finance costs in FY2026 was 12,270,000,000.00 INR. TCS other income in FY2026 was 44,020,000,000.00 INR. TCS revenue in FY2026 was 2,670,210,000,000.00 INR. TCS ebitda margin in FY2026 was 27.11 pct. TCS ranked #1 on ebitda margin: 27.113223304534102 pct in FY2026. INFY ranked #2 on ebitda margin: 23.66638678981248 pct in FY2026. HCLTECH ranked #3 on ebitda margin: 20.555692156380626 pct in FY2026.",
+      "confidence": 0.9444,
+      "plan_intent": "comparison",
+      "expected_intent": "comparison",
+      "intent_verdict": "pass",
+      "llm_used": false,
+      "latency_ms": 1.9,
+      "trace": [
+        {
+          "tool": "compare_companies",
+          "args": {
+            "metric": "ebitda_margin",
+            "tickers": [
+              "TCS",
+              "INFY",
+              "HCLTECH"
+            ],
+            "period": "latest_annual"
+          },
+          "ok": true,
+          "latency_ms": 0.6052999997336883,
+          "error": null,
+          "ts": "2026-09-26T18:15:06.458908+00:00"
+        },
+        {
+          "tool": "get_ratio",
+          "args": {
+            "ticker": "TCS",
+            "ratio": "ebitda_margin",
+            "period": "latest_annual"
+          },
+          "ok": true,
+          "latency_ms": 0.2457999980833847,
+          "error": null,
+          "ts": "2026-09-26T18:15:06.458908+00:00"
+        }
+      ],
+      "verification_status": "passed",
+      "n_claims": 9,
+      "n_sources": 0,
+      "llm": {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0
+      },
+      "scores": {
+        "numerical": {
+          "metrics": {},
+          "verdict": "na",
+          "detail": "no numeric reference"
+        },
+        "correctness": {
+          "metrics": {
+            "mode": "keyword",
+            "coverage": 1.0,
+            "hits": [
+              "tcs",
+              "hcltech"
+            ],
+            "missing": []
+          },
+          "verdict": "pass",
+          "detail": "2/2 required phrases present"
+        },
+        "groundedness": {
+          "metrics": {
+            "n_claims": 9,
+            "grounded_claims": 9,
+            "grounded_rate": 1.0
+          },
+          "verdict": "pass",
+          "detail": "9/9 claims fully grounded in the workspace"
+        },
+        "citation": {
+          "metrics": {
+            "precision": null,
+            "recall": null,
+            "n_got": 0
+          },
+          "verdict": "na",
+          "detail": "no reference citations"
+        },
+        "abstention": {
+          "metrics": {
+            "abstained": false,
+            "should_abstain": false
+          },
+          "verdict": "pass",
+          "detail": "answered, as expected"
+        },
+        "unsupported_claims": {
+          "metrics": {
+            "n_claims": 9,
+            "n_unsupported": 0,
+            "unsupported_rate": 0.0
+          },
+          "verdict": "pass",
+          "detail": "0/9 claims unsupported or uncited"
+        }
+      }
+    },
+    {
+      "id": "cmp-004",
+      "category": "comparison",
+      "question": "Which company has better leverage, TCS or WIPRO?",
+      "error": null,
+      "answer": "TCS total equity in FY2026 was 1,084,780,000,000.00 INR. TCS debt to equity in FY2026 was 0.00 x. WIPRO ranked #1 on debt to equity: 0.1901841185826993 x in FY2026. TCS ranked #2 on debt to equity: 0.0 x in FY2026.",
+      "confidence": 0.92,
+      "plan_intent": "comparison",
+      "expected_intent": "comparison",
+      "intent_verdict": "pass",
+      "llm_used": false,
+      "latency_ms": 1.2,
+      "trace": [
+        {
+          "tool": "compare_companies",
+          "args": {
+            "metric": "debt_to_equity",
+            "tickers": [
+              "TCS",
+              "WIPRO"
+            ],
+            "period": "latest_annual"
+          },
+          "ok": true,
+          "latency_ms": 0.34729999970295466,
+          "error": null,
+          "ts": "2026-09-26T18:15:06.460903+00:00"
+        },
+        {
+          "tool": "get_ratio",
+          "args": {
+            "ticker": "TCS",
+            "ratio": "debt_to_equity",
+            "period": "latest_annual"
+          },
+          "ok": true,
+          "latency_ms": 0.180200000613695,
+          "error": null,
+          "ts": "2026-09-26T18:15:06.460903+00:00"
+        }
+      ],
+      "verification_status": "passed",
+      "n_claims": 4,
+      "n_sources": 0,
+      "llm": {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0
+      },
+      "scores": {
+        "numerical": {
+          "metrics": {},
+          "verdict": "na",
+          "detail": "no numeric reference"
+        },
+        "correctness": {
+          "metrics": {
+            "mode": "keyword",
+            "coverage": 1.0,
+            "hits": [
+              "tcs",
+              "wipro"
+            ],
+            "missing": []
+          },
+          "verdict": "pass",
+          "detail": "2/2 required phrases present"
+        },
+        "groundedness": {
+          "metrics": {
+            "n_claims": 4,
+            "grounded_claims": 4,
+            "grounded_rate": 1.0
+          },
+          "verdict": "pass",
+          "detail": "4/4 claims fully grounded in the workspace"
+        },
+        "citation": {
+          "metrics": {
+            "precision": null,
+            "recall": null,
+            "n_got": 0
+          },
+          "verdict": "na",
+          "detail": "no reference citations"
+        },
+        "abstention": {
+          "metrics": {
+            "abstained": false,
+            "should_abstain": false
+          },
+          "verdict": "pass",
+          "detail": "answered, as expected"
+        },
+        "unsupported_claims": {
+          "metrics": {
+            "n_claims": 4,
+            "n_unsupported": 0,
+            "unsupported_rate": 0.0
+          },
+          "verdict": "pass",
+          "detail": "0/4 claims unsupported or uncited"
+        }
+      }
+    },
+    {
+      "id": "rank-001",
+      "category": "multi_step",
+      "question": "Rank the IT services companies by return on equity.",
+      "error": null,
+      "answer": "BAJAJ-AUTO ranked #1 on roe: 26.291371397911806 pct in FY2026. COALINDIA ranked #2 on roe: 25.67719549765765 pct in FY2026. BEL ranked #3 on roe: 25.251904225159684 pct in FY2026. APOLLOHOSP ranked #4 on roe: 20.078199408491653 pct in FY2026. ASIANPAINT ranked #5 on roe: 19.962271144466175 pct in FY2026. BHARTIARTL ranked #6 on roe: 17.259753607051113 pct in FY2026. BAJFINANCE ranked #7 on roe: 16.525426988668855 pct in FY2026. BAJAJFINSV ranked #8 on roe: 13.95341462805593 pct in FY2026. ADANIPORTS ranked #9 on roe: 12.913557162410585 pct in FY2026. AXISBANK ranked #10 on roe: 12.404697991730645 pct in FY2026. CIPLA ranked #11 on roe: 11.186886302065108 pct in FY2026. ADANIENT ranked #12 on roe: 11.158202812905612 pct in FY2026.",
+      "confidence": 0.9,
+      "plan_intent": "ranking",
+      "expected_intent": "ranking",
+      "intent_verdict": "pass",
+      "llm_used": false,
+      "latency_ms": 376.0,
+      "trace": [
+        {
+          "tool": "get_index_members",
+          "args": {
+            "index_name": "NIFTY 50"
+          },
+          "ok": true,
+          "latency_ms": 2.0915999994031154,
+          "error": null,
+          "ts": "2026-09-26T18:15:06.463908+00:00"
+        },
+        {
+          "tool": "compare_companies",
+          "args": {
+            "metric": "roe",
+            "tickers": [
+              "ADANIENT",
+              "ADANIPORTS",
+              "APOLLOHOSP",
+              "ASIANPAINT",
+              "AXISBANK",
+              "BAJAJ-AUTO",
+              "BAJAJFINSV",
+              "BAJFINANCE",
+              "BEL",
+              "BHARTIARTL",
+              "CIPLA",
+              "COALINDIA"
+            ],
+            "period": "latest_annual"
+          },
+          "ok": true,
+          "latency_ms": 372.74450000040815,
+          "error": null,
+          "ts": "2026-09-26T18:15:06.835904+00:00"
+        }
+      ],
+      "verification_status": "passed",
+      "n_claims": 12,
+      "n_sources": 0,
+      "llm": {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0
+      },
+      "scores": {
+        "numerical": {
+          "metrics": {},
+          "verdict": "na",
+          "detail": "no numeric reference"
+        },
+        "correctness": {
+          "metrics": {
+            "mode": "keyword",
+            "coverage": 0.0,
+            "hits": [],
+            "missing": [
+              "tcs"
+            ]
+          },
+          "verdict": "fail",
+          "detail": "0/1 required phrases present"
+        },
+        "groundedness": {
+          "metrics": {
+            "n_claims": 12,
+            "grounded_claims": 12,
+            "grounded_rate": 1.0
+          },
+          "verdict": "pass",
+          "detail": "12/12 claims fully grounded in the workspace"
+        },
+        "citation": {
+          "metrics": {
+            "precision": null,
+            "recall": null,
+            "n_got": 0
+          },
+          "verdict": "na",
+          "detail": "no reference citations"
+        },
+        "abstention": {
+          "metrics": {
+            "abstained": false,
+            "should_abstain": false
+          },
+          "verdict": "pass",
+          "detail": "answered, as expected"
+        },
+        "unsupported_claims": {
+          "metrics": {
+            "n_claims": 12,
+            "n_unsupported": 0,
+            "unsupported_rate": 0.0
+          },
+          "verdict": "pass",
+          "detail": "0/12 claims unsupported or uncited"
+        }
+      }
+    },
+    {
+      "id": "rank-002",
+      "category": "multi_step",
+      "question": "Which IT companies have the strongest return on capital employed?",
+      "error": null,
+      "answer": "BEL ranked #1 on roce: 31.884497722702598 pct in FY2026. BAJAJ-AUTO ranked #2 on roce: 25.220079250470288 pct in FY2026. ASIANPAINT ranked #3 on roce: 24.37594153116099 pct in FY2026. APOLLOHOSP ranked #4 on roce: 19.62890376441243 pct in FY2026. COALINDIA ranked #5 on roce: 19.440008851004244 pct in FY2026. BHARTIARTL ranked #6 on roce: 18.47789159103806 pct in FY2026. CIPLA ranked #7 on roce: 15.652637829638872 pct in FY2026. ADANIPORTS ranked #8 on roce: 11.472789177232253 pct in FY2026. ADANIENT ranked #9 on roce: 5.095716028716042 pct in FY2026.",
+      "confidence": 0.9,
+      "plan_intent": "ranking",
+      "expected_intent": "ranking",
+      "intent_verdict": "pass",
+      "llm_used": false,
+      "latency_ms": 6.2,
+      "trace": [
+        {
+          "tool": "get_index_members",
+          "args": {
+            "index_name": "NIFTY 50"
+          },
+          "ok": true,
+          "latency_ms": 2.080299997032853,
+          "error": null,
+          "ts": "2026-09-26T18:15:06.839910+00:00"
+        },
+        {
+          "tool": "compare_companies",
+          "args": {
+            "metric": "roce",
+            "tickers": [
+              "ADANIENT",
+              "ADANIPORTS",
+              "APOLLOHOSP",
+              "ASIANPAINT",
+              "AXISBANK",
+              "BAJAJ-AUTO",
+              "BAJAJFINSV",
+              "BAJFINANCE",
+              "BEL",
+              "BHARTIARTL",
+              "CIPLA",
+              "COALINDIA"
+            ],
+            "period": "latest_annual"
+          },
+          "ok": true,
+          "latency_ms": 2.8843999971286394,
+          "error": null,
+          "ts": "2026-09-26T18:15:06.842910+00:00"
+        }
+      ],
+      "verification_status": "passed",
+      "n_claims": 9,
+      "n_sources": 0,
+      "llm": {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0
+      },
+      "scores": {
+        "numerical": {
+          "metrics": {},
+          "verdict": "na",
+          "detail": "no numeric reference"
+        },
+        "correctness": {
+          "metrics": {
+            "mode": "keyword",
+            "coverage": 0.0,
+            "hits": [],
+            "missing": [
+              "tcs"
+            ]
+          },
+          "verdict": "fail",
+          "detail": "0/1 required phrases present"
+        },
+        "groundedness": {
+          "metrics": {
+            "n_claims": 9,
+            "grounded_claims": 9,
+            "grounded_rate": 1.0
+          },
+          "verdict": "pass",
+          "detail": "9/9 claims fully grounded in the workspace"
+        },
+        "citation": {
+          "metrics": {
+            "precision": null,
+            "recall": null,
+            "n_got": 0
+          },
+          "verdict": "na",
+          "detail": "no reference citations"
+        },
+        "abstention": {
+          "metrics": {
+            "abstained": false,
+            "should_abstain": false
+          },
+          "verdict": "pass",
+          "detail": "answered, as expected"
+        },
+        "unsupported_claims": {
+          "metrics": {
+            "n_claims": 9,
+            "n_unsupported": 0,
+            "unsupported_rate": 0.0
+          },
+          "verdict": "pass",
+          "detail": "0/9 claims unsupported or uncited"
+        }
+      }
+    },
+    {
+      "id": "seg-001",
+      "category": "multi_step",
+      "question": "Which segment contributed most to Reliance's revenue growth?",
+      "error": null,
+      "answer": "RELIANCE Oil to Chemicals (O2C): revenue 6,624,010,000,000 INR, 50.4% of total in FY2026. RELIANCE Retail: revenue 3,710,850,000,000 INR, 28.2% of total in FY2026. RELIANCE Digital Services: revenue 1,761,640,000,000 INR, 13.4% of total in FY2026. RELIANCE Others: revenue 805,220,000,000 INR, 6.1% of total in FY2026. RELIANCE Oil and Gas: revenue 238,610,000,000 INR, 1.8% of total in FY2026.",
+      "confidence": 0.9,
+      "plan_intent": "segment",
+      "expected_intent": "segment",
+      "intent_verdict": "pass",
+      "llm_used": false,
+      "latency_ms": 3.3,
+      "trace": [
+        {
+          "tool": "get_segment_data",
+          "args": {
+            "ticker": "RELIANCE",
+            "period": "latest_annual"
+          },
+          "ok": true,
+          "latency_ms": 2.172900000005029,
+          "error": null,
+          "ts": "2026-09-26T18:15:06.845901+00:00"
+        }
+      ],
+      "verification_status": "passed",
+      "n_claims": 5,
+      "n_sources": 0,
+      "llm": {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0
+      },
+      "scores": {
+        "numerical": {
+          "metrics": {},
+          "verdict": "na",
+          "detail": "no numeric reference"
+        },
+        "correctness": {
+          "metrics": {
+            "mode": "keyword",
+            "coverage": 0.0,
+            "hits": [],
+            "missing": [
+              "segment"
+            ]
+          },
+          "verdict": "fail",
+          "detail": "0/1 required phrases present"
         },
         "groundedness": {
           "metrics": {
@@ -3533,13 +3600,13 @@
       "category": "multi_step",
       "question": "Break down TCS revenue by reportable segment.",
       "error": null,
-      "answer": "TCS segment revenue in FY2026 was 1,033,630,000,000.00 INR. TCS segment revenue in FY2026 was 424,320,000,000.00 INR. TCS segment revenue in FY2026 was 394,740,000,000.00 INR. TCS segment revenue in FY2026 was 277,450,000,000.00 INR. TCS segment revenue in FY2026 was 273,930,000,000.00 INR. TCS segment revenue in FY2026 was 266,140,000,000.00 INR.",
+      "answer": "TCS Banking, Financial Services and Insurance: revenue 1,033,630,000,000 INR, 38.7% of total in FY2026. TCS Consumer Business: revenue 424,320,000,000 INR, 15.9% of total in FY2026. TCS Communication, Media and Technology: revenue 394,740,000,000 INR, 14.8% of total in FY2026. TCS Life Sciences and Healthcare: revenue 277,450,000,000 INR, 10.4% of total in FY2026. TCS Others: revenue 273,930,000,000 INR, 10.3% of total in FY2026. TCS Manufacturing: revenue 266,140,000,000 INR, 10.0% of total in FY2026.",
       "confidence": 0.9,
       "plan_intent": "segment",
       "expected_intent": "segment",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 2.3,
+      "latency_ms": 3.1,
       "trace": [
         {
           "tool": "get_segment_data",
@@ -3548,9 +3615,9 @@
             "period": "latest_annual"
           },
           "ok": true,
-          "latency_ms": 1.5200999987428077,
+          "latency_ms": 2.2205000022950117,
           "error": null,
-          "ts": "2026-09-10T21:04:04.343171+00:00"
+          "ts": "2026-09-26T18:15:06.849902+00:00"
         }
       ],
       "verification_status": "passed",
@@ -3570,14 +3637,14 @@
         "correctness": {
           "metrics": {
             "mode": "keyword",
-            "coverage": 1.0,
-            "hits": [
+            "coverage": 0.0,
+            "hits": [],
+            "missing": [
               "segment"
-            ],
-            "missing": []
+            ]
           },
-          "verdict": "pass",
-          "detail": "1/1 required phrases present"
+          "verdict": "fail",
+          "detail": "0/1 required phrases present"
         },
         "groundedness": {
           "metrics": {
@@ -3621,13 +3688,13 @@
       "category": "analytical",
       "question": "What are Reliance's business segments and their revenue contribution?",
       "error": null,
-      "answer": "RELIANCE segment revenue in FY2026 was 6,624,010,000,000.00 INR. RELIANCE segment revenue in FY2026 was 3,710,850,000,000.00 INR. RELIANCE segment revenue in FY2026 was 1,761,640,000,000.00 INR. RELIANCE segment revenue in FY2026 was 805,220,000,000.00 INR. RELIANCE segment revenue in FY2026 was 238,610,000,000.00 INR.",
+      "answer": "RELIANCE Oil to Chemicals (O2C): revenue 6,624,010,000,000 INR, 50.4% of total in FY2026. RELIANCE Retail: revenue 3,710,850,000,000 INR, 28.2% of total in FY2026. RELIANCE Digital Services: revenue 1,761,640,000,000 INR, 13.4% of total in FY2026. RELIANCE Others: revenue 805,220,000,000 INR, 6.1% of total in FY2026. RELIANCE Oil and Gas: revenue 238,610,000,000 INR, 1.8% of total in FY2026.",
       "confidence": 0.9,
       "plan_intent": "segment",
       "expected_intent": "segment",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 1.4,
+      "latency_ms": 1.5,
       "trace": [
         {
           "tool": "get_segment_data",
@@ -3636,9 +3703,9 @@
             "period": "latest_annual"
           },
           "ok": true,
-          "latency_ms": 0.7296999974641949,
+          "latency_ms": 0.7828999987395946,
           "error": null,
-          "ts": "2026-09-10T21:04:04.344170+00:00"
+          "ts": "2026-09-26T18:15:06.850902+00:00"
         }
       ],
       "verification_status": "passed",
@@ -3658,14 +3725,14 @@
         "correctness": {
           "metrics": {
             "mode": "keyword",
-            "coverage": 1.0,
-            "hits": [
+            "coverage": 0.0,
+            "hits": [],
+            "missing": [
               "segment"
-            ],
-            "missing": []
+            ]
           },
-          "verdict": "pass",
-          "detail": "1/1 required phrases present"
+          "verdict": "fail",
+          "detail": "0/1 required phrases present"
         },
         "groundedness": {
           "metrics": {
@@ -3709,13 +3776,13 @@
       "category": "why",
       "question": "Why did HCLTECH's profitability decline?",
       "error": null,
-      "answer": "HCLTECH net profit margin fell by -13.9% from FY2025 to FY2026. Candidate cause — Rising other operating expenses outpaced revenue growth — is supported by both the reported numbers and management commentary. Candidate cause — Rising finance costs outpaced revenue growth — is supported by both the reported numbers and management commentary. Candidate cause — Costs grew faster than revenue, compressing the margin — is supported by both the reported numbers and management commentary. Candidate cause — The move was driven mainly by a change in net profit margin — is supported by both the reported numbers and management commentary. Candidate cause — The IT and Business Services segment accounted for about 74% of the revenue change — is supported by both the reported numbers and management commentary.",
-      "confidence": 0.6661,
+      "answer": "HCLTECH net profit margin fell by -13.9% from FY2025 to FY2026. Candidate cause — The IT and Business Services segment accounted for about 74% of the revenue change — is supported by both the reported numbers and management commentary. Candidate cause — Costs grew faster than revenue, compressing the margin — is supported by both the reported numbers and management commentary. Candidate cause — Rising other operating expenses outpaced revenue growth — is supported by both the reported numbers and management commentary. Candidate cause — Rising finance costs outpaced revenue growth — is supported by both the reported numbers and management commentary. Candidate cause — The move was driven mainly by a change in net profit margin — is supported by both the reported numbers and management commentary.",
+      "confidence": 0.6531,
       "plan_intent": "causal",
       "expected_intent": "causal",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 19164.8,
+      "latency_ms": 19964.8,
       "trace": [
         {
           "tool": "get_growth",
@@ -3725,20 +3792,21 @@
             "kind": "yoy"
           },
           "ok": true,
-          "latency_ms": 0.1762000028975308,
+          "latency_ms": 0.2409999979136046,
           "error": null,
-          "ts": "2026-09-10T21:04:04.345170+00:00"
+          "ts": "2026-09-26T18:15:06.851902+00:00"
         },
         {
           "tool": "decompose_metric",
           "args": {
             "ticker": "HCLTECH",
-            "metric": "net_margin"
+            "metric": "net_margin",
+            "period": "latest_annual"
           },
           "ok": true,
-          "latency_ms": 0.14799999917158857,
+          "latency_ms": 0.3260000012232922,
           "error": null,
-          "ts": "2026-09-10T21:04:04.345675+00:00"
+          "ts": "2026-09-26T18:15:06.852904+00:00"
         },
         {
           "tool": "search_documents",
@@ -3748,14 +3816,14 @@
             "company": "HCLTECH"
           },
           "ok": true,
-          "latency_ms": 18904.709399997955,
+          "latency_ms": 19206.56009999948,
           "error": null,
-          "ts": "2026-09-10T21:04:23.250431+00:00"
+          "ts": "2026-09-26T18:15:26.059698+00:00"
         }
       ],
       "verification_status": "passed",
       "n_claims": 5,
-      "n_sources": 6,
+      "n_sources": 9,
       "llm": {
         "prompt_tokens": 0,
         "completion_tokens": 0,
@@ -3792,7 +3860,7 @@
           "metrics": {
             "precision": null,
             "recall": null,
-            "n_got": 6
+            "n_got": 9
           },
           "verdict": "na",
           "detail": "no reference citations"
@@ -3821,13 +3889,13 @@
       "category": "why",
       "question": "Why did TCS net profit change in FY2026?",
       "error": null,
-      "answer": "TCS net profit rose by +1.3% from FY2025 to FY2026. Candidate cause — Revenue growth outpaced the cost base — is supported by both the reported numbers and management commentary. Candidate cause — The Communication, Media and Technology segment moved against the overall trend, offsetting about 55% of the net change — is supported by both the reported numbers and management commentary. Candidate cause — Other operating expenses grew more slowly than revenue, lifting profit — is supported by both the reported numbers and management commentary. Candidate cause — Tax expense grew more slowly than revenue, lifting profit — is supported by both the reported numbers and management commentary. Candidate cause — The Banking, Financial Services and Insurance segment accounted for about 75% of the revenue change — is supported by both the reported numbers and management commentary.",
-      "confidence": 0.6506,
+      "answer": "TCS net profit rose by +1.3% from FY2025 to FY2026. Candidate cause — The Communication, Media and Technology segment moved against the overall trend, offsetting about 55% of the net change — is supported by both the reported numbers and management commentary. Candidate cause — Revenue growth outpaced the cost base — is supported by both the reported numbers and management commentary. Candidate cause — Other operating expenses grew more slowly than revenue, lifting profit — is supported by both the reported numbers and management commentary. Candidate cause — Tax expense grew more slowly than revenue, lifting profit — is supported by both the reported numbers and management commentary. Candidate cause — The Banking, Financial Services and Insurance segment accounted for about 75% of the revenue change — is supported by both the reported numbers and management commentary.",
+      "confidence": 0.6608,
       "plan_intent": "causal",
       "expected_intent": "causal",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 264.5,
+      "latency_ms": 1362.2,
       "trace": [
         {
           "tool": "get_growth",
@@ -3837,20 +3905,21 @@
             "kind": "yoy"
           },
           "ok": true,
-          "latency_ms": 4.854399994655978,
+          "latency_ms": 0.442000000475673,
           "error": null,
-          "ts": "2026-09-10T21:04:23.520840+00:00"
+          "ts": "2026-09-26T18:15:26.822046+00:00"
         },
         {
           "tool": "decompose_metric",
           "args": {
             "ticker": "TCS",
-            "metric": "net_margin"
+            "metric": "net_margin",
+            "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.41680000140331686,
+          "latency_ms": 0.29569999969680794,
           "error": null,
-          "ts": "2026-09-10T21:04:23.520840+00:00"
+          "ts": "2026-09-26T18:15:26.822046+00:00"
         },
         {
           "tool": "search_documents",
@@ -3860,14 +3929,14 @@
             "company": "TCS"
           },
           "ok": true,
-          "latency_ms": 42.985400003090035,
+          "latency_ms": 654.3856999996933,
           "error": null,
-          "ts": "2026-09-10T21:04:23.564099+00:00"
+          "ts": "2026-09-26T18:15:27.476716+00:00"
         }
       ],
       "verification_status": "passed",
       "n_claims": 5,
-      "n_sources": 5,
+      "n_sources": 9,
       "llm": {
         "prompt_tokens": 0,
         "completion_tokens": 0,
@@ -3904,7 +3973,7 @@
           "metrics": {
             "precision": null,
             "recall": null,
-            "n_got": 5
+            "n_got": 9
           },
           "verdict": "na",
           "detail": "no reference citations"
@@ -3933,13 +4002,13 @@
       "category": "why",
       "question": "Why did WIPRO's revenue change in FY2026?",
       "error": null,
-      "answer": "WIPRO revenue rose by +4.0% from FY2025 to FY2026. Candidate cause — The move was driven mainly by a change in balance-sheet leverage — is supported by both the reported numbers and management commentary. Candidate cause — The Americas 1 segment accounted for about 64% of the revenue change — is supported by both the reported numbers and management commentary. Candidate cause — Revenue growth outpaced the cost base — is supported by both the reported numbers and management commentary. Candidate cause — Depreciation and amortisation grew more slowly than revenue, lifting profit — is supported by both the reported numbers and management commentary. Candidate cause — Finance costs grew more slowly than revenue, lifting profit — is supported by both the reported numbers and management commentary. Candidate cause — Tax expense grew more slowly than revenue, lifting profit — is supported by both the reported numbers and management commentary.",
-      "confidence": 0.6976,
+      "answer": "WIPRO revenue rose by +4.0% from FY2025 to FY2026. Candidate cause — The move was driven mainly by a change in balance-sheet leverage — is supported by both the reported numbers and management commentary. Candidate cause — Revenue growth outpaced the cost base — is supported by both the reported numbers and management commentary. Candidate cause — Finance costs grew more slowly than revenue, lifting profit — is supported by both the reported numbers and management commentary. Candidate cause — Tax expense grew more slowly than revenue, lifting profit — is supported by both the reported numbers and management commentary. Candidate cause — The Americas 1 segment accounted for about 64% of the revenue change — is supported by both the reported numbers and management commentary. Candidate cause — Depreciation and amortisation grew more slowly than revenue, lifting profit — is supported by both the reported numbers and management commentary.",
+      "confidence": 0.6568,
       "plan_intent": "causal",
       "expected_intent": "causal",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 281.9,
+      "latency_ms": 1026.6,
       "trace": [
         {
           "tool": "get_growth",
@@ -3949,20 +4018,21 @@
             "kind": "yoy"
           },
           "ok": true,
-          "latency_ms": 1.3866000008420087,
+          "latency_ms": 0.3476999991107732,
           "error": null,
-          "ts": "2026-09-10T21:04:23.775892+00:00"
+          "ts": "2026-09-26T18:15:28.180122+00:00"
         },
         {
           "tool": "decompose_metric",
           "args": {
             "ticker": "WIPRO",
-            "metric": "net_margin"
+            "metric": "net_margin",
+            "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.4425000006449409,
+          "latency_ms": 0.26679999791667797,
           "error": null,
-          "ts": "2026-09-10T21:04:23.777398+00:00"
+          "ts": "2026-09-26T18:15:28.180122+00:00"
         },
         {
           "tool": "search_documents",
@@ -3972,14 +4042,14 @@
             "company": "WIPRO"
           },
           "ok": true,
-          "latency_ms": 39.84440000203904,
+          "latency_ms": 252.2610000014538,
           "error": null,
-          "ts": "2026-09-10T21:04:23.817146+00:00"
+          "ts": "2026-09-26T18:15:28.432962+00:00"
         }
       ],
       "verification_status": "passed",
       "n_claims": 6,
-      "n_sources": 5,
+      "n_sources": 10,
       "llm": {
         "prompt_tokens": 0,
         "completion_tokens": 0,
@@ -4016,7 +4086,7 @@
           "metrics": {
             "precision": null,
             "recall": null,
-            "n_got": 5
+            "n_got": 10
           },
           "verdict": "na",
           "detail": "no reference citations"
@@ -4045,13 +4115,13 @@
       "category": "how",
       "question": "How has TCS revenue changed year over year?",
       "error": null,
-      "answer": "TCS revenue in FY2025 was 2,553,240,000,000.00 INR. TCS revenue in FY2026 was 2,670,210,000,000.00 INR. TCS revenue yoy in FY2025 -> FY2026 was 4.58 pct. TCS revenue cagr in FY2025 -> FY2026 was 4.58 pct. TCS revenue in FY2027 Q1 was 722,750,000,000.00 INR.",
+      "answer": "TCS revenue in FY2025 was 2,553,240,000,000.00 INR. TCS revenue in FY2026 was 2,670,210,000,000.00 INR. TCS revenue yoy in FY2025 -> FY2026 was 4.58 pct. TCS revenue in FY2019 was 1,464,630,000,000.00 INR. TCS revenue cagr in FY2019 -> FY2026 was 8.96 pct.",
       "confidence": 0.948,
       "plan_intent": "trend",
       "expected_intent": "trend",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 3.5,
+      "latency_ms": 2.6,
       "trace": [
         {
           "tool": "get_growth",
@@ -4061,9 +4131,9 @@
             "kind": "yoy"
           },
           "ok": true,
-          "latency_ms": 0.7580999954370782,
+          "latency_ms": 0.3876000009768177,
           "error": null,
-          "ts": "2026-09-10T21:04:24.059192+00:00"
+          "ts": "2026-09-26T18:15:29.206873+00:00"
         },
         {
           "tool": "get_cagr",
@@ -4072,21 +4142,21 @@
             "metric": "revenue"
           },
           "ok": true,
-          "latency_ms": 0.3656000044429675,
+          "latency_ms": 0.23040000087348744,
           "error": null,
-          "ts": "2026-09-10T21:04:24.059192+00:00"
+          "ts": "2026-09-26T18:15:29.207874+00:00"
         },
         {
           "tool": "get_metric",
           "args": {
             "ticker": "TCS",
             "metric": "revenue",
-            "period": "latest"
+            "period": "latest_annual"
           },
           "ok": true,
-          "latency_ms": 0.2793000021483749,
+          "latency_ms": 0.21569999807979912,
           "error": null,
-          "ts": "2026-09-10T21:04:24.059192+00:00"
+          "ts": "2026-09-26T18:15:29.207874+00:00"
         }
       ],
       "verification_status": "passed",
@@ -4157,13 +4227,13 @@
       "category": "how",
       "question": "How did HCLTECH's EBITDA margin change?",
       "error": null,
-      "answer": "The available evidence was not sufficient to answer this question.",
-      "confidence": 0.0,
+      "answer": "HCLTECH ebitda margin in FY2025 was 21.79. HCLTECH ebitda margin in FY2026 was 20.56. HCLTECH ebitda margin yoy in FY2025 -> FY2026 was -5.66 pct. HCLTECH ebitda margin in FY2018 was 22.24. HCLTECH ebitda margin cagr in FY2018 -> FY2026 was -0.98 pct.",
+      "confidence": 0.948,
       "plan_intent": "trend",
       "expected_intent": "trend",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 1.8,
+      "latency_ms": 2.1,
       "trace": [
         {
           "tool": "get_growth",
@@ -4173,9 +4243,9 @@
             "kind": "yoy"
           },
           "ok": true,
-          "latency_ms": 0.42019999818876386,
+          "latency_ms": 0.3544999999576248,
           "error": null,
-          "ts": "2026-09-10T21:04:24.062192+00:00"
+          "ts": "2026-09-26T18:15:29.209874+00:00"
         },
         {
           "tool": "get_cagr",
@@ -4184,25 +4254,25 @@
             "metric": "ebitda_margin"
           },
           "ok": true,
-          "latency_ms": 0.2162000018870458,
+          "latency_ms": 0.21980000019539148,
           "error": null,
-          "ts": "2026-09-10T21:04:24.062192+00:00"
+          "ts": "2026-09-26T18:15:29.209874+00:00"
         },
         {
           "tool": "get_metric",
           "args": {
             "ticker": "HCLTECH",
             "metric": "ebitda_margin",
-            "period": "latest"
+            "period": "latest_annual"
           },
           "ok": true,
-          "latency_ms": 0.28200000087963417,
+          "latency_ms": 0.23240000155055895,
           "error": null,
-          "ts": "2026-09-10T21:04:24.063192+00:00"
+          "ts": "2026-09-26T18:15:29.210875+00:00"
         }
       ],
       "verification_status": "passed",
-      "n_claims": 0,
+      "n_claims": 5,
       "n_sources": 0,
       "llm": {
         "prompt_tokens": 0,
@@ -4218,21 +4288,23 @@
         "correctness": {
           "metrics": {
             "mode": "keyword",
-            "coverage": 0.0,
-            "hits": [],
-            "missing": [
+            "coverage": 1.0,
+            "hits": [
               "hcltech"
-            ]
+            ],
+            "missing": []
           },
-          "verdict": "fail",
-          "detail": "0/1 required phrases present"
+          "verdict": "pass",
+          "detail": "1/1 required phrases present"
         },
         "groundedness": {
           "metrics": {
-            "grounded_rate": null
+            "n_claims": 5,
+            "grounded_claims": 5,
+            "grounded_rate": 1.0
           },
-          "verdict": "na",
-          "detail": "no claims"
+          "verdict": "pass",
+          "detail": "5/5 claims fully grounded in the workspace"
         },
         "citation": {
           "metrics": {
@@ -4245,20 +4317,20 @@
         },
         "abstention": {
           "metrics": {
-            "abstained": true,
+            "abstained": false,
             "should_abstain": false
           },
-          "verdict": "warn",
-          "detail": "over-abstained on an answerable question"
+          "verdict": "pass",
+          "detail": "answered, as expected"
         },
         "unsupported_claims": {
           "metrics": {
-            "n_claims": 0,
+            "n_claims": 5,
             "n_unsupported": 0,
             "unsupported_rate": 0.0
           },
-          "verdict": "na",
-          "detail": "no claims"
+          "verdict": "pass",
+          "detail": "0/5 claims unsupported or uncited"
         }
       }
     },
@@ -4267,13 +4339,13 @@
       "category": "analytical",
       "question": "How has Infosys revenue changed over the last year?",
       "error": null,
-      "answer": "INFY revenue in FY2025 was 1,629,900,000,000.00 INR. INFY revenue in FY2026 was 1,786,500,000,000.00 INR. INFY revenue yoy in FY2025 -> FY2026 was 9.61 pct. INFY revenue cagr in FY2025 -> FY2026 was 9.61 pct. INFY revenue in FY2027 Q1 was 482,110,000,000.00 INR.",
+      "answer": "INFY revenue in FY2025 was 1,629,900,000,000.00 INR. INFY revenue in FY2026 was 1,786,500,000,000.00 INR. INFY revenue yoy in FY2025 -> FY2026 was 9.61 pct. INFY revenue in FY2019 was 826,750,000,000.00 INR. INFY revenue cagr in FY2019 -> FY2026 was 11.64 pct.",
       "confidence": 0.948,
       "plan_intent": "trend",
       "expected_intent": "trend",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 3.3,
+      "latency_ms": 2.3,
       "trace": [
         {
           "tool": "get_growth",
@@ -4283,9 +4355,9 @@
             "kind": "yoy"
           },
           "ok": true,
-          "latency_ms": 0.6416000032913871,
+          "latency_ms": 0.30310000147437677,
           "error": null,
-          "ts": "2026-09-10T21:04:24.064711+00:00"
+          "ts": "2026-09-26T18:15:29.211875+00:00"
         },
         {
           "tool": "get_cagr",
@@ -4294,21 +4366,21 @@
             "metric": "revenue"
           },
           "ok": true,
-          "latency_ms": 0.5291999987093732,
+          "latency_ms": 0.20399999993969686,
           "error": null,
-          "ts": "2026-09-10T21:04:24.064711+00:00"
+          "ts": "2026-09-26T18:15:29.212874+00:00"
         },
         {
           "tool": "get_metric",
           "args": {
             "ticker": "INFY",
             "metric": "revenue",
-            "period": "latest"
+            "period": "latest_annual"
           },
           "ok": true,
-          "latency_ms": 0.30339999648276716,
+          "latency_ms": 0.21349999951780774,
           "error": null,
-          "ts": "2026-09-10T21:04:24.065720+00:00"
+          "ts": "2026-09-26T18:15:29.212874+00:00"
         }
       ],
       "verification_status": "passed",
@@ -4379,13 +4451,13 @@
       "category": "causal",
       "question": "TCS highlighted margin expansion in its commentary. Is this visible in the financial statements?",
       "error": null,
-      "answer": "The claim that 'TCS highlighted margin expansion in its commentary' is not supported by the reported financials. The directional check runs against it (claimed increase; net profit margin actually decrease (-3.1%) over FY2025->FY2026). The margin bridge check runs against it (net margin moved -0.59 pp (rev effect +8.25, exp effect -8.84)). A filing passage stating this was retrieved.",
+      "answer": "TCS's claim that 'TCS highlighted margin expansion in its commentary' is not supported by the reported financials. The directional check runs against it (claimed increase; net profit margin actually decrease (-3.1%) over FY2025->FY2026). The margin bridge check runs against it (net margin moved -0.59 pp (rev effect +8.25, exp effect -8.84)). A filing passage stating this was retrieved.",
       "confidence": 0.1419,
       "plan_intent": "cross_validation",
       "expected_intent": "cross_validation",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 73.9,
+      "latency_ms": 260.0,
       "trace": [
         {
           "tool": "get_growth",
@@ -4395,9 +4467,9 @@
             "kind": "yoy"
           },
           "ok": true,
-          "latency_ms": 0.5588999993051402,
+          "latency_ms": 0.4164000019954983,
           "error": null,
-          "ts": "2026-09-10T21:04:24.067723+00:00"
+          "ts": "2026-09-26T18:15:29.214877+00:00"
         },
         {
           "tool": "get_segment_data",
@@ -4406,9 +4478,9 @@
             "period": "latest_annual"
           },
           "ok": true,
-          "latency_ms": 1.4900999958626926,
+          "latency_ms": 1.2028999990434386,
           "error": null,
-          "ts": "2026-09-10T21:04:24.069718+00:00"
+          "ts": "2026-09-26T18:15:29.215877+00:00"
         },
         {
           "tool": "search_documents",
@@ -4418,14 +4490,14 @@
             "company": "TCS"
           },
           "ok": true,
-          "latency_ms": 32.661600002029445,
+          "latency_ms": 144.81479999813018,
           "error": null,
-          "ts": "2026-09-10T21:04:24.102309+00:00"
+          "ts": "2026-09-26T18:15:29.360986+00:00"
         }
       ],
       "verification_status": "passed",
       "n_claims": 1,
-      "n_sources": 7,
+      "n_sources": 1,
       "llm": {
         "prompt_tokens": 0,
         "completion_tokens": 0,
@@ -4462,7 +4534,7 @@
           "metrics": {
             "precision": null,
             "recall": null,
-            "n_got": 7
+            "n_got": 1
           },
           "verdict": "na",
           "detail": "no reference citations"
@@ -4491,13 +4563,13 @@
       "category": "causal",
       "question": "HCLTECH management highlighted margin expansion. Is this borne out by the numbers?",
       "error": null,
-      "answer": "The claim that 'margin expansion' is not supported by the reported financials. The directional check runs against it (claimed increase; net profit margin actually decrease (-13.9%) over FY2025->FY2026). The margin bridge check runs against it (net margin moved -2.07 pp (rev effect +11.16, exp effect -13.23)). No filing passage stating this was retrieved.",
+      "answer": "HCLTECH's claim that 'margin expansion' is not supported by the reported financials. The directional check runs against it (claimed increase; net profit margin actually decrease (-13.9%) over FY2025->FY2026). The margin bridge check runs against it (net margin moved -2.07 pp (rev effect +11.16, exp effect -13.23)). No filing passage stating this was retrieved.",
       "confidence": 0.188,
       "plan_intent": "cross_validation",
       "expected_intent": "cross_validation",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 65.8,
+      "latency_ms": 259.3,
       "trace": [
         {
           "tool": "get_growth",
@@ -4507,9 +4579,9 @@
             "kind": "yoy"
           },
           "ok": true,
-          "latency_ms": 0.530999997863546,
+          "latency_ms": 0.41450000207987614,
           "error": null,
-          "ts": "2026-09-10T21:04:24.142042+00:00"
+          "ts": "2026-09-26T18:15:29.474619+00:00"
         },
         {
           "tool": "get_segment_data",
@@ -4518,9 +4590,9 @@
             "period": "latest_annual"
           },
           "ok": true,
-          "latency_ms": 0.8646999995107763,
+          "latency_ms": 0.9594000002834946,
           "error": null,
-          "ts": "2026-09-10T21:04:24.143041+00:00"
+          "ts": "2026-09-26T18:15:29.475620+00:00"
         },
         {
           "tool": "search_documents",
@@ -4530,14 +4602,14 @@
             "company": "HCLTECH"
           },
           "ok": true,
-          "latency_ms": 29.75029999652179,
+          "latency_ms": 138.79280000037397,
           "error": null,
-          "ts": "2026-09-10T21:04:24.172905+00:00"
+          "ts": "2026-09-26T18:15:29.615264+00:00"
         }
       ],
       "verification_status": "passed",
       "n_claims": 1,
-      "n_sources": 3,
+      "n_sources": 0,
       "llm": {
         "prompt_tokens": 0,
         "completion_tokens": 0,
@@ -4574,7 +4646,7 @@
           "metrics": {
             "precision": null,
             "recall": null,
-            "n_got": 3
+            "n_got": 0
           },
           "verdict": "na",
           "detail": "no reference citations"
@@ -4603,13 +4675,13 @@
       "category": "causal",
       "question": "TCS management said revenue growth was driven by higher volumes. Do the reported results support this?",
       "error": null,
-      "answer": "The claim that 'revenue growth was driven by higher volumes' is supported by the reported financials. The directional check supports it (claimed increase; revenue actually increase (+4.6%) over FY2025->FY2026). A filing passage stating this was retrieved.",
-      "confidence": 0.5824,
+      "answer": "TCS's claim that 'revenue growth was driven by higher volumes' is supported by the reported financials. The directional check supports it (claimed increase; revenue actually increase (+4.6%) over FY2025->FY2026). A filing passage stating this was retrieved.",
+      "confidence": 0.5811,
       "plan_intent": "cross_validation",
       "expected_intent": "cross_validation",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 69.8,
+      "latency_ms": 265.5,
       "trace": [
         {
           "tool": "get_growth",
@@ -4619,9 +4691,9 @@
             "kind": "yoy"
           },
           "ok": true,
-          "latency_ms": 0.45900000259280205,
+          "latency_ms": 0.48969999988912605,
           "error": null,
-          "ts": "2026-09-10T21:04:24.207617+00:00"
+          "ts": "2026-09-26T18:15:29.734269+00:00"
         },
         {
           "tool": "get_segment_data",
@@ -4630,9 +4702,9 @@
             "period": "latest_annual"
           },
           "ok": true,
-          "latency_ms": 1.2938999934704043,
+          "latency_ms": 1.5591000010317657,
           "error": null,
-          "ts": "2026-09-10T21:04:24.209623+00:00"
+          "ts": "2026-09-26T18:15:29.736269+00:00"
         },
         {
           "tool": "search_documents",
@@ -4642,14 +4714,14 @@
             "company": "TCS"
           },
           "ok": true,
-          "latency_ms": 30.25570000318112,
+          "latency_ms": 147.81849999781116,
           "error": null,
-          "ts": "2026-09-10T21:04:24.239418+00:00"
+          "ts": "2026-09-26T18:15:29.884776+00:00"
         }
       ],
       "verification_status": "passed",
       "n_claims": 1,
-      "n_sources": 4,
+      "n_sources": 1,
       "llm": {
         "prompt_tokens": 0,
         "completion_tokens": 0,
@@ -4686,7 +4758,7 @@
           "metrics": {
             "precision": null,
             "recall": null,
-            "n_got": 4
+            "n_got": 1
           },
           "verdict": "na",
           "detail": "no reference citations"
@@ -4718,11 +4790,24 @@
       "answer": "The available evidence was not sufficient to answer this question.",
       "confidence": 0.0,
       "plan_intent": "unknown",
-      "expected_intent": null,
-      "intent_verdict": "skip",
+      "expected_intent": "unknown",
+      "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 0.8,
-      "trace": [],
+      "latency_ms": 115.2,
+      "trace": [
+        {
+          "tool": "search_documents",
+          "args": {
+            "query": "What risk factors does TCS discuss in its filings?",
+            "k": 5,
+            "company": "TCS"
+          },
+          "ok": true,
+          "latency_ms": 114.38819999966654,
+          "error": null,
+          "ts": "2026-09-26T18:15:30.114019+00:00"
+        }
+      ],
       "verification_status": "passed",
       "n_claims": 0,
       "n_sources": 0,
@@ -4794,11 +4879,24 @@
       "answer": "The available evidence was not sufficient to answer this question.",
       "confidence": 0.0,
       "plan_intent": "unknown",
-      "expected_intent": null,
-      "intent_verdict": "skip",
+      "expected_intent": "unknown",
+      "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 0.6,
-      "trace": [],
+      "latency_ms": 178.9,
+      "trace": [
+        {
+          "tool": "search_documents",
+          "args": {
+            "query": "According to its filings, what did Infosys say about demand conditions?",
+            "k": 5,
+            "company": "INFY"
+          },
+          "ok": true,
+          "latency_ms": 177.99999999988358,
+          "error": null,
+          "ts": "2026-09-26T18:15:30.293123+00:00"
+        }
+      ],
       "verification_status": "passed",
       "n_claims": 0,
       "n_sources": 0,
@@ -4862,13 +4960,13 @@
       "category": "analytical",
       "question": "Give me a fundamental overview of TCS.",
       "error": null,
-      "answer": "TCS net profit in FY2026 Q4 was 137,840,000,000.00 INR. TCS total equity in FY2026 Q4 was 1,084,780,000,000.00 INR. TCS roe in FY2026 Q4 was 12.71 pct. TCS segment revenue in FY2026 was 1,033,630,000,000.00 INR. TCS segment revenue in FY2026 was 424,320,000,000.00 INR. TCS segment revenue in FY2026 was 394,740,000,000.00 INR.",
-      "confidence": 0.9267,
+      "answer": "TCS net profit in FY2026 was 494,540,000,000.00 INR. TCS total equity in FY2026 was 1,084,780,000,000.00 INR. TCS roe in FY2026 was 45.59 pct. TCS Banking, Financial Services and Insurance: revenue 1,033,630,000,000 INR, 38.7% of total in FY2026. TCS Consumer Business: revenue 424,320,000,000 INR, 15.9% of total in FY2026. TCS Communication, Media and Technology: revenue 394,740,000,000 INR, 14.8% of total in FY2026. TCS Life Sciences and Healthcare: revenue 277,450,000,000 INR, 10.4% of total in FY2026. TCS Others: revenue 273,930,000,000 INR, 10.3% of total in FY2026. TCS Manufacturing: revenue 266,140,000,000 INR, 10.0% of total in FY2026.",
+      "confidence": 0.9178,
       "plan_intent": "research_overview",
       "expected_intent": "research_overview",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 4.8,
+      "latency_ms": 3.7,
       "trace": [
         {
           "tool": "get_company",
@@ -4876,21 +4974,21 @@
             "ticker": "TCS"
           },
           "ok": true,
-          "latency_ms": 0.2998000054503791,
+          "latency_ms": 0.14089999967836775,
           "error": null,
-          "ts": "2026-09-10T21:04:24.279269+00:00"
+          "ts": "2026-09-26T18:15:30.294125+00:00"
         },
         {
           "tool": "get_ratio",
           "args": {
             "ticker": "TCS",
             "ratio": "roe",
-            "period": "latest"
+            "period": "latest_annual"
           },
           "ok": true,
-          "latency_ms": 0.31999999919207767,
+          "latency_ms": 0.2734000008786097,
           "error": null,
-          "ts": "2026-09-10T21:04:24.279269+00:00"
+          "ts": "2026-09-26T18:15:30.294125+00:00"
         },
         {
           "tool": "get_segment_data",
@@ -4899,9 +4997,9 @@
             "period": "latest_annual"
           },
           "ok": true,
-          "latency_ms": 1.3295000026118942,
+          "latency_ms": 1.0514999994484242,
           "error": null,
-          "ts": "2026-09-10T21:04:24.280773+00:00"
+          "ts": "2026-09-26T18:15:30.295124+00:00"
         },
         {
           "tool": "get_peers",
@@ -4909,13 +5007,13 @@
             "ticker": "TCS"
           },
           "ok": true,
-          "latency_ms": 0.6180999989737757,
+          "latency_ms": 0.42519999988144264,
           "error": null,
-          "ts": "2026-09-10T21:04:24.282330+00:00"
+          "ts": "2026-09-26T18:15:30.296123+00:00"
         }
       ],
       "verification_status": "passed",
-      "n_claims": 6,
+      "n_claims": 9,
       "n_sources": 0,
       "llm": {
         "prompt_tokens": 0,
@@ -4942,12 +5040,12 @@
         },
         "groundedness": {
           "metrics": {
-            "n_claims": 6,
-            "grounded_claims": 6,
+            "n_claims": 9,
+            "grounded_claims": 9,
             "grounded_rate": 1.0
           },
           "verdict": "pass",
-          "detail": "6/6 claims fully grounded in the workspace"
+          "detail": "9/9 claims fully grounded in the workspace"
         },
         "citation": {
           "metrics": {
@@ -4968,12 +5066,12 @@
         },
         "unsupported_claims": {
           "metrics": {
-            "n_claims": 6,
+            "n_claims": 9,
             "n_unsupported": 0,
             "unsupported_rate": 0.0
           },
           "verdict": "pass",
-          "detail": "0/6 claims unsupported or uncited"
+          "detail": "0/9 claims unsupported or uncited"
         }
       }
     },
@@ -4988,7 +5086,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 1.1,
+      "latency_ms": 0.8,
       "trace": [
         {
           "tool": "get_metric",
@@ -4998,9 +5096,9 @@
             "period": "FY1998"
           },
           "ok": true,
-          "latency_ms": 0.43449999793665484,
+          "latency_ms": 0.2367999986745417,
           "error": null,
-          "ts": "2026-09-10T21:04:24.284335+00:00"
+          "ts": "2026-09-26T18:15:30.298123+00:00"
         }
       ],
       "verification_status": "passed",
@@ -5064,25 +5162,25 @@
       "category": "adversarial",
       "question": "What will TCS's revenue be next year?",
       "error": null,
-      "answer": "TCS revenue in FY2027 Q1 was 722,750,000,000.00 INR.",
+      "answer": "TCS revenue in FY2026 was 2,670,210,000,000.00 INR.",
       "confidence": 0.98,
       "plan_intent": "numeric_fact",
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 1.3,
+      "latency_ms": 1.0,
       "trace": [
         {
           "tool": "get_metric",
           "args": {
             "ticker": "TCS",
             "metric": "revenue",
-            "period": "latest"
+            "period": "latest_annual"
           },
           "ok": true,
-          "latency_ms": 0.37629999860655516,
+          "latency_ms": 0.2094999981636647,
           "error": null,
-          "ts": "2026-09-10T21:04:24.285335+00:00"
+          "ts": "2026-09-26T18:15:30.299124+00:00"
         }
       ],
       "verification_status": "passed",
@@ -5154,7 +5252,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 1.1,
+      "latency_ms": 0.8,
       "trace": [
         {
           "tool": "get_metric",
@@ -5164,9 +5262,9 @@
             "period": "FY2026"
           },
           "ok": true,
-          "latency_ms": 0.4182999982731417,
+          "latency_ms": 0.21769999875687063,
           "error": null,
-          "ts": "2026-09-10T21:04:24.286839+00:00"
+          "ts": "2026-09-26T18:15:30.300124+00:00"
         }
       ],
       "verification_status": "passed",
@@ -5236,7 +5334,7 @@
       "expected_intent": "numeric_fact",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 1.3,
+      "latency_ms": 0.9,
       "trace": [
         {
           "tool": "get_metric",
@@ -5246,9 +5344,9 @@
             "period": "FY2015"
           },
           "ok": true,
-          "latency_ms": 0.4935999968438409,
+          "latency_ms": 0.19640000027720816,
           "error": null,
-          "ts": "2026-09-10T21:04:24.288434+00:00"
+          "ts": "2026-09-26T18:15:30.300124+00:00"
         }
       ],
       "verification_status": "passed",
@@ -5318,7 +5416,7 @@
       "expected_intent": "unknown",
       "intent_verdict": "pass",
       "llm_used": false,
-      "latency_ms": 0.8,
+      "latency_ms": 0.7,
       "trace": [],
       "verification_status": "passed",
       "n_claims": 0,
@@ -5387,7 +5485,7 @@
       "expected_intent": null,
       "intent_verdict": "skip",
       "llm_used": false,
-      "latency_ms": 0.6,
+      "latency_ms": 0.5,
       "trace": [],
       "verification_status": "passed",
       "n_claims": 0,
@@ -5456,8 +5554,21 @@
       "expected_intent": null,
       "intent_verdict": "skip",
       "llm_used": false,
-      "latency_ms": 0.6,
-      "trace": [],
+      "latency_ms": 213.7,
+      "trace": [
+        {
+          "tool": "search_documents",
+          "args": {
+            "query": "What was HDFCBANK's CET1 capital adequacy ratio in FY2026?",
+            "k": 5,
+            "company": "HDFCBANK"
+          },
+          "ok": true,
+          "latency_ms": 212.87549999760813,
+          "error": null,
+          "ts": "2026-09-26T18:15:30.515844+00:00"
+        }
+      ],
       "verification_status": "passed",
       "n_claims": 0,
       "n_sources": 0,

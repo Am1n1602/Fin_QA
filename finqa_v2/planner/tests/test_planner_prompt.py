@@ -68,6 +68,21 @@ class TestPrompt(unittest.TestCase):
         self.assertIsNone(parse_plan("q", "[1, 2, 3]", valid_tools=_TOOLS, valid_tickers=_TICKERS))
         self.assertIsNone(parse_plan("q", "{bad json", valid_tools=_TOOLS, valid_tickers=_TICKERS))
 
+    def test_parse_basis(self):
+        raw = json.dumps({"intent": "numeric_fact", "companies": ["TCS"], "tools": ["get_metric"],
+                          "basis": "standalone"})
+        self.assertEqual(parse_plan("q", raw, valid_tools=_TOOLS, valid_tickers=_TICKERS).basis,
+                         "standalone")
+
+    def test_parse_basis_ignores_garbage(self):
+        raw = json.dumps({"intent": "numeric_fact", "companies": ["TCS"], "tools": ["get_metric"],
+                          "basis": "combined"})
+        self.assertIsNone(parse_plan("q", raw, valid_tools=_TOOLS, valid_tickers=_TICKERS).basis)
+
+    def test_parse_basis_absent_is_none(self):
+        raw = json.dumps({"intent": "numeric_fact", "companies": ["TCS"], "tools": ["get_metric"]})
+        self.assertIsNone(parse_plan("q", raw, valid_tools=_TOOLS, valid_tickers=_TICKERS).basis)
+
 
 class TestQueryPlanner(unittest.TestCase):
     def setUp(self):

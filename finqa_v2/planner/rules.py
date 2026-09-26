@@ -77,6 +77,20 @@ _LAST_N = re.compile(r"\b(?:last|past)\s+(one|two|three|four|five|\d+)\s+years?\
 _LATEST = re.compile(r"\b(latest|most recent|current|now|today)\b", re.I)
 _WORDS_N = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
 
+# Standalone vs consolidated -- checked in this order since "standalone" is the more
+# specific ask (a bank/group with subsidiaries reports both; consolidated is every
+# tool's own default, so only override when the question is explicit about it).
+_STANDALONE = re.compile(r"\bstandalone\b|\bunconsolidated\b|\bparent[ -]?(company|only|alone)\b", re.I)
+_CONSOLIDATED = re.compile(r"\bconsolidated\b|\bgroup(?:-wide|\s+level)?\b", re.I)
+
+
+def _basis(question: str) -> str | None:
+    if _STANDALONE.search(question):
+        return "standalone"
+    if _CONSOLIDATED.search(question):
+        return "consolidated"
+    return None
+
 
 def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", s.lower()).strip()
@@ -225,5 +239,5 @@ def plan_with_rules(question: str, *, matcher: CompanyMatcher | None = None,
     return QueryPlan(
         question=question, intent=intent, companies=companies, periods=periods,
         metrics=metrics, tools=tools, needs_documents=needs_docs,
-        needs_calculation=needs_calc, planner="rules", notes=notes,
+        needs_calculation=needs_calc, basis=_basis(question), planner="rules", notes=notes,
     )

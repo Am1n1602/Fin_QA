@@ -108,6 +108,16 @@ REGISTRY: dict[str, MetricSpec] = {
 
     # --- Bank-specific balance sheet (instant) ---
     "advances": _bs("Advances (bank)"),
+
+    # --- Bank capital adequacy / asset quality -- reported under DURATION (OneD)
+    # contexts, same as the other "_reported" ratios above, not an instant one.
+    "cet1_ratio": MetricSpec("x", OTHER, False, "CET1 capital ratio (as reported, bank)"),
+    "additional_tier1_ratio": MetricSpec("x", OTHER, False, "Additional Tier 1 ratio (as reported, bank)"),
+    "gross_npa": MetricSpec("INR", BS, False, "Gross non-performing assets (bank)"),
+    "net_npa": MetricSpec("INR", BS, False, "Net non-performing assets (bank)"),
+    "gross_npa_ratio": MetricSpec("x", OTHER, False, "Gross NPA ratio (as reported, bank)"),
+    "net_npa_ratio": MetricSpec("x", OTHER, False, "Net NPA ratio (as reported, bank)"),
+    "return_on_assets": MetricSpec("x", OTHER, False, "Return on assets (as reported, bank)"),
 }
 
 
