@@ -62,9 +62,16 @@ REGISTRY: dict[str, MetricSpec] = {
     "eps_basic": _pl("Basic EPS", unit="per_share"),
     "eps_diluted": _pl("Diluted EPS", unit="per_share"),
 
-    # --- Equity / capital (balance-sheet-date) ---
-    "paid_up_equity_capital": _bs("Paid-up equity share capital"),
-    "face_value_per_share": _bs("Face value per share", unit="per_share"),
+    # --- Equity / capital -- reported under DURATION (OneD/FourD) contexts, never an
+    # instant one, across the whole corpus (confirmed 2026-09-20: 0 instant-context
+    # occurrences). NOT point-in-time: a quarter-context (OneD) and a same-period_end
+    # cumulative-context (FourD) filing can legitimately report different values (a
+    # mid-year capital change), and is_point_in_time=True previously stripped
+    # period_start, collapsing those into one grain and letting whichever was written
+    # last silently overwrite the other (surfaced via finqa_v2/sqlite/repo.py's
+    # add_many() overwrite-warning for INFY/ITC/SUNPHARMA).
+    "paid_up_equity_capital": MetricSpec("INR", BS, False, "Paid-up equity share capital"),
+    "face_value_per_share": MetricSpec("per_share", BS, False, "Face value per share"),
     "debt_equity_ratio_reported": MetricSpec("x", OTHER, False, "Debt/Equity ratio (as reported)"),
     "debt_service_coverage_ratio_reported": MetricSpec("x", OTHER, False, "Debt service coverage ratio (as reported)"),
     "interest_service_coverage_ratio_reported": MetricSpec("x", OTHER, False, "Interest service coverage ratio (as reported)"),

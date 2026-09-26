@@ -155,18 +155,23 @@ def gen_multi_step(engine, tickers, rng) -> list[dict]:
         seg = engine.get_segment_data(t)
         if getattr(seg, "ok", False) and getattr(seg, "rows", None):
             top = max(seg.rows, key=lambda r: getattr(r, "contribution_pct", 0) or 0)
+            topname = getattr(top, "segment", None)
+            # the generic word "segment" need not appear in a correct answer -- require
+            # the actual named segment instead, same fix as gen_causal_xval's kw=="segment"
+            mc = [t, topname.split()[0]] if topname else [t]
             out.append(_rec(category="multi_step", expected_intent="segment", answer_type="text",
                             question=rng.choice(T.SEGMENT_Q).format(name=_disp(t)),
-                            companies=[t], must_contain=[t, "segment"],
-                            reference_answer=getattr(top, "segment", None), notes="segment mix"))
+                            companies=[t], must_contain=mc,
+                            reference_answer=topname, notes="segment mix"))
         sg = engine.segment_growth(t)
         if getattr(sg, "ok", False) and getattr(sg, "rows", None):
             drv = max(sg.rows, key=lambda r: abs(getattr(r, "share_of_total_change_pct", 0) or 0))
+            drvname = getattr(drv, "segment", None)
+            mc = [t, drvname.split()[0]] if drvname else [t]
             out.append(_rec(category="multi_step", expected_intent="segment", answer_type="text",
                             question=rng.choice(T.SEGMENT_DRIVER_Q).format(name=_disp(t)),
-                            companies=[t], must_contain=[t, "segment"],
-                            reference_answer=getattr(drv, "segment", None),
-                            notes="segment growth attribution"))
+                            companies=[t], must_contain=mc,
+                            reference_answer=drvname, notes="segment growth attribution"))
         dq = engine.decompose_metric(t, "roe")
         if dq.ok:
             out.append(_rec(category="multi_step", expected_intent=None, answer_type="text",
@@ -220,10 +225,25 @@ def gen_causal_xval(engine, tickers, rng) -> list[dict]:
     return out
 
 
-def gen_cross_document(tickers, rng) -> list[dict]:
+def _sections_with_chunks(repos, ticker: str) -> set[str]:
+    """§16: 'do not populate gold_chunks unless those chunks actually exist' -- probe
+    the real corpus instead of assuming every company has every section."""
+    c = repos.companies.resolve(ticker)
+    if c is None:
+        return set()
+    rows = repos.connection.execute(
+        "SELECT DISTINCT section FROM document_chunks WHERE company_id = ?", (c.company_id,)
+    ).fetchall()
+    return {r["section"] for r in rows if r["section"]}
+
+
+def gen_cross_document(repos, tickers, rng) -> list[dict]:
     out = []
     for t in tickers:
+        have = _sections_with_chunks(repos, t)
         for topic, section in T.DOC_TOPICS.items():
+            if section not in have:
+                continue  # no real chunks for this company/section -- don't fabricate the premise
             out.append(_rec(category="cross_document", expected_intent=None, answer_type="text",
                             question=rng.choice(T.CROSSDOC_Q).format(name=_disp(t), topic=topic),
                             companies=[t],
@@ -276,10 +296,11 @@ def gen_adversarial(engine, tickers, rng) -> list[dict]:
 
 
 # --------------------------------------------------------------------------- #
-def generate(repos, engine, *, seed: int = 20) -> dict[str, list[dict]]:
+def generate(repos, engine, *, seed: int = 20, tickers: list[str] | None = None) -> dict[str, list[dict]]:
     rng = random.Random(seed)
-    idx = repos.indices.get_by_name("NIFTY 50")
-    tickers = sorted(c.ticker for c in repos.indices.members(idx.index_id))
+    if tickers is None:
+        idx = repos.indices.get_by_name("NIFTY 50")
+        tickers = sorted(c.ticker for c in repos.indices.members(idx.index_id))
     why, how = gen_why_how(engine, tickers, rng)
     return {
         "factual": gen_factual(engine, tickers, rng),
@@ -289,7 +310,7 @@ def generate(repos, engine, *, seed: int = 20) -> dict[str, list[dict]]:
         "why": why,
         "how": how,
         "causal": gen_causal_xval(engine, tickers, rng),
-        "cross_document": gen_cross_document(tickers, rng),
+        "cross_document": gen_cross_document(repos, tickers, rng),
         "analytical": gen_analytical(engine, tickers, rng),
         "adversarial": gen_adversarial(engine, tickers, rng),
     }

@@ -1,8 +1,11 @@
-"""Retrieval evaluation (§16 baseline comparison, §39 metrics).
+"""Retrieval evaluation (§16 baseline comparison, §17 retrieval benchmark, §39 metrics).
 
-A case gives a query + a loose relevance spec (company / acceptable sections / keywords).
-A retrieved chunk counts as relevant when: company matches (if given) AND section is in
-`sections` (if given) AND at least one `must_contain` keyword appears in its text.
+A case gives a query + a relevance spec, in one of two forms:
+  - `gold_chunk_ids`: exact chunk IDs probed from the real corpus (§17's preferred form
+    -- relevant iff the retrieved chunk_id is in this set).
+  - the looser fallback (company / acceptable sections / keywords): relevant when company
+    matches (if given) AND section is in `sections` (if given) AND at least one
+    `must_contain` keyword appears in its text.
 
 Reports Recall@{1,3,5,10}, MRR and P50 latency per retrieval mode -- so 'hybrid' can be
 measured against 'lexical' / 'vector' rather than assumed better.
@@ -35,6 +38,9 @@ def load_cases(path: Path) -> list[dict]:
 
 
 def _relevant(chunk, case, company_id: int | None) -> bool:
+    gold = case.get("gold_chunk_ids")
+    if gold:
+        return chunk.chunk_id in gold
     if company_id is not None and chunk.company_id != company_id:
         return False
     secs = case.get("sections")

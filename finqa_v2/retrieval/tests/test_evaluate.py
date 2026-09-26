@@ -4,7 +4,7 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from finqa_v2.retrieval.evaluate import build_retriever, evaluate, load_cases
+from finqa_v2.retrieval.evaluate import _relevant, build_retriever, evaluate, load_cases
 from finqa_v2.retrieval.lexical import BM25Index
 from finqa_v2.retrieval.rerank import CrossEncoderReranker, IdentityReranker
 from finqa_v2.retrieval.retriever import HybridRetriever
@@ -30,6 +30,31 @@ class TestBuildRetrieverReranker(unittest.TestCase):
                             use_reranker=True)
         self.assertIsInstance(r._reranker, CrossEncoderReranker)
         self.assertIsNone(r._reranker._model)  # constructed, not loaded
+
+
+class TestRelevantGoldChunkIds(unittest.TestCase):
+    """§17: a case with `gold_chunk_ids` is scored by exact chunk_id membership,
+    ignoring company/section/keyword -- the loose fallback spec is for cases
+    that predate real probed gold IDs."""
+
+    def _chunk(self, **kw):
+        from finqa_v2.models import DocumentChunk
+
+        base = dict(document_id=1, company_id=99, chunk_index=0, text="irrelevant text",
+                    section="mda")
+        base.update(kw)
+        return DocumentChunk(**base)
+
+    def test_matches_by_chunk_id_alone(self):
+        case = {"gold_chunk_ids": [42]}
+        self.assertTrue(_relevant(self._chunk(chunk_id=42), case, company_id=1))
+        self.assertFalse(_relevant(self._chunk(chunk_id=7), case, company_id=1))
+
+    def test_gold_chunk_ids_ignores_company_and_section(self):
+        case = {"gold_chunk_ids": [42]}
+        # would fail the loose company/section checks, but gold_chunk_ids takes over
+        self.assertTrue(_relevant(self._chunk(chunk_id=42, company_id=1, section="notes"),
+                                  case, company_id=999))
 
 
 class TestEvaluateMath(unittest.TestCase):
@@ -67,7 +92,9 @@ class TestRealCorpus(unittest.TestCase):
         from pathlib import Path
         cases = load_cases(Path(__file__).resolve().parents[1] / "eval_cases.jsonl")
         r = build_retriever(repos, bm25_path=Path("/nonexistent"), vector_dir=Path("/nonexistent"))
-        rep = evaluate(r, repos, cases, modes=("lexical",))["lexical"]
+        # company pre-filtering (§15.1) is mandatory in the real pipeline -- an unfiltered
+        # global-BM25 run isn't the production scenario, so filter here to match it.
+        rep = evaluate(r, repos, cases, modes=("lexical",), filter_company=True)["lexical"]
         # a lexical baseline over keyword-heavy cases should clear a low bar
         self.assertGreaterEqual(rep["recall@5"], 0.5, rep)
         self.assertGreater(rep["mrr"], 0.3, rep)

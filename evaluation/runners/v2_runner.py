@@ -76,6 +76,7 @@ def main() -> int:
     ap.add_argument("--filter-category", default=None)
     ap.add_argument("--llm", action="store_true", help="use the LLM synthesizer (spends tokens)")
     ap.add_argument("--no-retriever", action="store_true", help="skip wiring BM25/vector into the pipeline")
+    ap.add_argument("--rerank", action="store_true", help="wire the real cross-encoder reranker (§15.5)")
     ap.add_argument("--skip-retrieval-eval", action="store_true")
     ap.add_argument("--out", type=Path, default=None, help="explicit report path")
     ap.add_argument("--dry-run", action="store_true")
@@ -140,7 +141,8 @@ def main() -> int:
         engine = FinancialEngine(repos)
         retriever = None
         if not args.no_retriever and args.bm25.exists():
-            retriever = build_retriever(repos, bm25_path=args.bm25, vector_dir=args.vector_dir)
+            retriever = build_retriever(repos, bm25_path=args.bm25, vector_dir=args.vector_dir,
+                                        use_reranker=args.rerank)
         if args.llm:
             from finqa_v2.llm import RateBudget, provider_from_env
 
@@ -195,6 +197,7 @@ def main() -> int:
             retrieval_block = RetrievalEvaluator(
                 v2_db=args.v2_db, bm25=args.bm25, vector_dir=args.vector_dir,
                 cases_path=_RETRIEVAL_CASES, modes=modes, filter_company=True,
+                use_reranker=args.rerank,
             ).run(repos)
 
         intent_checked = [r for r in rows if r["intent_verdict"] in ("pass", "fail")]
@@ -233,7 +236,7 @@ def main() -> int:
             "dataset": str(args.dataset),
             "config": {
                 "llm": args.llm, "model": model_id, "retriever": not args.no_retriever,
-                "v2_db": str(args.v2_db),
+                "rerank": args.rerank, "v2_db": str(args.v2_db),
             },
             "aggregates": aggregates,
             "retrieval": retrieval_block,

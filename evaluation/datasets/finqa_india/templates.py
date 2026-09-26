@@ -111,7 +111,10 @@ CROSSVAL_Q = [
 ]
 CROSSDOC_Q = [
     "What does {name} say about {topic} in its filings?",
-    "According to its filings, discuss {name}'s {topic}.",
+    # NB: several DOC_TOPICS values already start with an article ("the key risk
+    # factors") or possessive ("its outlook and guidance") -- avoid "{name}'s {topic}"
+    # here, which would double up ("TCS's the key risk factors").
+    "According to its filings, how does {name} discuss {topic}?",
 ]
 SEGMENT_Q = [
     "Break down {name}'s revenue by reportable segment.",

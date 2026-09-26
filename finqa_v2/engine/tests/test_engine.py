@@ -63,10 +63,23 @@ class TestEngine(unittest.TestCase):
         r = self.eng.get_growth("TEST", "revenue", kind="qoq")
         self.assertAlmostEqual(r.value, 280.0 / 280 * 0 + (300 - 280) / 280 * 100)
 
+    def test_growth_yoy_on_a_ratio_not_just_a_raw_metric(self):
+        # roe: 100/500=20% (FY2025) -> 150/600=25% (FY2026) -- a ratio isn't a raw
+        # PeriodRecord value, so this previously always returned "no periods with roe"
+        # (r.get('roe') is never populated; only ratios.get_spec('roe').compute() is).
+        r = self.eng.get_growth("TEST", "roe", kind="yoy")
+        self.assertAlmostEqual(r.value, 25.0)
+        self.assertAlmostEqual(r.components["from_value"], 20.0)
+        self.assertAlmostEqual(r.components["to_value"], 25.0)
+
     def test_cagr(self):
         r = self.eng.get_cagr("TEST", "revenue")
         self.assertAlmostEqual(r.value, 20.0)
         self.assertEqual(r.components["years"], 1)
+
+    def test_cagr_on_a_ratio(self):
+        r = self.eng.get_cagr("TEST", "roe")
+        self.assertAlmostEqual(r.value, 25.0)
 
     # --- compare ---
     def test_compare_periods(self):

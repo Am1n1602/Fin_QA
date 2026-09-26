@@ -56,6 +56,13 @@ class Generate(unittest.TestCase):
                 self.assertTrue(r["question"].strip())
                 self.assertNotIn("{", r["question"])
 
+    def test_multi_step_segment_keyword_is_the_real_segment_name(self):
+        # a correct answer names the segment, not the generic word "segment" itself --
+        # same class of bug already fixed in gen_causal_xval's kw == "segment" case.
+        for r in self.gen["multi_step"]:
+            if r["notes"] in ("segment mix", "segment growth attribution"):
+                self.assertNotIn("segment", [w.lower() for w in r["must_contain"]])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -69,6 +69,13 @@ class TestValidator(unittest.TestCase):
         self.assertTrue(r.answer_sentences())
         self.assertTrue(any("deterministic cross-validation" in l for l in r.answer_limitations()))
 
+    def test_answer_sentences_name_the_company(self):
+        # §10: out of context (a multi-question transcript, or the pilot benchmark), "The
+        # claim that X is supported" never says whose claim -- name the company.
+        r = self.cv.validate("Management said revenue grew strongly. Is that supported?", "TEST")
+        self.assertEqual(r.company, "TEST")
+        self.assertTrue(r.answer_sentences()[0].startswith("TEST's claim"))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -184,13 +184,24 @@ class FinancialEngine:
         )
 
     def _series(self, records, metric, is_derived, *, only):
+        # A ratio (e.g. "roce", "net_profit_margin") isn't a raw PeriodRecord value --
+        # r.get(metric) always misses for one, silently starving get_growth/get_cagr of
+        # every period ("how has TCS's ROCE changed" -> "insufficient evidence" even
+        # though get_ratio() computes it fine). Resolve it via the same RatioSpec.compute
+        # get_ratio() uses, once per call rather than per period.
+        spec = None if is_derived else ratios.get_spec(metric)
         out = []
         for r in records:
             if only == "annual" and not r.is_annual:
                 continue
             if only == "quarter" and not r.is_single_quarter:
                 continue
-            v = derive.DERIVED[metric](r.values) if is_derived else r.get(metric)
+            if is_derived:
+                v = derive.DERIVED[metric](r.values)
+            elif spec is not None:
+                v = spec.compute(r.values)
+            else:
+                v = r.get(metric)
             if v is not None:
                 out.append((r, v))
         return out

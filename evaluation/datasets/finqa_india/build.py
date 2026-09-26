@@ -76,15 +76,19 @@ def _balance(cands: list[dict], curated: list[dict], quota: int, cap: int, rng: 
     return chosen
 
 
-def build(repos, engine, *, target: int, seed: int) -> list[dict]:
+def build(repos, engine, *, target: int, seed: int, tickers: list[str] | None = None) -> list[dict]:
     from evaluation.datasets.finqa_india.audit import scaled_quotas
     from evaluation.datasets.finqa_india.generate import generate
 
     rng = random.Random(seed)
     quotas = scaled_quotas(target)
-    gen = generate(repos, engine, seed=seed)
+    gen = generate(repos, engine, seed=seed, tickers=tickers)
+    scope = set(tickers) if tickers is not None else None
     curated_by_cat: dict[str, list[dict]] = {}
     for r in _load_curated():
+        cos = r.get("companies") or []
+        if scope is not None and cos and not (set(cos) & scope):
+            continue  # company-agnostic curated rows (companies=[]) always pass through
         curated_by_cat.setdefault(r["category"], []).append(r)
 
     out: list[dict] = []
@@ -114,10 +118,15 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=20)
     ap.add_argument("--v2-db", type=Path, default=_DEFAULT_DB)
     ap.add_argument("--out", type=Path, default=_DEFAULT_OUT)
+    ap.add_argument("--company", default=None,
+                    help="restrict generation to a comma-separated ticker list (pilot scope); "
+                         "default is the full NIFTY 50 membership")
     ap.add_argument("--dry-run", action="store_true", help="print the audit, do not write")
     args = ap.parse_args()
     if not args.v2_db.exists():
         raise SystemExit(f"db not found: {args.v2_db}")
+
+    tickers = [c.strip() for c in args.company.split(",") if c.strip()] if args.company else None
 
     from evaluation.datasets.finqa_india.audit import audit, format_audit
     from finqa_v2.engine import FinancialEngine
@@ -126,7 +135,7 @@ def main() -> int:
     repos = SqliteRepositories(args.v2_db)
     try:
         engine = FinancialEngine(repos)
-        records = build(repos, engine, target=args.target, seed=args.seed)
+        records = build(repos, engine, target=args.target, seed=args.seed, tickers=tickers)
     finally:
         repos.close()
 

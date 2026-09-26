@@ -210,5 +210,44 @@ class TestProtocolConformance(RepoTestCase):
         self.assertIsInstance(self.repos.documents, R.DocumentRepository)
 
 
+class TestThreadSafeConnection(unittest.TestCase):
+    """§21 production hardening: `check_same_thread=False` is what finqa_v2/api/ relies
+    on to answer concurrent requests from one long-lived connection (see repo.py's
+    _ThreadSafeConnection docstring for the real incident this fixed -- concurrent
+    execute() calls returning each OTHER's rows). That fix was never actually exercised
+    under real concurrent load in the test suite; this does."""
+
+    def setUp(self):
+        self.repos = SqliteRepositories(":memory:", check_same_thread=False)
+        self.addCleanup(self.repos.close)
+        for i in range(20):
+            self.repos.companies.upsert(Company(name=f"Company {i}", ticker=f"CO{i}"))
+        self.repos.commit()
+
+    def test_concurrent_reads_never_return_another_threads_row(self):
+        import threading
+
+        errors: list[BaseException] = []
+        mismatches: list[str] = []
+
+        def worker(ticker: str) -> None:
+            try:
+                for _ in range(50):
+                    c = self.repos.companies.resolve(ticker)
+                    if c is None or c.ticker != ticker:
+                        mismatches.append(f"asked for {ticker}, got {c.ticker if c else None}")
+            except BaseException as e:  # noqa: BLE001 -- a thread crash must fail the test
+                errors.append(e)
+
+        threads = [threading.Thread(target=worker, args=(f"CO{i}",)) for i in range(20)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(timeout=10)
+
+        self.assertEqual(errors, [])
+        self.assertEqual(mismatches, [])
+
+
 if __name__ == "__main__":
     unittest.main()

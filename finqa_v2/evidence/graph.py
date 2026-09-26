@@ -91,11 +91,39 @@ class ClaimGraph:
         )
 
     # ------------------------------------------------------------------ #
+    def _reachable_evidence_ids(self) -> set[str]:
+        """Evidence a claim actually cites, directly, via a calculation's inputs, or via
+        an evidence-to-evidence derivation chain. Mirrors claimgraph.view's
+        `reachable_only` filter for the debug claim_graph; kept local here (rather than
+        imported) since evidence/ is the lower-level module claimgraph/ builds on."""
+        start: set[str] = set()
+        for c in self.claims:
+            start.update(c.evidence_ids)
+            for cid in c.calculation_ids:
+                calc = self._calcs.get(cid)
+                if calc:
+                    start.update(i.get("evidence_id") for i in calc.inputs if i.get("evidence_id"))
+        seen: set[str] = set()
+        stack = list(start)
+        while stack:
+            eid = stack.pop()
+            if eid in seen:
+                continue
+            seen.add(eid)
+            ev = self.workspace.get(eid)
+            if ev:
+                stack.extend(ev.inputs)
+        return seen
+
     def to_response(self, answer: str, *, limitations=()) -> dict:
-        """The §31 internal research-response schema."""
+        """The §31 internal research-response schema. `sources` only includes citations a
+        claim actually cites -- evidence gathered during retrieval but never used to build
+        the answer (e.g. leftover retrieval candidates behind an "insufficient evidence"
+        abstention) must not be presented as if it grounds the response (§19)."""
+        reachable = self._reachable_evidence_ids()
         cited = {}
         for e in self.workspace:
-            if e.citation is not None:
+            if e.citation is not None and e.evidence_id in reachable:
                 cited.setdefault(e.citation.citation_id, e.citation)
         auto_lims = sorted({
             lim for e in self.workspace for lim in e.limitations

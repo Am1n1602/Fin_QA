@@ -63,15 +63,18 @@ class RetrievalEvaluator:
     name = "retrieval"
 
     def __init__(self, *, v2_db: Path, bm25: Path, vector_dir: Path,
-                 cases_path: Path, modes=("lexical",), filter_company: bool = True) -> None:
+                 cases_path: Path, modes=("lexical",), filter_company: bool = True,
+                 use_reranker: bool = False) -> None:
         self.v2_db, self.bm25, self.vector_dir = v2_db, bm25, vector_dir
         self.cases_path, self.modes, self.filter_company = cases_path, tuple(modes), filter_company
+        self.use_reranker = use_reranker
 
     def run(self, repos) -> dict[str, Any]:
         if not self.cases_path.exists():
             return {"skipped": f"cases file not found: {self.cases_path}"}
         cases = load_cases(self.cases_path)
-        retriever = build_retriever(repos, bm25_path=self.bm25, vector_dir=self.vector_dir)
+        retriever = build_retriever(repos, bm25_path=self.bm25, vector_dir=self.vector_dir,
+                                    use_reranker=self.use_reranker)
         out: dict[str, Any] = {"cases": len(cases), "modes_available": list(retriever.modes)}
         for mode in self.modes:
             out[mode] = score_retrieval(retriever, repos, cases, mode=mode,

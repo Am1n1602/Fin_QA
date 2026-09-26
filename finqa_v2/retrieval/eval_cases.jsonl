@@ -1,7 +1,6 @@
 {"id": "seg-01", "query": "Reliance segment revenue Oil to Chemicals Retail Digital Services", "company": "RELIANCE", "sections": ["segment_information"], "must_contain": ["segment"], "k": 5}
 {"id": "seg-02", "query": "TCS reportable segments BFSI Manufacturing", "company": "TCS", "sections": ["segment_information"], "must_contain": ["segment"], "k": 5}
 {"id": "seg-03", "query": "ITC segment information cigarettes agri business", "company": "ITC", "sections": ["segment_information"], "must_contain": ["segment"], "k": 5}
-{"id": "seg-04", "query": "HDFC Bank Treasury and Retail Banking segment results", "company": "HDFCBANK", "sections": ["segment_information"], "must_contain": ["segment"], "k": 5}
 {"id": "aud-01", "query": "independent auditor's report basis for opinion", "company": null, "sections": ["auditors_report"], "must_contain": ["opinion"], "k": 5}
 {"id": "aud-02", "query": "auditor unmodified opinion true and fair view financial results", "company": "INFY", "sections": ["auditors_report"], "must_contain": ["opinion"], "k": 5}
 {"id": "aud-03", "query": "auditors conducted audit in accordance with standards on auditing", "company": "RELIANCE", "sections": ["auditors_report"], "must_contain": ["audit"], "k": 5}
@@ -15,4 +14,9 @@
 {"id": "bs-01", "query": "total assets total equity and liabilities balance sheet", "company": "RELIANCE", "sections": ["balance_sheet", "financial_results"], "must_contain": ["assets"], "k": 5}
 {"id": "cf-01", "query": "cash flow from operating investing and financing activities", "company": "INFY", "sections": ["cash_flow_statement", "financial_results"], "must_contain": ["cash"], "k": 5}
 {"id": "fr-01", "query": "revenue from operations profit for the period earnings per share", "company": "TCS", "sections": ["financial_results", "notes"], "must_contain": ["revenue"], "k": 5}
-{"id": "fr-02", "query": "provision for tax profit before tax total comprehensive income", "company": "HCLTECH", "sections": ["financial_results", "notes"], "must_contain": ["tax"], "k": 5}
+{"id": "risk-01", "query": "TCS geopolitical macroeconomic volatility Russia Ukraine war impact on demand", "company": "TCS", "gold_chunk_ids": [343], "k": 5}
+{"id": "risk-02", "query": "Tata Steel raw material iron ore coking coal price volatility", "company": "TATASTEEL", "gold_chunk_ids": [24095], "k": 5}
+{"id": "risk-03", "query": "ITC cybersecurity risk from digital technology adoption robotic process automation", "company": "ITC", "gold_chunk_ids": [18982], "k": 5}
+{"id": "risk-04", "query": "Infosys foreign currency risk forward contracts hedging exchange rate exposure", "company": "INFY", "gold_chunk_ids": [15786], "k": 5}
+{"id": "mda-01", "query": "Reliance Jio 5G network rollout pan-India coverage", "company": "RELIANCE", "gold_chunk_ids": [5603], "k": 5}
+{"id": "mda-02", "query": "Sun Pharma innovation focus new medicines patient care", "company": "SUNPHARMA", "gold_chunk_ids": [30555], "k": 5}

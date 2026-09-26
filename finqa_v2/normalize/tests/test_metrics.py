@@ -21,10 +21,18 @@ class TestRegistry(unittest.TestCase):
         self.assertIsNone(currency_for("eps_basic"))
 
     def test_balance_sheet_is_point_in_time(self):
-        for name in ("total_assets", "total_equity", "cash_and_equivalents",
-                     "advances", "paid_up_equity_capital", "face_value_per_share"):
+        for name in ("total_assets", "total_equity", "cash_and_equivalents", "advances"):
             s = metrics.get(name)
             self.assertTrue(s.is_point_in_time, msg=name)
+            self.assertIs(s.statement_type, StatementType.BALANCE_SHEET, msg=name)
+
+    def test_capital_fields_are_balance_sheet_but_not_point_in_time(self):
+        # Reported under duration (OneD/FourD) contexts, never instant -- collapsing
+        # period_start would silently merge a quarter figure with a same-period_end
+        # cumulative figure that can legitimately differ (see metrics.py comment).
+        for name in ("paid_up_equity_capital", "face_value_per_share"):
+            s = metrics.get(name)
+            self.assertFalse(s.is_point_in_time, msg=name)
             self.assertIs(s.statement_type, StatementType.BALANCE_SHEET, msg=name)
 
     def test_cash_flow_bucket(self):

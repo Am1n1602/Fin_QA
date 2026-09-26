@@ -54,6 +54,13 @@ class BuiltArtifact(unittest.TestCase):
         self.assertTrue(all(r["reference_sources"] and r["reference_sources"][0].get("section")
                             for r in xd))
 
+    def test_segment_rows_require_the_named_segment_not_the_generic_word(self):
+        # a correct answer names the segment (e.g. "Retail"), not the literal word
+        # "segment" -- same bug class as gen_causal_xval's kw == "segment" fix.
+        for r in self.rows:
+            if r["notes"] in ("segment mix", "segment growth attribution"):
+                self.assertNotIn("segment", [w.lower() for w in r["must_contain"]], r["id"])
+
 
 @unittest.skipUnless(DB.exists(), "finqa_v2.db not built")
 class BuildFresh(unittest.TestCase):

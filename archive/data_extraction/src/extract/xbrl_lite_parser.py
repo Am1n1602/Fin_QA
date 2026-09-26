@@ -1,6 +1,7 @@
 import json
 import re
 import sys
+from datetime import date, timedelta
 from pathlib import Path
 
 from lxml import etree # type: ignore
@@ -8,6 +9,49 @@ from lxml import etree # type: ignore
 NS = {
     "xbrli": "http://www.xbrl.org/2003/instance",
 }
+
+# Some filers (confirmed: HDFCBANK, ICICIBANK) self-declare DateOfEndOfReportingPeriod
+# but omit DateOfStartOfReportingPeriod entirely -- unlike non-bank filers (confirmed:
+# TCS), which declare both under the same context. Real reported magnitudes (interest
+# income growing steadily quarter to quarter, never doubling/quadrupling) confirm the
+# primary context is always the DISCRETE 3-month quarter, regardless of what the
+# ReportingQuarter label itself says -- "Yearly"/"Fourth quarter" both mean the Q4
+# quarter ending at FY end, not a cumulative full year (the true annual aggregate lives
+# in a separate context that has no self-declared period at all and is not recovered
+# here -- see docs/roadmap-v2-restart.md's HDFCBANK investigation, Phase 2/unresolved).
+_QUARTER_INDEX = {
+    "First quarter": 0,
+    "Half yearly": 1,
+    "Third quarter": 2,
+    "Fourth quarter": 3,
+    "Yearly": 3,
+}
+
+
+def _add_months(d: date, months: int) -> date:
+    total = d.month - 1 + months
+    return date(d.year + total // 12, total % 12 + 1, d.day)
+
+
+def _derive_quarter_period(fy_start: str | None, reporting_quarter: str | None,
+                            declared_end: str | None) -> tuple[str, str] | None:
+    """Derive (start, end) for a context missing DateOfStartOfReportingPeriod, from
+    DateOfStartOfFinancialYear + ReportingQuarter, cross-checked against the
+    self-declared end date. Returns None (fail safe, no override applied) whenever the
+    check doesn't hold -- an unexpected filing shape then keeps today's behavior
+    (period_start stays unset) rather than risk mistagging a value."""
+    n = _QUARTER_INDEX.get(reporting_quarter or "")
+    if n is None or not fy_start or not declared_end:
+        return None
+    try:
+        fy = date.fromisoformat(fy_start)
+        end = date.fromisoformat(declared_end)
+    except ValueError:
+        return None
+    start = _add_months(fy, 3 * n)
+    if _add_months(start, 3) - timedelta(days=1) != end:
+        return None
+    return start.isoformat(), end.isoformat()
 
 
 def _local_name(tag: str) -> str:
@@ -79,6 +123,17 @@ def parse_xbrl_file(filepath: str, company: str = "") -> list[dict]:
             self_described.setdefault(ctx_ref, {})["start"] = elem.text
         elif local == "DateOfEndOfReportingPeriod":
             self_described.setdefault(ctx_ref, {})["end"] = elem.text
+        elif local == "ReportingQuarter":
+            self_described.setdefault(ctx_ref, {})["quarter"] = elem.text
+        elif local == "DateOfStartOfFinancialYear":
+            self_described.setdefault(ctx_ref, {})["fy_start"] = elem.text
+
+    for ctx_ref, info in self_described.items():
+        if info.get("start") or not info.get("end"):
+            continue  # either already resolvable, or nothing to derive from
+        derived = _derive_quarter_period(info.get("fy_start"), info.get("quarter"), info["end"])
+        if derived:
+            info["start"], info["end"] = derived
 
     # --- Parse facts: any element with a contextRef is a fact ---
     records = []

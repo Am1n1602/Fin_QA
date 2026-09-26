@@ -10,7 +10,11 @@ from finqa_v2.evidence.models import Evidence, EvidenceType
 def _dedup_key(ev: Evidence):
     if ev.type is EvidenceType.DOCUMENT:
         return ("doc", ev.document_id, ev.page, (ev.text or "")[:120])
-    return (ev.type.value, ev.company_id, ev.metric, ev.period, ev.value)
+    # company_id isn't always populated (e.g. evidence_from_compare_result() only knows
+    # the ticker) -- fall back to the ticker string so two different companies sharing a
+    # tied metric value (company_id=None, same metric/period/value) don't collide onto
+    # the same key and silently drop one company's row from a comparison/ranking answer.
+    return (ev.type.value, ev.company_id or ev.company, ev.metric, ev.period, ev.value)
 
 
 class EvidenceSet:

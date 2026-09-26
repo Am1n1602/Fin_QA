@@ -82,7 +82,11 @@ class CrossValidationReport:
     def answer_sentences(self) -> list[str]:
         if self.claim is None:
             return ["No checkable management claim could be identified in the question."]
-        lines = [f'The claim that {self.claim.raw!r} is {_STATUS_VERDICT[self.status]}.']
+        # name the company -- otherwise unreadable out of context (which company's claim?)
+        # in a multi-question transcript; HypothesisReport already does this for "why"
+        # answers via MetricChange.describe(), this was the one path missing it.
+        subject = f"{self.company}'s claim" if self.company else "The claim"
+        lines = [f'{subject} that {self.claim.raw!r} is {_STATUS_VERDICT[self.status]}.']
         for c in self.checks:
             if c.verdict in ("agrees", "contradicts"):
                 verb = "supports" if c.verdict == "agrees" else "runs against"

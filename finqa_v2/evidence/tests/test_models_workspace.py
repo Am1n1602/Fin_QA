@@ -80,6 +80,23 @@ class TestEvidenceSet(unittest.TestCase):
         self.assertEqual(a, b)
         self.assertEqual(ws.get("d1").confidence, 0.7)
 
+    def test_two_companies_tied_on_a_ratio_dont_collide(self):
+        # evidence_from_compare_result() never sets company_id (it only knows the
+        # ticker) -- two companies genuinely tied on the same metric/period/value used
+        # to collapse onto one dedup key, silently dropping the second company's row
+        # from a comparison/ranking answer (real repro: INFY and TCS both at
+        # debt_to_equity=0.0 in the same period).
+        ws = EvidenceSet()
+        infy = Evidence(evidence_id="c1", type=EvidenceType.COMPARISON, company="INFY",
+                        metric="debt_to_equity", period="FY2026", value=0.0, confidence=0.9)
+        tcs = Evidence(evidence_id="c2", type=EvidenceType.COMPARISON, company="TCS",
+                       metric="debt_to_equity", period="FY2026", value=0.0, confidence=0.9)
+        ws.add(infy)
+        ws.add(tcs)
+        self.assertEqual(len(ws), 2)
+        self.assertIsNotNone(ws.get("c1"))
+        self.assertIsNotNone(ws.get("c2"))
+
     def test_by_type_and_metric(self):
         ws = EvidenceSet()
         ws.add(_fact_ev("f1", "roe", 25.0))

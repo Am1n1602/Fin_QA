@@ -23,8 +23,6 @@ dependencies = [
     "pymupdf",
     "rank-bm25",
     "numpy",
-    "psycopg[binary]>=3.1",
-    "pgvector>=0.2.5",
 ]
 
 [project.optional-dependencies]
@@ -33,6 +31,10 @@ api = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
 ocr = ["pytesseract", "pillow"]
 storage = ["boto3>=1.34"]
 observability = ["prometheus-client>=0.20"]
+# finqa_v2/postgres/: only needed once a real Postgres migration is underway (roadmap
+# §21/§23 -- don't migrate off SQLite until measured workload justifies it; not yet true
+# at pilot/6-company scale). Every other install skips these two drivers entirely.
+postgres = ["psycopg[binary]>=3.1", "pgvector>=0.2.5"]
 
 [project.scripts]
 # fin_llm_platform/ and api/ (v1) moved into archive/ -- still installable/runnable, just

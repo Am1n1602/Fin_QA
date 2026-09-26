@@ -11,7 +11,7 @@ from finqa_v2.evidence.build import (
     evidence_from_segment_result,
 )
 from finqa_v2.evidence.graph import ClaimGraph
-from finqa_v2.evidence.models import ClaimStatus, EvidenceType
+from finqa_v2.evidence.models import Citation, ClaimStatus, Evidence, EvidenceType
 from finqa_v2.evidence.workspace import EvidenceSet
 from finqa_v2.models import DocumentChunk
 from finqa_v2.retrieval.retriever import RetrievedChunk
@@ -152,6 +152,40 @@ class TestClaimGraph(unittest.TestCase):
         self.assertEqual(len(resp["calculations"]), 1)
         self.assertTrue(0.0 <= resp["confidence"] <= 1.0)
         self.assertGreater(len(resp["evidence"]), 2)
+
+    def _doc_evidence_with_citation(self, workspace, *, evidence_id, citation_id):
+        ev = Evidence(
+            evidence_id=evidence_id, type=EvidenceType.DOCUMENT, text="Some passage.",
+            company="TCS", confidence=0.8,
+            citation=Citation(citation_id=citation_id, kind="document", title="Some filing",
+                              company="TCS", document_id=9, page=4),
+        )
+        workspace.add(ev)
+        return ev
+
+    def test_sources_exclude_evidence_no_claim_cites(self):
+        """§19: a chunk retrieved into the workspace but never cited by any claim (e.g.
+        leftover retrieval candidates behind an "insufficient evidence" abstention) must
+        not appear in `sources` -- it isn't part of what actually grounds the answer."""
+        g = ClaimGraph()
+        self._doc_evidence_with_citation(g.workspace, evidence_id="doc-1", citation_id="cite-1")
+        # no g.add_claim(...) at all -- mirrors deterministic_answer()'s empty-claims path
+
+        resp = g.to_response("The available evidence was not sufficient to answer this question.")
+        self.assertEqual(resp["sources"], [])
+        self.assertGreater(len(resp["evidence"]), 0)  # the full workspace dump is unaffected
+
+    def test_sources_are_scoped_to_the_citing_claim_not_the_whole_workspace(self):
+        """A second chunk sits in the workspace (e.g. gathered for a different claim, or
+        an unused retrieval candidate) but this claim only cites `ev` -- its citation
+        must not leak into a response that never mentions it."""
+        g, ev, calc = self._graph_with_roe()
+        dev = self._doc_evidence_with_citation(g.workspace, evidence_id="doc-2", citation_id="cite-2")
+        g.add_claim("TCS ROE in FY2026 was 25.0%", kind="numeric",
+                    evidence_ids=[ev.evidence_id], calculation_ids=[calc.calculation_id])
+        resp = g.to_response("TCS ROE was 25.0% in FY2026.")
+        cited_ids = {s["citation_id"] for s in resp["sources"]}
+        self.assertNotIn(dev.citation.citation_id, cited_ids)
 
 
 if __name__ == "__main__":
