@@ -17,7 +17,7 @@ def repositories_from_env(*, sqlite_path: str | Path | None = None, check_same_t
     connection is always thread-safe internally, so it ignores this flag."""
     url = os.environ.get("FINQA_PG_URL") or os.environ.get("DATABASE_URL")
     if url:
-        from finqa_v2.postgres import PgRepositories
+        from finqa_v2.postgres.repo import PgRepositories
 
         return PgRepositories(url)
     from finqa_v2.sqlite import DEFAULT_V2_DB_PATH, SqliteRepositories

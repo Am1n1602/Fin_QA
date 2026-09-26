@@ -30,19 +30,22 @@ OUT_DIR = ROOT / "deployment" / "docker" / "public_data"
 OUT_DB = OUT_DIR / "finqa_v2.db"
 OUT_BM25 = OUT_DIR / "finqa_v2_bm25.pkl"
 
-# 12 companies (not all 50 -- see the module docstring), picked for sector diversity
-# (IT/energy/banking/FMCG/auto/insurance) and to make sure every example question in the
-# README and the dashboard's own QA/Research example chips actually resolves against this
-# dataset -- including README's "Compare RELIANCE and ONGC on leverage", which needs ONGC
-# specifically. SBILIFE also showcases the consolidated/standalone basis toggle (insurers
-# file standalone only).
+# 11 companies (not all 50 -- see the module docstring), picked for sector diversity
+# (IT/energy/banking/FMCG/auto) and to make sure every example question in the README and
+# the dashboard's own QA/Research example chips actually resolves against this dataset --
+# including README's "Compare RELIANCE and ONGC on leverage", which needs ONGC
+# specifically. SBILIFE (insurance) dropped 2026-09-27: confirmed genuinely data-limited
+# vs the rest of this list -- FY2025-2027 only (vs FY2018/19 for everyone else), 113
+# facts (vs 1,700-3,200+), zero segments (vs 3-12) -- an NSE-side historical-coverage gap
+# for insurers, not fixable the way the bank-taxonomy bug was. The consolidated/standalone
+# basis-toggle demo it used to showcase is still covered: HDFCBANK/ICICIBANK/SBIN's own
+# CET1/NPA ratios are standalone-only by RBI regulation (the exact bug fixed this session).
 TICKERS = [
     "TCS", "INFY", "HCLTECH", "WIPRO",       # IT services
     "RELIANCE", "ONGC",                       # energy / conglomerate
-    "HDFCBANK", "ICICIBANK", "SBIN",          # banks
+    "HDFCBANK", "ICICIBANK", "SBIN",          # banks (standalone-only capital ratios)
     "ITC",                                    # FMCG
     "M&M",                                    # auto
-    "SBILIFE",                                # insurance (standalone-only basis)
 ]
 
 _COPY_TABLES = (

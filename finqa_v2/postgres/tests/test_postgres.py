@@ -37,7 +37,7 @@ _URL = os.environ.get("FINQA_PG_URL") or os.environ.get("DATABASE_URL")
 
 
 def _fresh_pg():
-    from finqa_v2.postgres import PgRepositories
+    from finqa_v2.postgres.repo import PgRepositories
 
     r = PgRepositories(_URL)
     with r._raw.cursor() as cur:                      # empty every table for a clean test
@@ -120,7 +120,7 @@ class TestPgBackend(unittest.TestCase):
 class TestRepositoriesFromEnv(unittest.TestCase):
     def test_factory_picks_postgres(self):
         from finqa_v2.db import repositories_from_env
-        from finqa_v2.postgres import PgRepositories
+        from finqa_v2.postgres.repo import PgRepositories
 
         r = repositories_from_env()
         self.addCleanup(r.close)

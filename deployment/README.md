@@ -166,10 +166,13 @@ limited RAM, and this system's normal retrieval path pulls in torch).
   baked in the *full* 50-company dataset and measured **~680MB** resident memory in the
   running container — almost entirely `rank_bm25`'s per-document term-frequency
   dictionaries for the full 32k-chunk corpus — comfortably over a typical free tier's
-  ~512MB ceiling. The current 12-company set (`TCS, INFY, HCLTECH, WIPRO, RELIANCE, ONGC,
-  HDFCBANK, ICICIBANK, SBIN, ITC, M&M, SBILIFE` — picked for sector diversity and so every
-  example question in this README and the dashboard's own example chips resolves)
-  measured **~250-320MB** resident / ~490MB including reclaimable page cache. **Always
+  ~512MB ceiling. The current 11-company set (`TCS, INFY, HCLTECH, WIPRO, RELIANCE, ONGC,
+  HDFCBANK, ICICIBANK, SBIN, ITC, M&M` — picked for sector diversity and so every
+  example question in this README and the dashboard's own example chips resolves; SBILIFE
+  dropped 2026-09-27, confirmed genuinely data-limited — FY2025-2027 only vs FY2018/19 for
+  the rest, zero segments, an NSE-side historical-coverage gap for insurers) measured
+  **~250-320MB** resident / ~490MB including reclaimable page cache at 12 companies —
+  **re-measure after this change, don't assume 11 is proportionally smaller**. **Always
   re-measure with `docker stats` + `docker exec <container> cat /proc/1/status` after
   changing `TICKERS`** — this is empirical, not something to assume scales safely.
 - **Lexical-only retrieval, no torch loaded at all.** `deployment/docker/api.public.Dockerfile`
