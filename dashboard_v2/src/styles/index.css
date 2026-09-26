@@ -1,39 +1,44 @@
 /* ---------------------------------------------------------------------
-   Fin·QA v2 dashboard — "evidence desk" aesthetic.
+   Fin·QA v2 dashboard — "the Ledger" aesthetic.
 
-   Cool slate/teal, distinct from v1's warm-paper research-terminal look,
-   deliberately so the two are never mistaken for one another. The one
-   idea this stylesheet is built around: every claim is a disclosure
-   widget (native <details>), and its open state should look visually
-   "verified" (a left rule + tinted background), not just "expanded".
+   Deep charcoal-navy + warm gold, restructured around a persistent sidebar
+   (the layout financial terminals and modern fintech admin panels converge
+   on — the workspace never re-orients as you move between sections). Every
+   claim is still a disclosure widget (native <details>), and its open state
+   still reads as "verified" (a left rule + tinted background), not just
+   "expanded" — that discipline survives the redesign untouched.
    --------------------------------------------------------------------- */
 
 :root {
-  --bg: #eef1f3;
+  --bg: #f6f3ec;
   --surface: #ffffff;
-  --surface-sunken: #e4e9ec;
-  --ink: #1b2430;
-  --ink-soft: #47535f;
-  --ink-faint: #5b6773; /* 4.6:1 on --bg, 4.9:1 on --surface */
-  --rule: #d3dade;
-  --rule-strong: #aab6bd;
-  --accent: #0f5c6b;
-  --accent-strong: #0a4550;
-  --accent-tint: #e3f0f2;
-  --on-accent: #ffffff;
-  --supported: #1f6f4a;
-  --supported-tint: #e6f3ec;
-  --partial: #8a6a1f;
-  --partial-tint: #f7f0dd;
-  --not-supported: #9c3b32;
-  --not-supported-tint: #fbe9e7;
-  --insufficient: #5b6773;
-  --insufficient-tint: #eceff1;
-  --shadow: 0 1px 2px rgba(27, 36, 48, 0.06), 0 4px 14px rgba(27, 36, 48, 0.05);
+  --surface-sunken: #ece6d8;
+  --surface-raised: #fbfaf6;
+  --ink: #1a1f29;
+  --ink-soft: #4c5566;
+  --ink-faint: #767f8f;
+  --rule: #e3ddcd;
+  --rule-strong: #cfc6ac;
+  --accent: #8a6522;
+  --accent-strong: #6d4e17;
+  --accent-tint: #f3e8cf;
+  --on-accent: #fffdf8;
+  --supported: #1f7a4f;
+  --supported-tint: #e5f3ea;
+  --partial: #96650f;
+  --partial-tint: #f8eeda;
+  --not-supported: #a13c30;
+  --not-supported-tint: #fbeae7;
+  --insufficient: #5b6573;
+  --insufficient-tint: #ece9e2;
+  --shadow-sm: 0 1px 2px rgba(26, 31, 41, 0.06);
+  --shadow: 0 1px 2px rgba(26, 31, 41, 0.05), 0 18px 36px -14px rgba(26, 31, 41, 0.16);
 
-  --font-serif: Charter, Georgia, "Times New Roman", serif;
-  --font-sans: "Segoe UI", Charter, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+  --font-sans: "IBM Plex Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, Menlo, monospace;
+
+  --sidebar-w: 232px;
 
   color-scheme: light;
 }
@@ -42,52 +47,56 @@
    way once the header toggle (useTheme.js) writes an explicit choice to localStorage. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #10161b;
-    --surface: #171f26;
-    --surface-sunken: #0c1216;
-    --ink: #e7edf1;
-    --ink-soft: #aab6c0;
-    --ink-faint: #85929c;
-    --rule: #2a343c;
-    --rule-strong: #3c4750;
-    --accent: #55b8c7;
-    --accent-strong: #86d3df;
-    --accent-tint: #163138;
-    --on-accent: #0a1a1e;
-    --supported: #6bd39a;
-    --supported-tint: #143323;
-    --partial: #e7c069;
-    --partial-tint: #382c11;
-    --not-supported: #ec9285;
-    --not-supported-tint: #3b1c17;
-    --insufficient: #9aa7b0;
-    --insufficient-tint: #212a30;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 14px rgba(0, 0, 0, 0.28);
+    --bg: #0a0d12;
+    --surface: #12161d;
+    --surface-sunken: #060809;
+    --surface-raised: #1b212b;
+    --ink: #eef0f4;
+    --ink-soft: #9aa3b2;
+    --ink-faint: #6b7382;
+    --rule: #232933;
+    --rule-strong: #333c48;
+    --accent: #d1a84e;
+    --accent-strong: #e8c274;
+    --accent-tint: #241d10;
+    --on-accent: #14110a;
+    --supported: #4fbf83;
+    --supported-tint: #0f2a1d;
+    --partial: #e2a23f;
+    --partial-tint: #2c2010;
+    --not-supported: #e2685c;
+    --not-supported-tint: #301613;
+    --insufficient: #8790a0;
+    --insufficient-tint: #1b212b;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 20px 40px -12px rgba(0, 0, 0, 0.6);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #10161b;
-  --surface: #171f26;
-  --surface-sunken: #0c1216;
-  --ink: #e7edf1;
-  --ink-soft: #aab6c0;
-  --ink-faint: #85929c;
-  --rule: #2a343c;
-  --rule-strong: #3c4750;
-  --accent: #55b8c7;
-  --accent-strong: #86d3df;
-  --accent-tint: #163138;
-  --on-accent: #0a1a1e;
-  --supported: #6bd39a;
-  --supported-tint: #143323;
-  --partial: #e7c069;
-  --partial-tint: #382c11;
-  --not-supported: #ec9285;
-  --not-supported-tint: #3b1c17;
-  --insufficient: #9aa7b0;
-  --insufficient-tint: #212a30;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 14px rgba(0, 0, 0, 0.28);
+  --bg: #0a0d12;
+  --surface: #12161d;
+  --surface-sunken: #060809;
+  --surface-raised: #1b212b;
+  --ink: #eef0f4;
+  --ink-soft: #9aa3b2;
+  --ink-faint: #6b7382;
+  --rule: #232933;
+  --rule-strong: #333c48;
+  --accent: #d1a84e;
+  --accent-strong: #e8c274;
+  --accent-tint: #241d10;
+  --on-accent: #14110a;
+  --supported: #4fbf83;
+  --supported-tint: #0f2a1d;
+  --partial: #e2a23f;
+  --partial-tint: #2c2010;
+  --not-supported: #e2685c;
+  --not-supported-tint: #301613;
+  --insufficient: #8790a0;
+  --insufficient-tint: #1b212b;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 20px 40px -12px rgba(0, 0, 0, 0.6);
   color-scheme: dark;
 }
 
@@ -102,7 +111,7 @@ body {
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.55;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
@@ -110,15 +119,15 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-weight: 600;
   color: var(--ink);
+  letter-spacing: -0.015em;
 }
 
 .page-header h1 {
   font-weight: 700;
-  letter-spacing: -0.01em;
-  font-size: 1.9rem;
+  font-size: 1.85rem;
 }
 
 a {
@@ -139,7 +148,7 @@ a {
   left: -999px;
   top: 0;
   background: var(--accent-strong);
-  color: #fff;
+  color: var(--on-accent);
   padding: 0.6rem 1rem;
   z-index: 100;
 }
@@ -148,37 +157,99 @@ a {
   top: 0.5rem;
 }
 
+/* ---------------------------------------------------------------- */
+/* app shell -- persistent sidebar + scrolling content column         */
+/* ---------------------------------------------------------------- */
 .app-shell {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 1.2rem 3rem;
-}
-
-.app-header {
-  padding: 1.4rem 0 0.8rem;
-  border-bottom: 3px double var(--rule-strong);
-  margin-bottom: 1.4rem;
-}
-
-.masthead-row {
   display: flex;
+  min-height: 100vh;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.8rem;
+}
+
+.app-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: var(--sidebar-w);
+  flex: 0 0 var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-right: 1px solid var(--rule);
+  padding: 1.4rem 1.1rem;
 }
 
 .brand-block {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.25rem;
+  padding-bottom: 1.2rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+.brand em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.brand-tagline {
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  line-height: 1.35;
+}
+
+.app-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: var(--ink-soft);
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  border-left: 2px solid transparent;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+.nav-link:hover {
+  color: var(--ink);
+  background: var(--surface-sunken);
+}
+.nav-link-active,
+.nav-link-active:hover {
+  color: var(--accent-strong);
+  background: var(--accent-tint);
+  border-left-color: var(--accent);
+}
+.nav-divider {
+  display: none;
+}
+
+.sidebar-foot {
+  padding-top: 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid var(--rule);
 }
 
 .theme-toggle {
-  background: var(--surface);
+  width: 100%;
+  background: var(--surface-sunken);
   color: var(--ink-soft);
   border: 1px solid var(--rule-strong);
-  border-radius: 999px;
-  padding: 0.35rem 0.8rem;
+  border-radius: 8px;
+  padding: 0.45rem 0.7rem;
   font-size: 0.82rem;
   font-weight: 600;
   white-space: nowrap;
@@ -186,46 +257,15 @@ a {
 .theme-toggle:hover {
   color: var(--ink);
   border-color: var(--accent);
-  background: var(--surface);
-}
-
-.brand {
-  font-family: var(--font-serif);
-  font-size: 1.6rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--accent-strong);
-}
-
-.brand-tagline {
-  font-size: 0.85rem;
-  color: var(--ink-faint);
-}
-
-.app-nav {
-  margin-top: 0.9rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.nav-link {
-  text-decoration: none;
-  color: var(--ink-soft);
-  padding: 0.3rem 0.2rem;
-  font-weight: 600;
-}
-.nav-link-active {
-  color: var(--accent-strong);
-  border-bottom: 2px solid var(--accent);
-}
-.nav-divider {
-  color: var(--rule-strong);
+  background: var(--surface-sunken);
 }
 
 .app-main {
+  flex: 1;
+  min-width: 0;
   outline: none;
+  padding: 2.2rem 2.6rem 4rem;
+  max-width: 1180px;
 }
 
 .page-header {
@@ -234,7 +274,7 @@ a {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.6rem;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.5rem;
 }
 .page-header h1 {
   margin: 0;
@@ -242,6 +282,8 @@ a {
 
 .byline {
   color: var(--ink-soft);
+  font-size: 1.02rem;
+  max-width: 62ch;
 }
 .muted {
   color: var(--ink-faint);
@@ -250,24 +292,26 @@ a {
 .card {
   background: var(--surface);
   border: 1px solid var(--rule);
-  border-radius: 12px;
-  padding: 1.1rem 1.2rem;
-  box-shadow: var(--shadow);
+  border-radius: 14px;
+  padding: 1.2rem 1.3rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .card-link {
   display: block;
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 .card-link:hover,
 .card-link:focus-visible {
   border-color: var(--accent);
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
 }
 .card-link h2 {
   margin: 0 0 0.3rem;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
 }
 .card-link p {
   margin: 0;
@@ -277,15 +321,15 @@ a {
 
 .home-shortcuts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.9rem;
-  margin: 1.2rem 0;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
 }
 
 .home-search {
   display: flex;
   gap: 0.5rem;
-  margin: 1rem 0 1.5rem;
+  margin: 1.2rem 0 1.8rem;
 }
 
 .status-list {
@@ -295,7 +339,7 @@ a {
   font-size: 0.92rem;
 }
 .status-list li {
-  padding: 0.15rem 0;
+  padding: 0.2rem 0;
 }
 
 /* forms ---------------------------------------------------------- */
@@ -303,7 +347,7 @@ input[type="text"],
 input[type="search"],
 select {
   font: inherit;
-  padding: 0.5rem 0.9rem;
+  padding: 0.55rem 1rem;
   border: 1px solid var(--rule-strong);
   border-radius: 999px;
   background: var(--surface);
@@ -322,15 +366,20 @@ select:focus {
 }
 button {
   font: inherit;
+  font-weight: 600;
   cursor: pointer;
   border: 1px solid var(--accent-strong);
   background: var(--accent);
   color: var(--on-accent);
-  padding: 0.5rem 1.1rem;
+  padding: 0.55rem 1.2rem;
   border-radius: 999px;
+  transition: background-color 0.12s ease, transform 0.08s ease;
 }
 button:hover {
   background: var(--accent-strong);
+}
+button:active {
+  transform: translateY(1px);
 }
 button:disabled {
   opacity: 0.55;
@@ -383,15 +432,18 @@ button:disabled {
 .data-table th,
 .data-table td {
   text-align: left;
-  padding: 0.5rem 0.6rem;
+  padding: 0.65rem 0.7rem;
   border-bottom: 1px solid var(--rule);
 }
 .data-table th {
   color: var(--ink-faint);
   font-weight: 600;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
+}
+.data-table tbody tr:hover {
+  background: var(--surface-sunken);
 }
 .data-table td {
   font-variant-numeric: tabular-nums;
@@ -409,8 +461,9 @@ button:disabled {
 .tab-bar {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   border-bottom: 1px solid var(--rule);
-  margin: 1rem 0 0;
+  margin: 1.2rem 0 0;
 }
 .tab-row {
   display: flex;
@@ -423,7 +476,8 @@ button:disabled {
   border-bottom: 3px solid transparent;
   color: var(--ink-soft);
   border-radius: 0;
-  padding: 0.5rem 0.7rem;
+  padding: 0.55rem 0.75rem;
+  font-weight: 600;
 }
 .tab-button:hover {
   color: var(--ink);
@@ -435,25 +489,25 @@ button:disabled {
   color: var(--accent-strong);
   background: transparent;
   border-bottom-color: var(--accent);
-  font-weight: 600;
 }
 .tab-panel {
-  padding-top: 1rem;
+  padding-top: 1.2rem;
 }
 .basis-toggle {
   display: flex;
   gap: 0.2rem;
   margin-left: auto;
   align-self: center;
-  padding: 0.15rem;
-  background: var(--accent-tint);
+  padding: 0.2rem;
+  background: var(--surface-sunken);
   border-radius: 999px;
 }
 .basis-toggle-option {
   border: none;
   border-radius: 999px;
-  padding: 0.3rem 0.7rem;
-  font-size: 0.82rem;
+  padding: 0.32rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
   color: var(--ink-soft);
   background: transparent;
 }
@@ -465,7 +519,6 @@ button:disabled {
 .basis-toggle-option-active:hover {
   background: var(--accent);
   color: var(--on-accent);
-  font-weight: 600;
 }
 .section-note {
   color: var(--ink-faint);
@@ -473,38 +526,47 @@ button:disabled {
   margin-top: 0;
 }
 .subsection-title {
-  font-size: 0.95rem;
-  margin: 1.2rem 0 0.4rem;
+  font-size: 1rem;
+  margin: 1.4rem 0 0.5rem;
 }
 
 /* stat tiles ----------------------------------------------------------- */
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.8rem;
 }
 .stat-tile {
   border: 1px solid var(--rule);
-  border-radius: 6px;
-  padding: 0.7rem 0.8rem;
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  padding: 0.85rem 0.95rem;
   background: var(--surface);
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.2rem;
+  transition: box-shadow 0.15s ease;
+}
+.stat-tile:hover {
+  box-shadow: var(--shadow-sm);
 }
 .stat-tile-missing {
   background: var(--surface-sunken);
+  border-left-color: var(--rule-strong);
 }
 .stat-label {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: var(--ink-faint);
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
+  font-weight: 600;
 }
 .stat-value {
   font-family: var(--font-mono);
-  font-size: 1.15rem;
+  font-size: 1.4rem;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
+  color: var(--ink);
 }
 .stat-period {
   font-size: 0.75rem;
@@ -561,6 +623,9 @@ button:disabled {
   flex: 1;
   min-width: 240px;
 }
+.qa-ask-button {
+  flex-shrink: 0;
+}
 
 .status-banner {
   padding: 0.5rem 0;
@@ -581,21 +646,23 @@ button:disabled {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
+  background: var(--bg);
 }
 .wake-gate-card {
   max-width: 420px;
   text-align: center;
   background: var(--surface);
   border: 1px solid var(--rule);
-  border-radius: 10px;
-  padding: 2rem 1.8rem;
+  border-radius: 14px;
+  padding: 2.2rem 2rem;
+  box-shadow: var(--shadow);
 }
 .wake-gate-brand {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 1.6rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--accent-strong);
+  letter-spacing: 0.01em;
+  color: var(--ink);
   margin: 0 0 1rem;
 }
 .wake-gate-message {
@@ -629,7 +696,7 @@ button:disabled {
   gap: 0.6rem;
 }
 .answer-text {
-  font-size: 1.02rem;
+  font-size: 1.05rem;
 }
 .answer-paragraph {
   margin: 0 0 0.6rem;
@@ -676,7 +743,7 @@ button:disabled {
 .claim-card {
   border: 1px solid var(--rule);
   border-left: 4px solid var(--rule-strong);
-  border-radius: 6px;
+  border-radius: 10px;
   margin-bottom: 0.6rem;
   background: var(--surface);
 }
@@ -686,7 +753,7 @@ button:disabled {
 .claim-summary {
   cursor: pointer;
   list-style: none;
-  padding: 0.6rem 0.8rem;
+  padding: 0.65rem 0.85rem;
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
@@ -708,25 +775,25 @@ button:disabled {
   min-width: 200px;
 }
 .claim-body {
-  padding: 0 0.8rem 0.8rem 1.7rem;
+  padding: 0 0.85rem 0.85rem 1.75rem;
   border-top: 1px solid var(--rule);
 }
 .claim-section {
   margin-top: 0.7rem;
 }
 .claim-section h3 {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   color: var(--ink-faint);
   margin: 0 0 0.3rem;
 }
 .status-badge {
   display: inline-block;
-  padding: 0.1rem 0.55rem;
+  padding: 0.12rem 0.6rem;
   border-radius: 999px;
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
 }
 .status-supported {
@@ -779,6 +846,9 @@ button:disabled {
 .calc-row {
   font-size: 0.88rem;
 }
+.calc-head {
+  font-weight: 600;
+}
 .calc-expression {
   display: block;
   font-family: var(--font-mono);
@@ -804,6 +874,44 @@ button:disabled {
   padding: 0.15rem 0.5rem;
   background: var(--surface-sunken);
   color: var(--ink-soft);
+}
+
+@media (max-width: 860px) {
+  .app-shell {
+    flex-direction: column;
+  }
+  .app-sidebar {
+    position: static;
+    height: auto;
+    width: 100%;
+    flex: none;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 1rem 1.2rem;
+  }
+  .brand-block {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    margin-right: 1rem;
+  }
+  .app-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  .sidebar-foot {
+    border-top: none;
+    margin-top: 0;
+    padding-top: 0;
+  }
+  .theme-toggle {
+    width: auto;
+  }
+  .app-main {
+    padding: 1.6rem 1.2rem 3rem;
+  }
 }
 
 @media (max-width: 640px) {

@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React from "react";
 import { NavLink, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home.jsx";
 import CompaniesPage from "./pages/CompaniesPage.jsx";
@@ -26,12 +26,26 @@ export default function App() {
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
-        <header className="app-header">
-          <div className="masthead-row">
-            <div className="brand-block">
-              <span className="brand">FIN&middot;QA v2</span>
-              <span className="brand-tagline">Evidence Desk &mdash; NIFTY 50, every claim cited</span>
-            </div>
+        <aside className="app-sidebar">
+          <div className="brand-block">
+            <span className="brand">
+              FIN&middot;<em>QA</em> v2
+            </span>
+            <span className="brand-tagline">Evidence Desk &mdash; NIFTY 50, every claim cited</span>
+          </div>
+          <nav className="app-nav" aria-label="Primary">
+            {NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) => "nav-link" + (isActive ? " nav-link-active" : "")}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+          <div className="sidebar-foot">
             <button
               type="button"
               className="theme-toggle"
@@ -42,25 +56,7 @@ export default function App() {
               {theme === "dark" ? "☀️ Light" : "\u{1F319} Dark"}
             </button>
           </div>
-          <nav className="app-nav" aria-label="Primary">
-            {NAV_ITEMS.map((item, i) => (
-              <Fragment key={item.to}>
-                {i > 0 && (
-                  <span className="nav-divider" aria-hidden="true">
-                    &middot;
-                  </span>
-                )}
-                <NavLink
-                  to={item.to}
-                  end={item.end}
-                  className={({ isActive }) => "nav-link" + (isActive ? " nav-link-active" : "")}
-                >
-                  {item.label}
-                </NavLink>
-              </Fragment>
-            ))}
-          </nav>
-        </header>
+        </aside>
 
         <main className="app-main" id="main-content" tabIndex={-1}>
           <Routes>
