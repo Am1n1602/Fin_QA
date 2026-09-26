@@ -21,6 +21,12 @@ def backfill_company(nse_symbol: str) -> int:
     downloaded = 0
     for period in ("Annual", "Quarterly"):
         records = nse_source.fetch_historical_financial_results(nse_symbol, _FROM, _TO, period=period)
+        # Insurers (confirmed: HDFCLIFE, SBILIFE) file under NSE's "insurance" index
+        # category instead of "equities" and return 0 records here regardless of date
+        # range -- not a listing-date issue, just the wrong category. Retry once.
+        if not records:
+            records = nse_source.fetch_historical_financial_results(
+                nse_symbol, _FROM, _TO, period=period, index="insurance")
         real = [r for r in records if r.get("xbrl") and not r["xbrl"].endswith("/-")]
         print(f"  {nse_symbol} {period}: {len(records)} filings found, {len(real)} with real XBRL")
         for rec in real:
@@ -31,7 +37,10 @@ def backfill_company(nse_symbol: str) -> int:
             # already uses for Integrated Filing files.
             basis = "Standalone" if rec.get("consolidated") == "Non-Consolidated" else "Consolidated"
             title = f"Financial_Results_Original_{basis}"
-            filing_period = rec.get("toDate") or rec.get("financialYear") or "unknown_period"
+            # Insurance-index records carry no "toDate"/"financialYear" -- only
+            # "periodEnd" (confirmed against real HDFCLIFE/SBILIFE responses).
+            filing_period = rec.get("toDate") or rec.get("periodEnd") or rec.get("financialYear") \
+                or "unknown_period"
             result = pdf_downloader.download_filing(
                 nse_symbol, rec["xbrl"], title=title, period=filing_period,
                 source="NSE", extra_meta=rec,

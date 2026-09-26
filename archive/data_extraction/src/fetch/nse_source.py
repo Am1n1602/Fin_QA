@@ -75,7 +75,7 @@ def fetch_corporate_filings(nse_symbol: str, days_back: int = 1095) -> list[dict
 
 
 def fetch_historical_financial_results(nse_symbol: str, from_date: date, to_date: date,
-                                       period: str = "Annual") -> list[dict]:
+                                       period: str = "Annual", index: str = "equities") -> list[dict]:
     """
     Pull 'Financial Results' (pre-Integrated-Filing, Regulation 33) entries for one
     company from NSE's OLDER, separate filing-type API. Not wrapped by jugaad_data --
@@ -91,11 +91,17 @@ def fetch_historical_financial_results(nse_symbol: str, from_date: date, to_date
 
     IMPORTANT: the filter parameter is `symbol`, not `issuer` -- `issuer=<ticker>`
     silently returns EVERY company's filings unfiltered, confirmed by direct comparison.
+
+    `index` defaults to "equities" but insurers (confirmed: HDFCLIFE, SBILIFE) file under
+    "insurance" instead and return 0 records under "equities" no matter the date range --
+    not a listing-date issue (both listed in 2017), just a different NSE category. Even
+    under "insurance" this endpoint's own historical depth is much shallower for insurers
+    (confirmed: nothing before ~mid-2024), a real, separate ceiling from the equities path.
     """
     nse = NSELive()
     url = nse.base_url + "/corporates-financial-results"
     payload = {
-        "index": "equities", "symbol": nse_symbol, "period": period,
+        "index": index, "symbol": nse_symbol, "period": period,
         "from_date": from_date.strftime("%d-%m-%Y"), "to_date": to_date.strftime("%d-%m-%Y"),
     }
     try:
