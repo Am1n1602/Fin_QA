@@ -10,11 +10,14 @@ services:
   # needs (deployment/docker/public_data/) is gitignored and this repo has no persistent
   # disk on the free tier to populate at runtime. Build + push it yourself first:
   #   deployment/scripts/build_and_push_public_image.sh <your-registry>/finqa-api-public:latest
+  # On Docker Hub, not GHCR (switched 2026-09-27 -- GHCR's classic-PAT scope requirements
+  # kept denying the login on this machine; Docker Hub's plain username/password sidesteps
+  # that entirely and this image URL is genuinely just a pointer, any registry works).
   - type: web
     name: finqa-api-public
     runtime: image
     image:
-      url: ghcr.io/am1n1602/finqa-api-public:latest
+      url: docker.io/am1n1602/finqa-api-public:latest
     plan: free
     healthCheckPath: /health
     envVars:

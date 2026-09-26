@@ -196,9 +196,13 @@ limited RAM, and this system's normal retrieval path pulls in torch).
 **Deploy flow:**
 
 ```bash
-# 1. Build the curated dataset + image, push it to a registry (needs your own
-#    `docker login ghcr.io` first — this step isn't run for you, it needs your account)
-deployment/scripts/build_and_push_public_image.sh ghcr.io/YOUR_GITHUB_USERNAME/finqa-api-public:latest
+# 1. Build the curated dataset + image, push it to a registry (needs your own login
+#    first, e.g. `docker login ghcr.io` for GHCR or plain `docker login` for Docker Hub
+#    — this step isn't run for you, it needs your account). Currently deployed from
+#    Docker Hub (`docker.io/am1n1602/...`), not GHCR -- GHCR's classic-PAT scope
+#    requirement was a real source of friction; Docker Hub's plain username/password
+#    sidesteps it. Either registry works, this is just a pointer:
+deployment/scripts/build_and_push_public_image.sh docker.io/YOUR_DOCKERHUB_USERNAME/finqa-api-public:latest
 
 # 2. Edit render.yaml's image.url to match what you just pushed.
 
