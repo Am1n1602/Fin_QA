@@ -160,21 +160,26 @@ limited RAM, and this system's normal retrieval path pulls in torch).
 
 **What's different from the local stack, and why:**
 
-- **A curated ~10-15 company subset, not all 50.** `deployment/scripts/build_public_dataset.py`
+- **A curated 5-company subset, not all 50.** `deployment/scripts/build_public_dataset.py`
   copies a chosen ticker list out of the real `finqa_v2.db` into
-  `deployment/docker/public_data/` (gitignored, rebuild locally any time). A first attempt
-  baked in the *full* 50-company dataset and measured **~680MB** resident memory in the
-  running container — almost entirely `rank_bm25`'s per-document term-frequency
-  dictionaries for the full 32k-chunk corpus — comfortably over a typical free tier's
-  ~512MB ceiling. The current 11-company set (`TCS, INFY, HCLTECH, WIPRO, RELIANCE, ONGC,
-  HDFCBANK, ICICIBANK, SBIN, ITC, M&M` — picked for sector diversity and so every
-  example question in this README and the dashboard's own example chips resolves; SBILIFE
-  dropped 2026-09-27, confirmed genuinely data-limited — FY2025-2027 only vs FY2018/19 for
-  the rest, zero segments, an NSE-side historical-coverage gap for insurers) measured
-  **~250-320MB** resident / ~490MB including reclaimable page cache at 12 companies —
-  **re-measure after this change, don't assume 11 is proportionally smaller**. **Always
-  re-measure with `docker stats` + `docker exec <container> cat /proc/1/status` after
-  changing `TICKERS`** — this is empirical, not something to assume scales safely.
+  `deployment/docker/public_data/` (gitignored, rebuild locally any time). The original
+  12-company set (built 2026-09-13, before this session's historical XBRL/PDF backfill)
+  measured ~250-320MB resident. After that backfill made every company's document
+  history far deeper, an 11-company rebuild (58,110 chunks — more than the *entire* old
+  50-company corpus at 32,224 chunks) genuinely OOM'd on Render's 512MB free tier
+  (confirmed live: `Out of memory (used over 512Mi)`, and reproduced locally with
+  `docker run -m 512m` — `OOMKilled=true`). Chunk count, not company count, is what
+  actually drives `rank_bm25`'s per-document term-frequency dictionary memory. Cut to 5
+  companies (`INFY, RELIANCE, M&M, ICICIBANK, ITC` — IT/energy/auto/banking/FMCG;
+  ICICIBANK keeps the standalone/consolidated basis-toggle demo alive since its CET1/NPA
+  ratios are standalone-only) — **measured empirically at 22,388 chunks, ~430MB/512MB
+  idle, survives a real query** (not guessed). Lost: the extra IT/banking names and
+  ONGC specifically, which breaks this README's own "Compare RELIANCE and ONGC on
+  leverage" example question against the live demo (works fine against a full local
+  build). **Always re-measure with `docker run -m 512m ...` + `docker stats` after
+  changing `TICKERS`** — this is empirical, not something to assume scales safely, and
+  the safe company count can shrink even when historical depth grows, not just when it
+  grows.
 - **Lexical-only retrieval, no torch loaded at all.** `deployment/docker/api.public.Dockerfile`
   bakes in `finqa_v2.db` + `finqa_v2_bm25.pkl` but not `finqa_v2_vec/` (the dense vector
   index). `finqa_v2/retrieval/evaluate.py`'s `build_retriever()` only imports

@@ -1,13 +1,16 @@
 # Fin·QA
 
 **[Live demo](https://finqa-dashboard-public.onrender.com/)** (Disable ublock origin for this to load) — a free-tier deployment
-covering 11 of the NIFTY 50 companies (TCS, INFY, HCLTECH, WIPRO, RELIANCE, ONGC,
-HDFCBANK, ICICIBANK, SBIN, ITC, M&M), lexical-only retrieval, LLM synthesis on
-by default. First load can take up to a minute — the backend sleeps after inactivity on
-Render's free tier. This is a **frozen, manually-built snapshot** (see
-[`deployment/README.md`](deployment/README.md#public-demo-render)) — it doesn't
-auto-update with this repo, so it may lag behind the full 50-company dataset described
-below until someone rebuilds and pushes it (same section has the exact steps).
+covering 5 of the NIFTY 50 companies (INFY, RELIANCE, M&M, ICICIBANK, ITC),
+lexical-only retrieval, LLM synthesis on by default. First load can take up to a minute
+— the backend sleeps after inactivity on Render's free tier. This is a **frozen,
+manually-built snapshot** (see [`deployment/README.md`](deployment/README.md#public-demo-render))
+— it doesn't auto-update with this repo, so it may lag behind the full 50-company
+dataset described below until someone rebuilds and pushes it (same section has the
+exact steps). Cut down from 11 companies on 2026-09-27 after that set (58,110 chunks)
+exceeded Render's 512MB free-tier memory limit — this session's historical XBRL/PDF
+backfill made every company's own document history far deeper than when the original
+demo was scoped, not something the company *count* alone controls.
 
 Financial research API and dashboard for the NIFTY 50 universe. Ask it things like *"What
 was TCS's ROE?"*, *"Compare RELIANCE and ONGC on leverage"*, or *"Why did HCLTECH's

@@ -30,22 +30,24 @@ OUT_DIR = ROOT / "deployment" / "docker" / "public_data"
 OUT_DB = OUT_DIR / "finqa_v2.db"
 OUT_BM25 = OUT_DIR / "finqa_v2_bm25.pkl"
 
-# 11 companies (not all 50 -- see the module docstring), picked for sector diversity
-# (IT/energy/banking/FMCG/auto) and to make sure every example question in the README and
-# the dashboard's own QA/Research example chips actually resolves against this dataset --
-# including README's "Compare RELIANCE and ONGC on leverage", which needs ONGC
-# specifically. SBILIFE (insurance) dropped 2026-09-27: confirmed genuinely data-limited
-# vs the rest of this list -- FY2025-2027 only (vs FY2018/19 for everyone else), 113
-# facts (vs 1,700-3,200+), zero segments (vs 3-12) -- an NSE-side historical-coverage gap
-# for insurers, not fixable the way the bank-taxonomy bug was. The consolidated/standalone
-# basis-toggle demo it used to showcase is still covered: HDFCBANK/ICICIBANK/SBIN's own
-# CET1/NPA ratios are standalone-only by RBI regulation (the exact bug fixed this session).
+# 5 companies -- cut down from 11 on 2026-09-27 after the 11-company build (58,110
+# chunks) OOM'd on Render's free tier (512MB). Root cause: this session's historical
+# XBRL/PDF backfill made every company's own document history much deeper than when the
+# original 12-company demo was scoped (that whole 12-company set used to total less than
+# the OLD full 50-company corpus, 32,224 chunks -- now just these 11 alone are 58,110).
+# Measured empirically (docker run -m 512m + docker stats, not guessed): 22,388 chunks
+# (this list) settles at ~430MB/512MB idle, survives a real query. Sector spread: IT
+# (INFY), energy (RELIANCE), auto (M&M), banking (ICICIBANK), FMCG (ITC). ICICIBANK keeps
+# the standalone/consolidated basis-toggle demo alive (its CET1/NPA ratios are
+# standalone-only, same as HDFCBANK's). Lost from the 11-company set: the extra IT/bank
+# names, and ONGC specifically -- breaks the README's "Compare RELIANCE and ONGC on
+# leverage" example question (flagged, not fixed; that example needs updating separately).
 TICKERS = [
-    "TCS", "INFY", "HCLTECH", "WIPRO",       # IT services
-    "RELIANCE", "ONGC",                       # energy / conglomerate
-    "HDFCBANK", "ICICIBANK", "SBIN",          # banks (standalone-only capital ratios)
-    "ITC",                                    # FMCG
+    "INFY",                                   # IT services
+    "RELIANCE",                               # energy
     "M&M",                                    # auto
+    "ICICIBANK",                               # banking
+    "ITC",                                    # FMCG
 ]
 
 _COPY_TABLES = (
