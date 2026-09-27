@@ -6,6 +6,7 @@ from .build import (
     citation_for_document,
     evidence_from_compare_result,
     evidence_from_engine_result,
+    evidence_from_period_compare_result,
     evidence_from_retrieved_chunk,
     evidence_from_segment_result,
 )
@@ -32,6 +33,7 @@ __all__ = [
     "citation_for_document",
     "evidence_from_compare_result",
     "evidence_from_engine_result",
+    "evidence_from_period_compare_result",
     "evidence_from_retrieved_chunk",
     "evidence_from_segment_result",
 ]

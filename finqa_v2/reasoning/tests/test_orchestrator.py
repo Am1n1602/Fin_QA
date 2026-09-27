@@ -217,5 +217,52 @@ class TestToolCallsThreadBasis(OrchestratorTestCase):
         self.assertNotIn("basis", calls["get_metric"])
 
 
+class TestBoundedRangeCompareSafetyNet(OrchestratorTestCase):
+    """Regression test for a real bug: "growth from FY2023 to FY2026" resolved the
+    named periods correctly in the plan but neither planner ever requested
+    compare_periods for a TREND question, so get_growth's default YoY and get_cagr's
+    default earliest-to-latest were the only numbers computed -- neither answers the
+    specific range the user named, and the LLM (honestly) reported it as unavailable."""
+
+    def test_two_named_periods_get_a_bounded_compare_even_when_not_requested(self):
+        plan = QueryPlan(question="q", companies=["TEST"], intent=Intent.TREND,
+                         periods=["FY2025", "FY2026"], metrics=["revenue"],
+                         tools=["get_growth", "get_cagr", "get_metric"])
+        calls = dict(self.orch._tool_calls(plan))
+        self.assertIn("compare_periods", calls)
+        self.assertEqual(calls["compare_periods"]["a"], "FY2025")
+        self.assertEqual(calls["compare_periods"]["b"], "FY2026")
+
+    def test_uses_first_and_last_named_period_not_first_two(self):
+        # a range spanning more than 2 named periods (e.g. "from 2023 to 2026" resolving
+        # to all 4 FYs in between) should compare the two ENDS, not adjacent periods.
+        plan = QueryPlan(question="q", companies=["TEST"],
+                         periods=["FY2023", "FY2024", "FY2025", "FY2026"],
+                         tools=["compare_periods"])
+        calls = dict(self.orch._tool_calls(plan))
+        self.assertEqual(calls["compare_periods"]["a"], "FY2023")
+        self.assertEqual(calls["compare_periods"]["b"], "FY2026")
+
+    def test_does_not_duplicate_when_already_requested(self):
+        plan = QueryPlan(question="q", companies=["TEST"], periods=["FY2025", "FY2026"],
+                         tools=["compare_periods"], basis="standalone")
+        calls = list(self.orch._tool_calls(plan))
+        self.assertEqual([name for name, _ in calls].count("compare_periods"), 1)
+        # the explicitly-requested branch's kwargs win, basis still threaded through
+        self.assertEqual(dict(calls)["compare_periods"]["basis"], "standalone")
+
+    def test_no_safety_net_with_fewer_than_two_periods(self):
+        plan = QueryPlan(question="q", companies=["TEST"], periods=["FY2026"],
+                         tools=["get_metric"], metrics=["revenue"])
+        calls = dict(self.orch._tool_calls(plan))
+        self.assertNotIn("compare_periods", calls)
+
+    def test_no_safety_net_without_a_resolved_company(self):
+        plan = QueryPlan(question="q", companies=[], periods=["FY2025", "FY2026"],
+                         tools=["get_metric"])
+        calls = dict(self.orch._tool_calls(plan))
+        self.assertNotIn("compare_periods", calls)
+
+
 if __name__ == "__main__":
     unittest.main()

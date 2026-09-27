@@ -187,6 +187,40 @@ def evidence_from_compare_result(res: dict, *, workspace=None) -> list[Evidence]
     return out
 
 
+def evidence_from_period_compare_result(res, *, workspace=None) -> list[Evidence]:
+    """Adapter for FinancialEngine.compare_periods -- a multi-metric from/to comparison
+    across two named periods, keyed in `res.components`, not a single value+inputs
+    EngineResult, so evidence_from_engine_result doesn't apply (same reasoning as
+    evidence_from_compare_result above for compare_companies' ranking dict). Without
+    this, a real, correctly-computed bounded-range comparison (e.g. "revenue growth
+    from FY2023 to FY2026") was silently dropped before reaching synthesis -- confirmed
+    2026-09-27 on the live demo: the LLM had no evidence for the range it was asked
+    about and (accurately, given what it was handed) reported the figure as
+    unavailable, despite the engine having computed it correctly all along."""
+    out: list[Evidence] = []
+    ev_type = EvidenceType.COMPARISON
+    for metric, c in (res.components or {}).items():
+        if c.get("from") is None or c.get("to") is None:
+            continue
+        label = metric.replace("_", " ")
+        pct = c.get("pct_change")
+        pct_txt = f", {pct:+.2f}%" if pct is not None else ""
+        unit = unit_for(metric)
+        text = (f"{res.company} {label}: {c['from']:,.2f} -> {c['to']:,.2f}"
+                f"{f' {unit}' if unit else ''} ({res.period}){pct_txt}")
+        ev = Evidence(
+            evidence_id=_id("cmp"),
+            type=ev_type,
+            text=text, company=res.company, metric=metric,
+            period=res.period, value=pct if pct is not None else c["to"], unit=unit,
+            confidence=evidence_confidence_for_type(ev_type),
+        )
+        out.append(ev)
+        if workspace is not None:
+            workspace.add(ev)
+    return out
+
+
 # --------------------------------------------------------------------------- #
 # Segments
 # --------------------------------------------------------------------------- #

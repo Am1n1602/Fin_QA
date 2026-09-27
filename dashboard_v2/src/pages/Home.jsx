@@ -37,7 +37,7 @@ export default function Home() {
           type="text"
           value={ticker}
           onChange={(e) => setTicker(e.target.value)}
-          placeholder="Jump to a company, e.g. TCS"
+          placeholder="Jump to a company, e.g. ITC"
         />
         <button type="submit">Go</button>
       </form>

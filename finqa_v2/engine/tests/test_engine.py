@@ -87,6 +87,20 @@ class TestEngine(unittest.TestCase):
         self.assertEqual(r.components["revenue"]["pct_change"], 20.0)
         self.assertEqual(r.components["net_profit"]["abs_change"], 50.0)
 
+    def test_compare_periods_ok_reflects_the_real_comparison_not_just_value(self):
+        # compare_periods never sets `value` (a multi-metric result has no single
+        # scalar to put there) -- `ok` has to look at `components` instead, or every
+        # successful comparison reports itself as failed (confirmed 2026-09-27: this
+        # silently dropped a correct, real comparison from ever reaching synthesis).
+        r = self.eng.compare_periods("TEST", ["revenue"], a="FY2025", b="FY2026")
+        self.assertIsNone(r.value)
+        self.assertTrue(r.ok)
+
+    def test_compare_periods_ok_false_when_a_period_cannot_resolve(self):
+        r = self.eng.compare_periods("TEST", ["revenue"], a="FY2025", b="FY1999")
+        self.assertFalse(r.ok)
+        self.assertTrue(r.limitations)
+
     def test_compare_companies(self):
         # only one company in the fixture; still exercises the shape
         out = self.eng.compare_companies("roe", ["TEST", "NOPE"])

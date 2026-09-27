@@ -5,12 +5,19 @@ import { usePageTitle } from "../hooks/usePageTitle.js";
 import StatusBanner from "../components/StatusBanner.jsx";
 import EvidenceAnswer from "../components/EvidenceClaims.jsx";
 
+// Scoped to the public demo's actual 5-company dataset (INFY, RELIANCE, M&M,
+// ICICIBANK, ITC -- see deployment/README.md's "Public demo (Render)" section for why
+// it's only 5, not all 50). Verified against real data before picking these, not just
+// plausible-sounding: ITC's net profit margin genuinely dropped ~45.6% YoY, and
+// RELIANCE's Retail segment is genuinely the top contributor to its revenue *growth*
+// specifically (33.2% of the change), not just to total revenue (that's O2C, a
+// different segment) -- so both examples resolve to a real, interesting answer.
 const EXAMPLE_QUESTIONS = [
-  "What was TCS's revenue in FY2026?",
-  "Compare TCS and Infosys on profitability.",
+  "What was ITC's revenue in FY2026?",
+  "Compare INFY and ICICIBANK on profitability.",
   "Which segment contributed most to Reliance's revenue growth?",
-  "Why did HCLTECH's profitability decline?",
-  "TCS management said growth was driven by the BFSI segment. Is this supported?",
+  "Why did ITC's profitability decline?",
+  "Reliance management said growth was driven by the Retail segment. Is this supported?",
 ];
 
 function prefersReducedMotion() {
@@ -120,7 +127,7 @@ export default function QaPage() {
           className="qa-input"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask a financial question, e.g. 'What was TCS's revenue in FY2026?'"
+          placeholder="Ask a financial question, e.g. 'What was ITC's revenue in FY2026?'"
           disabled={isAsking}
         />
         <button type="submit" className="qa-ask-button" disabled={isAsking || !input.trim()}>

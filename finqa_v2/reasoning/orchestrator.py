@@ -203,8 +203,10 @@ class ReasoningOrchestrator:
                 m = metric or ("roe" if plan.intent is Intent.RANKING else "revenue")
                 yield name, {"metric": m, "tickers": list(plan.companies), "period": period, **basis_kw}
             elif name == "compare_periods" and co and len(plan.periods) >= 2:
+                # First-named vs LAST-named, not first-vs-second: "growth from 2023 to
+                # 2026" names the two ends of the range, not two adjacent periods.
                 yield name, {"ticker": co, "metrics": plan.metrics or ["revenue", "net_profit"],
-                             "a": plan.periods[0], "b": plan.periods[1], **basis_kw}
+                             "a": plan.periods[0], "b": plan.periods[-1], **basis_kw}
             elif name == "get_segment_data" and co:
                 yield name, {"ticker": co, "period": "latest_annual", **basis_kw}
             elif name == "decompose_metric" and co:
@@ -219,3 +221,15 @@ class ReasoningOrchestrator:
                 yield name, {"ticker": co}
             elif name == "get_peers" and co:
                 yield name, {"ticker": co}
+
+        # Safety net, independent of what either planner chose: a question naming 2+
+        # specific periods ("growth from 2023 to 2026") means a bounded-range number is
+        # actually wanted, not just get_growth's default YoY or get_cagr's default
+        # earliest-to-latest. Neither the rules planner nor the LLM planner reliably
+        # requests compare_periods for this on their own (confirmed 2026-09-27: the LLM
+        # planner correctly resolved periods=[FY2023..FY2026] for exactly this question
+        # but still only chose [get_growth, get_cagr, get_metric] -- info this endpoint
+        # never surfaced). Only fires when compare_periods wasn't already yielded above.
+        if co and len(plan.periods) >= 2 and "compare_periods" not in plan.tools:
+            yield "compare_periods", {"ticker": co, "metrics": plan.metrics or ["revenue", "net_profit"],
+                                      "a": plan.periods[0], "b": plan.periods[-1], **basis_kw}

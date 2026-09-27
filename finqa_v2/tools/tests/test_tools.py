@@ -61,6 +61,12 @@ class TestFinancialTools(ToolsTestCase):
                            a="FY2025", b="FY2026")
         self.assertTrue(cp.ok)
         self.assertEqual(cp.value["components"]["revenue"]["pct_change"], 20.0)
+        # regression: this used to produce 0 real evidence (the generic single-value
+        # evidence builder doesn't know about `components`), so a bounded-range
+        # comparison never reached synthesis even though the number was computed
+        # correctly -- confirmed 2026-09-27 on a real "growth from X to Y" question.
+        self.assertTrue(cp.evidence)
+        self.assertTrue(any("20.00%" in e["text"] or "pct_change" in e for e in cp.evidence))
         d = self.reg.call("decompose_metric", ticker="TEST", metric="roe")
         self.assertTrue(d.ok)
         self.assertTrue(d.value["components"]["reconciles"])

@@ -43,7 +43,16 @@ class EngineResult:
 
     @property
     def ok(self) -> bool:
-        return self.value is not None
+        if self.value is not None:
+            return True
+        # compare_periods (the only caller that populates `components`) never sets
+        # `value` -- a multi-metric comparison has no single natural scalar to put
+        # there. Without this, `ok` was unconditionally False even when both named
+        # periods resolved and real from/to data was computed (confirmed 2026-09-27:
+        # a real 21.72% revenue comparison was silently dropped before reaching
+        # evidence/synthesis, because line 77's `if not res.ok: continue` discarded it).
+        return any(c.get("from") is not None and c.get("to") is not None
+                   for c in self.components.values())
 
 
 class EngineError(Exception):
