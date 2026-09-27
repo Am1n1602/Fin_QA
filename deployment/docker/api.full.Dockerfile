@@ -14,10 +14,11 @@
 # bakes in the COMPLETE 50-company dataset (not a curated subset) and INCLUDES the
 # vector index directory, so torch actually loads and hybrid (lexical + dense)
 # retrieval is available, matching the local dev stack. Needs real memory to match --
-# measured empirically (not guessed) at ~6-6.5GB resident for the full 261,479-chunk
-# corpus (see docs/roadmap-v2-restart.md's Google-Cloud-Run migration entry, 2026-09-27,
-# for the extrapolation this is based on -- re-measure with `docker stats` if the
-# corpus size changes materially, same discipline as the public demo variant).
+# estimated at ~6-6.5GB resident for the full 261,479-chunk corpus, extrapolated from
+# the public-demo curated-subset's measured chunk-count/memory ratio, NOT itself
+# confirmed with `docker stats` against this exact image (see deployment/README.md's
+# Cloud Run section). Deployed on Cloud Run at --memory 8Gi as headroom over that
+# estimate; re-measure for real before shrinking the allocation.
 FROM python:3.12-slim
 
 WORKDIR /app

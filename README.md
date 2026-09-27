@@ -1,16 +1,15 @@
 # Fin·QA
 
-**[Live demo](https://finqa-dashboard-public.onrender.com/)** (Disable ublock origin for this to load) — a free-tier deployment
-covering 5 of the NIFTY 50 companies (INFY, RELIANCE, M&M, ICICIBANK, ITC),
-lexical-only retrieval, LLM synthesis on by default. First load can take up to a minute
-— the backend sleeps after inactivity on Render's free tier. This is a **frozen,
-manually-built snapshot** (see [`deployment/README.md`](deployment/README.md#public-demo-render))
-— it doesn't auto-update with this repo, so it may lag behind the full 50-company
-dataset described below until someone rebuilds and pushes it (same section has the
-exact steps). Cut down from 11 companies on 2026-09-27 after that set (58,110 chunks)
-exceeded Render's 512MB free-tier memory limit — this session's historical XBRL/PDF
-backfill made every company's own document history far deeper than when the original
-demo was scoped, not something the company *count* alone controls.
+**[Live demo](https://am1n1602.me/finqa-v2)** — the full 50-company dataset, hybrid
+(lexical + dense) retrieval, LLM synthesis on by default. Runs on Google Cloud Run +
+Firebase Hosting, both scaled to zero: the first request after any idle period takes
+~15 seconds while the full 261k-chunk corpus loads into a fresh container — an accepted
+latency/cost trade-off, not a bug (detail in
+[`deployment/README.md`](deployment/README.md#public-demo-google-cloud-run--firebase-hosting)).
+This is a **frozen, manually-built snapshot**, not something that auto-updates with this
+repo — same section has the rebuild/redeploy steps. A smaller, free-tier fallback (5
+companies, lexical-only, on Render) also exists at
+[`deployment/README.md`](deployment/README.md#public-demo-render).
 
 Financial research API and dashboard for the NIFTY 50 universe. Ask it things like *"What
 was TCS's ROE?"*, *"Compare RELIANCE and ONGC on leverage"*, or *"Why did HCLTECH's
@@ -86,9 +85,9 @@ FastAPI ──► React/Vite dashboard (chat + per-company drill-down, claim-lev
   to recompute every calculation (a formula whose inputs aren't all pinned values is
   flagged `not_recomputable` rather than silently trusted) and reconciles every number in
   the prose against its source evidence; a claim that fails is downgraded, and an answer
-  that fails as a whole is abstained rather than shown. Measured on the 850-question
-  benchmark below: 99.7% of claims are fully grounded (every evidence id they cite
-  resolves to real, unflagged evidence).
+  that fails as a whole is abstained rather than shown. Measured on the current
+  51-question regression set below: 100% of cited claims are fully grounded (every
+  evidence id resolves to real, unflagged evidence).
 - **REST API and dashboard**, both pure transport over the same engine — neither computes
   anything on its own. The dashboard (`dashboard_v2/`) uses a sidebar layout and a
   navy-and-gold "ledger" theme, with light/dark modes and every claim rendered as an
@@ -126,7 +125,8 @@ finqa_v2/            The system described above.
 
 dashboard_v2/         React (Vite) frontend
 evaluation/           Internal benchmark, evaluators, baseline comparisons
-deployment/           Docker Compose stack (API, Postgres, dashboard, Prometheus, Grafana)
+deployment/           Docker Compose stack, plus the Render and Cloud Run/Firebase
+                      public-demo deploy targets
 
 archive/              NOT LIVE — an earlier iteration (data_analysis/, rag/, qa_router/,
                       llm_router/, orchestrator/, fin_llm_platform/, its own api/ and
@@ -317,41 +317,20 @@ BM25 term matches). A cross-encoder reranker measured a real win over this at pi
 (+0.13-0.18 Recall@5) but hasn't been re-validated at full scale and stays off by default.
 Raw report: [`evaluation/regression/baselines/deterministic_v2.json`](evaluation/regression/baselines/deterministic_v2.json).
 
-**Older, larger runs (pre-restart data, kept for context, not current):**
+**Older, larger, pre-restart runs — kept only for the one finding that doesn't need
+re-validating (the architecture, not the exact numbers), full tables in their raw
+reports:**
 
-**Full benchmark, deterministic path (0 LLM calls, all 850 questions), 2026-09-10:**
-
-| Check | Result | n checked |
-|---|---|---|
-| Numerical accuracy | 100% | 200 |
-| Claim groundedness (every cited evidence id is real) | 99.7% | 625 |
-| Correct abstention (declines what it can't answer) | 99.7% | 850 |
-| Overall correctness (keyword/tolerance match to reference) | 58.0% | 800 |
-
-Correctness lands well below the other three because it's the bluntest check — a strict
-keyword/tolerance match against one reference answer — and many causal/adversarial
-questions don't have a single "correct" phrasing to match, even when the underlying
-numbers and evidence are right. Raw report:
-[`evaluation/datasets/finqa_india/baseline_deterministic.json`](evaluation/datasets/finqa_india/baseline_deterministic.json).
-
-**204-question sample, Claude Sonnet via Anthropic, $3 cost cap, 2026-09-11** — four
-pipeline variants compared on the same questions:
-
-| Pipeline | Numerical accuracy | Correctness |
-|---|---|---|
-| A — LLM only, no tools | 0.0% | 32.3% |
-| B — vector RAG + LLM | 4.2% | 33.9% |
-| C — deterministic engine + LLM, no verification | 83.3% | 83.3% |
-| D — full Fin·QA (this system) | 91.7% | 68.2% |
-
-The gap that matters: an LLM answering from its own knowledge or from retrieved passages
-alone gets financial arithmetic right essentially never (0–4%) on this dataset; adding the
-deterministic engine — regardless of whether verification/reasoning sits on top — moves
-numerical accuracy to 83–92%. D's correctness score sitting below C's is a real, unresolved
-result, not a typo: D abstains far more often (98.8% vs 93.9% correct-abstention), which
-trades some judged-correct answers for refusing ones it's less sure of — plausible, but
-not something this sample size (n=204, one seed) proves either way. Raw report:
-[`evaluation/reports/baselines-claude-sonnet5.json`](evaluation/reports/baselines-claude-sonnet5.json).
+- Full 850-question deterministic run (2026-09-10, predates the historical-depth
+  restart): 100% numerical accuracy (n=200), 58.0% strict keyword/tolerance correctness
+  (n=800) — correctness undercounts real quality here, since causal/adversarial answers
+  rarely match one reference phrasing even when the numbers and evidence are right. Raw
+  report: [`baseline_deterministic.json`](evaluation/datasets/finqa_india/baseline_deterministic.json).
+- 204-question, four-pipeline comparison (Claude Sonnet, $3 cap, 2026-09-11): numerical
+  accuracy was 0.0–4.2% for an LLM with no deterministic engine (raw model knowledge or
+  vector RAG alone) versus 83–92% once the engine is in the loop, regardless of whether
+  verification sits on top — the categorical case for this architecture, not a number
+  expected to move. Raw report: [`baselines-claude-sonnet5.json`](evaluation/reports/baselines-claude-sonnet5.json).
 
 A regression gate compares any new run against a pinned baseline and fails on a metric
 regression beyond tolerance. See [`MANUAL.md §17`](MANUAL.md#17-evaluation-framework) for

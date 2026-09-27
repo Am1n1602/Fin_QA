@@ -150,10 +150,110 @@ FINQA_PG_URL=... python -m unittest finqa_v2.postgres.tests.test_postgres
 
 The gated test suite skips itself when `FINQA_PG_URL` is unset.
 
+## Public demo (Google Cloud Run + Firebase Hosting)
+
+The primary public deployment, at `https://am1n1602.me/finqa-v2` — the **full** 50-company
+dataset with real hybrid (lexical + dense) retrieval, not the curated lexical-only subset
+the Render target below is limited to. Exists because Render's free tier caps at 512MB and
+structurally cannot run this corpus with torch/faiss loaded (see the Render section for
+the measurements that proved it); Cloud Run's pay-per-use free tier has no such ceiling.
+
+**Two independent Cloud Run services, one domain, one path prefix:**
+
+| Service | Built from | Allocation | Serves |
+|---|---|---|---|
+| `finqa-api-public` | `deployment/docker/api.full.Dockerfile` | 8Gi / 2 vCPU | `/health`, `/api/v2/**` |
+| `finqa-dashboard-public` | `deployment/docker/dashboard.full.Dockerfile` | 256Mi / 1 vCPU | `/finqa-v2`, `/finqa-v2/**` |
+
+Cloud Run's own domain-mapping feature maps one whole (sub)domain to one service — it
+cannot split traffic by path across two services. Firebase Hosting can: `firebase.json`'s
+`rewrites` route by path to whichever Cloud Run service owns it, both fronted by the same
+`am1n1602.me` domain, so the browser never sees CORS at all (same origin throughout,
+`VITE_API_BASE_URL=""` at build time — identical same-origin pattern to the local
+nginx-proxy setup, just proxied by Firebase instead of nginx).
+
+**Three real, non-obvious bugs found wiring this up, each worth knowing before touching
+this config again:**
+
+1. **Firebase's `run` rewrite forwards the original request path unchanged — it does not
+   strip the matched prefix.** A request for `/finqa-v2/assets/foo.js` arrives at the
+   dashboard container as literally that path, but the Vite build's own output puts the
+   file at `/assets/foo.js` (`base: "/finqa-v2/"` in `vite.config.js` only rewrites the
+   URLs *inside* `index.html`, not the `dist/` folder layout). `nginx.standalone.conf`
+   uses `alias` (not `root`) on the `/finqa-v2/` location specifically to strip that
+   prefix back off before hitting the filesystem — get this wrong and every asset 404s
+   through nginx's own SPA fallback, so the browser tries to parse HTML as JavaScript
+   and the page loads blank with no visible error.
+2. **Firebase's glob matching does not treat `/finqa-v2` and `/finqa-v2/` as the same
+   source for a `rewrites` entry, but does for `redirects`.** `/finqa-v2/**` alone never
+   matches the bare no-trailing-slash path — it falls through to Firebase's own default
+   404 page instead of reaching either service. The fix is an explicit exact-path entry
+   in `rewrites` (`{ "source": "/finqa-v2", "run": {...dashboard...} }`), not a
+   `redirects` entry — a `redirects` rule for `"/finqa-v2" → "/finqa-v2/"` matched its
+   own destination too and infinite-looped.
+3. **nginx never sees the original `Host: am1n1602.me` through Firebase's proxy**, so its
+   default `absolute_redirect on` synthesizes any `return 301 /path` using the
+   container's own internal `*.run.app` hostname instead — silently bouncing users off
+   the public domain onto raw Cloud Run infrastructure. `nginx.standalone.conf` sets
+   `absolute_redirect off;` so `Location` headers stay relative and resolve against
+   whatever domain the browser actually requested.
+
+**Deploy flow:**
+
+```bash
+# 1. Stage the full (not curated) dataset -- gitignored, same staging-directory pattern
+#    as public_data/ below, since .dockerignore excludes database/data/ entirely.
+mkdir -p deployment/docker/full_data
+cp database/data/finqa_v2.db database/data/finqa_v2_bm25.pkl deployment/docker/full_data/
+cp -r database/data/finqa_v2_vec_minilm deployment/docker/full_data/finqa_v2_vec
+
+# 2. Build + push both images (Docker Hub, reusing the same login as the Render target).
+docker build -f deployment/docker/api.full.Dockerfile -t finqa-api-full .
+docker tag finqa-api-full am1n1602/finqa-api-full:latest && docker push am1n1602/finqa-api-full:latest
+
+docker build -f deployment/docker/dashboard.full.Dockerfile \
+  --build-arg VITE_API_BASE_URL= -t finqa-dashboard-full .
+docker tag finqa-dashboard-full am1n1602/finqa-dashboard-full:latest && docker push am1n1602/finqa-dashboard-full:latest
+
+# 3. Deploy both to Cloud Run. GROQ_API_KEY comes from Secret Manager, never a plain
+#    env var: `echo -n "$KEY" | gcloud secrets create groq-api-key --data-file=-`, then
+#    grant the default compute service account roles/secretmanager.secretAccessor on it.
+#
+#    Deploy by DIGEST, not the `:latest` tag: Cloud Run was observed caching a pulled
+#    image by tag across two `gcloud run deploy` calls with genuinely different pushed
+#    content -- the second deploy silently kept serving the first image. `docker push`
+#    prints the digest; use `image@sha256:...`, not `image:latest`, on every redeploy.
+gcloud run deploy finqa-api-public --image docker.io/am1n1602/finqa-api-full@sha256:<digest> \
+  --region us-central1 --memory 8Gi --cpu 2 --port 8010 \
+  --set-secrets GROQ_API_KEY=groq-api-key:latest --allow-unauthenticated
+
+gcloud run deploy finqa-dashboard-public --image docker.io/am1n1602/finqa-dashboard-full@sha256:<digest> \
+  --region us-central1 --memory 256Mi --port 80 --allow-unauthenticated
+
+# 4. Deploy the Firebase Hosting rewrites (firebase.json + .firebaserc at the repo root).
+firebase deploy --only hosting
+
+# 5. Custom domain: Firebase Console -> Hosting -> Add custom domain -> am1n1602.me.
+#    Two DNS records at the registrar, not one: a TXT record for ownership verification
+#    (shown first), then A records pointing at Firebase's hosting IP (shown after
+#    verification passes) -- replace any existing A records for the domain, don't add
+#    alongside them, or resolution becomes non-deterministic between the two targets.
+```
+
+**Cold starts are real and accepted, not fixed.** Both services scale to zero
+(`--min-instances` unset). Loading the full 261,479-chunk corpus (BM25 + vector index,
+torch/faiss) into a fresh container measured at 13-15 seconds before the first request
+after any idle period returns. `--min-instances=1` would eliminate this, but at
+8Gi/2 vCPU running continuously that's roughly 5.18M vCPU-seconds/month against Cloud
+Run's always-free 180,000 vCPU-seconds/month — real ongoing cost, not free-tier headroom.
+Decided to leave it: the same cold-start trade-off the Render target below already had.
+
 ## Public demo (Render)
 
-A separate, deliberately smaller deployment target for an actual public URL — two free
-Render services, defined in `render.yaml` at the repo root. This is **not** the same
+Smaller, free-tier fallback target, superseded by the Cloud Run deployment above as the
+primary public demo but still buildable/deployable as-is. A separate, deliberately
+smaller deployment for an actual public URL — two free Render services, defined in
+`render.yaml` at the repo root. This is **not** the same
 stack as the sections above: no Postgres, no MinIO, no Prometheus/Grafana, and no dense
 retrieval, all for the same underlying reason (a free host has no persistent disk and
 limited RAM, and this system's normal retrieval path pulls in torch).

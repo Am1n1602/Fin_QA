@@ -364,11 +364,15 @@ quality effect — a small recall gain in lexical-only mode, a small MRR *loss* 
 (the mode the API runs by default). Set `FINQA_V2_RERANK=1` if a larger evaluation run on
 your own data justifies the cost.
 
-**Why hybrid mode isn't lexical-only or vector-only by default.** Two independent
-evaluations disagree on which is better: an 18-case hand-built set favored lexical, a
-50-question benchmark slice favored hybrid slightly. Given genuinely inconclusive evidence,
-the default was deliberately left as `hybrid` rather than flipped for a speed gain that
-would trade away an unknown quality risk.
+**Why hybrid mode isn't lexical-only or vector-only by default.** This was genuinely
+inconclusive at pilot scale (an 18-case hand-built set favored lexical, a 50-question
+benchmark slice favored hybrid slightly) but is no longer: the current 51-question
+regression set, run against the full 261,479-chunk corpus (2026-09-26), shows lexical
+clearly ahead — 68.2% vs 50.0% Recall@5, 0.536 vs 0.510 MRR (see README's
+[Evaluation](README.md#evaluation) section for the full table). The code default is
+still `mode: str = "hybrid"` (`retriever.py`) — not yet revisited against this newer,
+clearer result, so treat "hybrid by default" as inherited, not re-justified by current
+evidence, until someone deliberately re-measures and changes it.
 
 Run `python -m finqa_v2.retrieval.evaluate` against `retrieval/eval_cases.jsonl` for
 Recall@k / MRR / p50-latency per mode on your own corpus before changing either default.
@@ -776,6 +780,25 @@ cd dashboard_v2 && npm install && npm run dev -- --port 5174
 Individual (non-Compose) runs default to SQLite; set `FINQA_PG_URL` to point at Postgres
 instead — no code change either way.
 
+### Public demo targets
+
+Two separate deployments exist purely to give the system a real public URL, both
+distinct from the stack above (no Postgres/MinIO/Prometheus, curated or full dataset
+baked into the image rather than a bind-mounted volume):
+
+- **Google Cloud Run + Firebase Hosting** (primary) — the full 50-company dataset with
+  real hybrid retrieval, at `https://am1n1602.me/finqa-v2`. Two Cloud Run services
+  (`finqa-api-public`, `finqa-dashboard-public`) fronted by one Firebase Hosting domain
+  doing path-based rewrites, since Cloud Run's own domain-mapping can't split one domain
+  across services by path.
+- **Render** (fallback) — a curated 5-company, lexical-only subset on Render's free
+  tier, `render.yaml` at the repo root.
+
+Full architecture, the deploy flow, and three real bugs found wiring up the Cloud Run
+target (a path-prefix mismatch through Firebase's proxy, a trailing-slash glob mismatch,
+and an internal-hostname redirect leak) are in
+[`deployment/README.md`](deployment/README.md#public-demo-google-cloud-run--firebase-hosting).
+
 ---
 
 ## 15. Observability
@@ -886,7 +909,11 @@ Four pipelines, scored identically, isolate what each architectural layer contri
 | C — Financial Engine + LLM | One direct engine call per named company, handed to the LLM to phrase. No documents, no verification. |
 | D — Full Fin·QA | The real pipeline: planner + engine + hybrid retrieval + calculator + reasoning + verification. |
 
-At n=204 real questions (Claude Sonnet, hard dollar cap): numeric accuracy is **0.0–4.2%
+Pre-restart data (2026-09-11, before the historical-depth backfill) — the categorical
+finding below has no reason to move with more historical data and hasn't been
+re-validated at full scale; treat the architecture conclusion as current, the exact
+percentages as historical. At n=204 real questions (Claude Sonnet, hard dollar cap):
+numeric accuracy is **0.0–4.2%
 without the deterministic engine (A, B) and 83–92% with it (C, D)** — the categorical
 finding replicates at scale and doesn't depend on which LLM answers. Groundedness (1.00)
 and abstention accuracy (0.988) are only meaningful for D, since A/B/C build no claim graph
@@ -901,18 +928,23 @@ to reproduce on your own key.
 These are architectural facts, not bugs — the system reports them as `limitations` in its
 own answers rather than working around them silently:
 
-- **Historical depth is shallow.** Structured financials only go back to FY2025 — India's
-  SEBI integrated-filing API (the only automated source of structured XBRL) doesn't serve
-  anything earlier. A question about an older fiscal year gets an honest "not available,"
-  never a substituted year's figure. `yoy == cagr` follows directly from this.
+- **Historical depth is real but uneven.** Most of the NIFTY 50 (48/50 companies) has
+  structured XBRL data back to FY2018-19 via NSE's older "Financial Results" API, not
+  just the most recent filings. Two exceptions: HDFCLIFE and SBILIFE (insurers) only
+  reach back to FY2025 — that NSE endpoint's own historical coverage for insurers is
+  genuinely shallower, not a gap in this pipeline. JIOFIN only reaches FY2024, matching
+  its real 2023 listing date. A question about a period before a company's own history
+  gets an honest "not available," never a substituted year's figure.
 - **Segment margin is never shown, only segment revenue.** The XBRL segment tags carry
   revenue and a segment name but no result/profit figure; the system doesn't approximate
   one.
 - **The consolidated/standalone toggle is manual, not automatic**, by design — an insurer
   that files only standalone won't have that basis silently substituted for "consolidated."
-- **Reranking and hybrid-vs-lexical retrieval mode are both defaulted based on measured,
-  genuinely inconclusive evidence at current corpus size** — see §6. Re-measure on a larger
-  or different corpus before assuming either default is optimal for your data.
+- **Reranking stays off by default on inconclusive pilot-scale evidence, not yet
+  re-measured at full corpus size** — see §6. Hybrid-vs-lexical retrieval mode is no
+  longer inconclusive at current (full 261,479-chunk) corpus scale — lexical clearly
+  leads — but the code default is still `hybrid`, inherited rather than re-justified;
+  see §6 for the current numbers before assuming either default is optimal for your data.
 - **PostgreSQL support is tested and complete, but running components individually (not
   via Docker Compose) defaults to SQLite.** Switching is one environment variable
   (`FINQA_PG_URL`), never a code change.
