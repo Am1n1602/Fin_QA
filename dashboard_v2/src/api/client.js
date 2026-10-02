@@ -13,7 +13,7 @@ export class ApiError extends Error {
   }
 }
 
-async function request(path, options = {}) {
+async function fetchJson(path, options) {
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: { "Content-Type": "application/json" },
     ...options,
@@ -27,9 +27,30 @@ async function request(path, options = {}) {
   }
 
   if (!res.ok) {
-    throw new ApiError(res.status, body?.error, body?.detail || res.statusText);
+    // FastAPI's own 422 validation errors send `detail` as a list of {loc, msg, type}
+    // objects (only this API's ApiError subclasses send a string) -- flatten it so
+    // anything that renders `error.detail` always gets text.
+    const detail = Array.isArray(body?.detail) ? body.detail.map((e) => e.msg).join("; ") : body?.detail;
+    throw new ApiError(res.status, body?.error, detail || res.statusText);
   }
   return body;
+}
+
+// Plain GET responses are static until the API restarts (see finqa_v2/api/cache.py), so
+// repeat visits to a tab (Financials/Ratios/Trends each fan out 4-9 calls) reuse the
+// first response. Skipped for /health (a live status), POSTs, and any call carrying an
+// AbortSignal (those are the slow LLM-backed ones, which must stay individually cancellable).
+const getCache = new Map();
+
+function request(path, options = {}) {
+  const cacheable = !options.method && !options.signal && path !== "/health";
+  if (cacheable && getCache.has(path)) return getCache.get(path);
+  const pending = fetchJson(path, options);
+  if (cacheable) {
+    getCache.set(path, pending);
+    pending.catch(() => getCache.delete(path));
+  }
+  return pending;
 }
 
 function qs(params = {}) {
@@ -39,7 +60,7 @@ function qs(params = {}) {
 }
 
 export const api = {
-  health: () => request("/health"),
+  health: ({ signal } = {}) => request("/health", { signal }),
 
   listCompanies: ({ index = "NIFTY 50" } = {}) => request(`/api/v2/companies${qs({ index })}`),
   getCompany: (ticker) => request(`/api/v2/companies/${ticker}`),
@@ -71,8 +92,8 @@ export const api = {
   getDocumentSection: (ticker, section, { financialYear, limit } = {}) =>
     request(`/api/v2/companies/${ticker}/documents/${section}${qs({ financial_year: financialYear, limit })}`),
 
-  getResearch: (ticker, { useLlm = true } = {}) =>
-    request(`/api/v2/companies/${ticker}/research${qs({ use_llm: useLlm })}`),
+  getResearch: (ticker, { useLlm = true, signal } = {}) =>
+    request(`/api/v2/companies/${ticker}/research${qs({ use_llm: useLlm })}`, { signal }),
   askQuestion: (question, { useLlm = true } = {}) =>
     request("/api/v2/qa", { method: "POST", body: JSON.stringify({ question, use_llm: useLlm }) }),
 };

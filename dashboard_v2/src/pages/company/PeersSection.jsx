@@ -21,10 +21,9 @@ export default function PeersSection({ ticker, basis = "consolidated" }) {
 
   const tickers = peersData ? [ticker, ...peersData.peers.map((p) => p.ticker)] : [];
   const { data: ranking, loading: rankLoading, error: rankError } = useApi(
-    // period pinned to FY2026 (matches Ratios/Trends) -- compare_companies defaults to
-    // "latest", which for quarterly filers resolves to the latest QUARTER, not the annual
-    // period, understating an annual ratio like ROE by roughly 4x.
-    () => (tickers.length > 1 ? api.getRankings({ metric, tickers, period: "FY2026", basis }) : Promise.resolve(null)),
+    // period omitted: the API defaults to the latest ANNUAL period (not a quarter, which
+    // would understate an annual ratio like ROE by roughly 4x).
+    () => (tickers.length > 1 ? api.getRankings({ metric, tickers, basis }) : Promise.resolve(null)),
     [ticker, metric, peersData, basis]
   );
 
@@ -74,7 +73,7 @@ export default function PeersSection({ ticker, basis = "consolidated" }) {
         </table>
       )}
       {ranking?.missing?.length > 0 && (
-        <p className="muted">No {metric} for: {ranking.missing.join(", ")}.</p>
+        <p className="muted">No {metric} for: {ranking.missing.map((m) => m.ticker).join(", ")}.</p>
       )}
     </div>
   );

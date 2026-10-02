@@ -18,9 +18,10 @@ export const LAKH = 1e5;
 export function formatCrore(value, { decimals = 2, symbol = "₹" } = {}) {
   if (typeof value !== "number" || !Number.isFinite(value)) return String(value);
   const abs = Math.abs(value);
-  if (abs >= CRORE) return `${symbol}${formatIndianNumber(value / CRORE, decimals)} Cr`;
-  if (abs >= LAKH) return `${symbol}${formatIndianNumber(value / LAKH, decimals)} L`;
-  return `${symbol}${formatIndianNumber(value, decimals)}`;
+  const sign = value < 0 ? "-" : ""; // before the symbol ("-₹25 L"), not inside it ("₹-25 L")
+  if (abs >= CRORE) return `${sign}${symbol}${formatIndianNumber(abs / CRORE, decimals)} Cr`;
+  if (abs >= LAKH) return `${sign}${symbol}${formatIndianNumber(abs / LAKH, decimals)} L`;
+  return `${sign}${symbol}${formatIndianNumber(abs, decimals)}`;
 }
 
 const UNIT_SUFFIX = { pct: "%", pp: " pp", x: "x" };

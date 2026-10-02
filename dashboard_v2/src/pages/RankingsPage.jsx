@@ -25,9 +25,8 @@ export default function RankingsPage() {
 
   const tickers = selected.length >= 2 ? selected : (companiesData?.members || []).slice(0, 15).map((c) => c.ticker);
   const { data: ranking, loading, error } = useApi(
-    // period pinned to FY2026 -- compare_companies defaults to "latest", which for
-    // quarterly filers resolves to the latest QUARTER, not the annual period.
-    () => (tickers.length >= 2 ? api.getRankings({ metric, tickers, period: "FY2026" }) : Promise.resolve(null)),
+    // period omitted: the API defaults to the latest ANNUAL period (not a quarter).
+    () => (tickers.length >= 2 ? api.getRankings({ metric, tickers }) : Promise.resolve(null)),
     [metric, tickers.join(",")]
   );
 
@@ -83,6 +82,9 @@ export default function RankingsPage() {
             ))}
         </div>
       </details>
+      {selected.length === 1 && (
+        <p className="muted">Select at least 2 companies to compare a custom set &mdash; showing the default 15 until then.</p>
+      )}
 
       {loading && <StatusBanner loading loadingText="Ranking..." />}
       {error && <StatusBanner error={error} />}

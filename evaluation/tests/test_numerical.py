@@ -19,6 +19,16 @@ class ExtractFigures(unittest.TestCase):
     def test_x_family(self):
         self.assertEqual(extract_figures("D/E stood at 0.34x at year end", "x"), [0.34])
 
+    def test_hyphenated_range_is_not_negative(self):
+        self.assertEqual(extract_figures("expected between 10-12%.", "pct"), [12.0])
+        self.assertEqual(extract_figures("fell -3.5% last year", "pct"), [-3.5])
+
+    def test_scaled_inr_not_double_counted(self):
+        self.assertEqual(extract_figures("PAT was Rs 1,500 crore", "inr"), [1.5e10])
+
+    def test_figures_in_text_order(self):
+        self.assertEqual(extract_figures("25.0% in FY2026 vs 31.6% in FY2025", "pct"), [25.0, 31.6])
+
     def test_family_map(self):
         self.assertEqual(unit_family("%"), "pct")
         self.assertEqual(unit_family("x"), "x")
@@ -43,6 +53,17 @@ class Numerical(unittest.TestCase):
     def test_fail_out_of_tolerance(self):
         r = self.ev.score(self._rec(), {"response": {"answer": "ROE was 25.0 pct."}})
         self.assertEqual(r["verdict"], "fail")
+
+    def test_fail_when_only_a_secondary_figure_matches(self):
+        r = self.ev.score(self._rec(), {"response": {"answer": "ROE was 25.0% in FY2026, versus 31.6% in FY2025."}})
+        self.assertEqual(r["verdict"], "fail")
+
+    def test_headline_sentence_wins_over_component_figures(self):
+        rec = self._rec(reference_value=98301700000.0, reference_unit="INR",
+                        gold_spec={"name": "ebit"})
+        ans = ("X pbt before exceptional in FY2027 Q1 was 46,257,200,000.00 INR. "
+               "X ebit in FY2027 Q1 was 98,301,700,000.00 INR.")
+        self.assertEqual(self.ev.score(rec, {"response": {"answer": ans}})["verdict"], "pass")
 
     def test_fail_when_no_figure(self):
         r = self.ev.score(self._rec(), {"response": {"answer": "It improved a lot."}})

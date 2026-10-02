@@ -19,11 +19,12 @@ const VALUATION = [
   { key: "dividend_yield", label: "Dividend Yield" },
 ];
 
-export default function RatiosSection({ ticker, period = "FY2026", basis = "consolidated" }) {
+export default function RatiosSection({ ticker, basis = "consolidated" }) {
   const all = [...RATIOS, ...VALUATION];
+  // No `period`: the API defaults to the latest annual period; each tile shows the one it used.
   const { data, loading, error } = useApi(
-    () => Promise.all(all.map((r) => api.getRatio(ticker, { ratio: r.key, period, basis }))),
-    [ticker, period, basis]
+    () => Promise.all(all.map((r) => api.getRatio(ticker, { ratio: r.key, basis }))),
+    [ticker, basis]
   );
 
   if (loading) return <StatusBanner loading loadingText="Loading ratios..." />;
@@ -31,7 +32,7 @@ export default function RatiosSection({ ticker, period = "FY2026", basis = "cons
 
   return (
     <div>
-      <p className="section-note">Ratios and valuation multiples, period {period}, {basis} basis.</p>
+      <p className="section-note">Ratios and valuation multiples, latest annual period, {basis} basis.</p>
       <div className="stat-grid">
         {data.map((res, i) => (
           <StatTile

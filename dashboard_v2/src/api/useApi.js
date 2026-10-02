@@ -7,10 +7,14 @@ export function useApi(fetcher, deps = []) {
 
   useEffect(() => {
     let cancelled = false;
+    // fetcher receives the AbortSignal so slow calls (e.g. LLM-backed research) can opt in
+    // to being cancelled when deps change or the component unmounts.
+    const controller = new AbortController();
     setLoading(true);
     setError(null);
+    setData(null); // else the previous request's result keeps rendering under the new deps
 
-    fetcher()
+    fetcher(controller.signal)
       .then((result) => {
         if (!cancelled) setData(result);
       })
@@ -23,6 +27,7 @@ export function useApi(fetcher, deps = []) {
 
     return () => {
       cancelled = true;
+      controller.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);

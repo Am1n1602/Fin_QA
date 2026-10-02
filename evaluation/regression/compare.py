@@ -20,6 +20,7 @@ TRACKED: list[tuple[str, str, float, float]] = [
     ("citation.mean_f1", "up", 0.05, 0.0),
     ("abstention.accuracy", "up", 0.02, 0.0),
     ("unsupported_claims.mean_rate", "down", 0.02, 0.0),
+    ("errors", "down", 0.0, 0.0),
     ("operations.latency_ms.p50", "down", 1.0, 0.25),
     ("operations.latency_ms.p95", "down", 1.0, 0.30),
     ("operations.llm.tokens_per_question", "down", 5.0, 0.15),
@@ -44,6 +45,8 @@ def extract_metrics(report: dict) -> dict[str, float]:
     out: dict[str, float] = {}
     if im.get("checked"):
         out["intent_match_rate"] = round(im["passed"] / im["checked"], 4)
+    if isinstance(agg.get("errors"), int):
+        out["errors"] = agg["errors"]
     for key in ("numerical.accuracy", "correctness.accuracy",
                 "groundedness.mean_grounded_rate", "citation.mean_f1",
                 "abstention.accuracy", "unsupported_claims.mean_rate",
@@ -61,10 +64,12 @@ def extract_metrics(report: dict) -> dict[str, float]:
 
 def compare(baseline: dict, candidate: dict) -> dict:
     b, c = extract_metrics(baseline), extract_metrics(candidate)
-    regressions, improvements, unchanged, missing = [], [], [], []
+    regressions, improvements, unchanged, missing, dropped = [], [], [], [], []
     for key, direction, abs_slack, rel_slack in TRACKED:
         if key not in b or key not in c:
             missing.append(key)
+            if key in b:  # a metric the baseline had but the candidate lost is a regression
+                dropped.append(key)
             continue
         bv, cv = b[key], c[key]
         delta = cv - bv
@@ -75,8 +80,9 @@ def compare(baseline: dict, candidate: dict) -> dict:
                "delta": round(delta, 4), "slack": round(slack, 4), "direction": direction}
         (regressions if worse else improvements if better else unchanged).append(row)
     return {
-        "ok": not regressions,
+        "ok": not regressions and not dropped,
         "regressions": regressions,
+        "dropped": dropped,
         "improvements": improvements,
         "unchanged": unchanged,
         "not_in_both": missing,
@@ -122,6 +128,8 @@ def main() -> int:
     for r in diff["improvements"]:
         print(_fmt(r))
     print(f"unchanged: {len(diff['unchanged'])}   not-in-both: {diff['not_in_both']}")
+    if diff["dropped"]:
+        print(f"dropped from candidate (counted as regression): {diff['dropped']}")
     print(f"\n{'OK — no regression' if diff['ok'] else 'REGRESSION'}")
     return 0 if diff["ok"] else 1
 

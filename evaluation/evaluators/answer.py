@@ -45,19 +45,19 @@ class GroundednessEvaluator:
         }
 
 
-def _src_matches(ref: dict[str, Any], got: dict[str, Any]) -> bool:
+def _src_matches(ref: dict[str, Any], got: dict[str, Any],
+                 companies: list[str] | None = None) -> bool:
+    got_co = (got.get("company") or "").strip().upper()
+    if companies and got_co and got_co not in {c.strip().upper() for c in companies}:
+        return False  # a right-section chunk from the wrong company is not a correct citation
     r_sec = (ref.get("section") or "").strip().lower()
     g_sec = (got.get("section") or "").strip().lower()
     if r_sec and g_sec and not (r_sec in g_sec or g_sec in r_sec):
         return False
     r_doc = (ref.get("document") or "").strip().lower()
     g_title = (got.get("title") or "").strip().lower()
-    if r_doc and g_title and not any(tok in g_title for tok in r_doc.split() if len(tok) > 3):
-        # allow section-only matches; only reject when a doc name was given and clearly differs
-        if r_sec and g_sec:
-            pass
-        else:
-            return False
+    if r_doc and g_title and not any(tok in g_title for tok in r_doc.split() if len(tok) >= 3):
+        return False
     r_page = ref.get("page")
     g_page, g_end = got.get("page"), got.get("page_end") or got.get("page")
     if r_page is not None and g_page is not None:
@@ -77,8 +77,9 @@ class CitationEvaluator:
         if not refs:
             return {"metrics": {"precision": None, "recall": None, "n_got": len(got)},
                     "verdict": "na", "detail": "no reference citations"}
-        matched_ref = [r for r in refs if any(_src_matches(r, g) for g in got)]
-        matched_got = [g for g in got if any(_src_matches(r, g) for r in refs)]
+        cos = record.get("companies")
+        matched_ref = [r for r in refs if any(_src_matches(r, g, cos) for g in got)]
+        matched_got = [g for g in got if any(_src_matches(r, g, cos) for r in refs)]
         precision = len(matched_got) / len(got) if got else 0.0
         recall = len(matched_ref) / len(refs)
         f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0

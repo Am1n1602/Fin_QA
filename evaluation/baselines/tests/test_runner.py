@@ -78,7 +78,7 @@ class Cli(unittest.TestCase):
             rep = Path(td) / "mini.json"
             out = subprocess.run(
                 [sys.executable, "-m", "evaluation.baselines.runner", "--dataset", str(DATASET),
-                 "--sample", "8", "--label", "test-mini", "--out", str(rep)],
+                 "--sample", "8", "--no-retriever", "--label", "test-mini", "--out", str(rep)],
                 cwd=str(ROOT), capture_output=True, text=True, timeout=300)
             self.assertEqual(out.returncode, 0, out.stderr)
             data = json.loads(rep.read_text())

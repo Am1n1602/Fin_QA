@@ -1,6 +1,6 @@
 import React from "react";
 import { formatValue } from "../utils/format.js";
-import { renderAnswerHtml, reformatCurrencyNumbers } from "../utils/answerFormat.js";
+import { parseBlocks, reformatCurrencyNumbers } from "../utils/answerFormat.js";
 
 /* The v2 differentiator (roadmap §24/§32): every claim in an answer traces back to the
    exact evidence, calculation, and filing passage that supports it. `claims` here is
@@ -184,11 +184,40 @@ export function VerificationNote({ verification }) {
   );
 }
 
+// `parts` alternates plain / **bold** text (see inlineParts in utils/answerFormat.js).
+function Inline({ parts }) {
+  return parts.map((p, i) => (i % 2 ? <strong key={i}>{p}</strong> : p));
+}
+
+function AnswerText({ text }) {
+  return parseBlocks(text).map((block, i) => {
+    if (!block.items) {
+      return (
+        <p key={i} className="answer-paragraph">
+          <Inline parts={block.parts} />
+        </p>
+      );
+    }
+    const List = block.ordered ? "ol" : "ul";
+    return (
+      <List key={i} className="answer-list" start={block.start}>
+        {block.items.map((parts, j) => (
+          <li key={j}>
+            <Inline parts={parts} />
+          </li>
+        ))}
+      </List>
+    );
+  });
+}
+
 export default function EvidenceAnswer({ result, contextLabel }) {
   const { response, claim_graph: claimGraph } = result;
   return (
     <div className="evidence-answer" title={`Overall confidence: ${Math.round((response.confidence ?? 0) * 100)}%`}>
-      <div className="answer-text" dangerouslySetInnerHTML={{ __html: renderAnswerHtml(response.answer) }} />
+      <div className="answer-text">
+        <AnswerText text={response.answer} />
+      </div>
       <VerificationNote verification={result.verification} />
       <LimitationsList items={response.limitations} />
       <ClaimList claims={claimGraph?.claims} contextLabel={contextLabel} />

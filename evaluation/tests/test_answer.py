@@ -66,6 +66,16 @@ class Citation(unittest.TestCase):
     def test_na_without_reference(self):
         self.assertEqual(self.ev.score({}, _result())["verdict"], "na")
 
+    def test_wrong_company_section_is_not_a_match(self):
+        rec = {"companies": ["TCS"], "reference_sources": [{"section": "risk_factors"}]}
+        res = _result(sources=[{"section": "risk_factors", "company": "INFY"}])
+        self.assertEqual(self.ev.score(rec, res)["metrics"]["recall"], 0.0)
+
+    def test_short_document_name_matches(self):
+        rec = {"reference_sources": [{"document": "TCS"}]}
+        res = _result(sources=[{"title": "TCS Annual Report"}])
+        self.assertEqual(self.ev.score(rec, res)["metrics"]["recall"], 1.0)
+
 
 class Correctness(unittest.TestCase):
     ev = CorrectnessEvaluator()

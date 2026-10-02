@@ -163,7 +163,7 @@ def main() -> int:
                 error = repr(e)
                 result = {"response": {"answer": "", "claims": [], "evidence": [],
                                        "calculations": [], "sources": [], "confidence": 0.0},
-                          "plan": {}, "trace": [], "latency_ms": 0.0}
+                          "plan": {}, "trace": [], "latency_ms": None}  # not a real timing
             after = dict(provider.usage) if provider is not None else {}
             llm_delta = {k: after.get(k, 0) - before.get(k, 0)
                          for k in ("prompt_tokens", "completion_tokens", "total_tokens")}
@@ -194,11 +194,14 @@ def main() -> int:
         retrieval_block = {"skipped": "disabled"}
         if not args.skip_retrieval_eval and not args.no_retriever and args.bm25.exists():
             modes = ("lexical", "vector", "hybrid") if args.vector_dir.exists() else ("lexical",)
-            retrieval_block = RetrievalEvaluator(
-                v2_db=args.v2_db, bm25=args.bm25, vector_dir=args.vector_dir,
-                cases_path=_RETRIEVAL_CASES, modes=modes, filter_company=True,
-                use_reranker=args.rerank,
-            ).run(repos)
+            try:  # the answered rows (maybe paid LLM calls) must survive a retrieval-eval failure
+                retrieval_block = RetrievalEvaluator(
+                    v2_db=args.v2_db, bm25=args.bm25, vector_dir=args.vector_dir,
+                    cases_path=_RETRIEVAL_CASES, modes=modes, filter_company=True,
+                    use_reranker=args.rerank, retriever=retriever,
+                ).run(repos)
+            except Exception as e:  # noqa: BLE001
+                retrieval_block = {"skipped": f"retrieval eval failed: {e!r}"}
 
         intent_checked = [r for r in rows if r["intent_verdict"] in ("pass", "fail")]
         aggregates = {
@@ -264,8 +267,8 @@ def main() -> int:
     print(f"  unsupported rate : {a['unsupported_claims']['mean_rate']}")
     print(f"  latency p50/p95  : {a['operations']['latency_ms']['p50']} / {a['operations']['latency_ms']['p95']} ms")
     print(f"  llm tokens/q     : {a['operations']['llm']['tokens_per_question']}  cost/q ${a['operations']['llm']['est_cost_usd_per_question']}")
-    if isinstance(report["retrieval"], dict) and "lexical" in report["retrieval"]:
-        lx = report["retrieval"]["lexical"]
+    lx = report["retrieval"].get("lexical", {})
+    if "recall@5" in lx:  # absent when the mode was skipped
         print(f"  retrieval(lex)   : R@5 {lx['recall@5']}  MRR {lx['mrr']}  nDCG@10 {lx['ndcg@10']}")
     print("=" * 64)
     return 0

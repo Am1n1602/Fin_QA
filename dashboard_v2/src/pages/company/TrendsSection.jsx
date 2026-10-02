@@ -10,18 +10,16 @@ const GROWTH_METRICS = [
   { key: "net_profit", label: "Net Profit Growth (YoY)" },
 ];
 
-export default function TrendsSection({ ticker, period = "FY2026", basis = "consolidated" }) {
+export default function TrendsSection({ ticker, basis = "consolidated" }) {
   const { data, loading, error } = useApi(
     () =>
       Promise.all([
         ...GROWTH_METRICS.map((m) => api.getGrowth(ticker, { metric: m.key, kind: "yoy", basis })),
         api.getCagr(ticker, { metric: "revenue", basis }),
-        // must match the Ratios tab's period -- decompose defaults to "latest", which for a
-        // company with quarterly filings resolves to the latest QUARTER, not the latest
-        // annual period, giving an unannualised (and much smaller) ROE breakdown otherwise.
-        api.decompose(ticker, { metric: "roe", period, basis }),
+        // no `period`: the API defaults to the latest ANNUAL period, same as the Ratios tab.
+        api.decompose(ticker, { metric: "roe", basis }),
       ]),
-    [ticker, period, basis]
+    [ticker, basis]
   );
 
   if (loading) return <StatusBanner loading loadingText="Loading trends..." />;
@@ -47,7 +45,7 @@ export default function TrendsSection({ ticker, period = "FY2026", basis = "cons
 
       {Object.keys(factors).length > 0 && (
         <>
-          <h2 className="subsection-title">DuPont decomposition — ROE {period}</h2>
+          <h2 className="subsection-title">DuPont decomposition — ROE {dupont.period}</h2>
           <table className="data-table">
             <thead>
               <tr>

@@ -12,9 +12,11 @@ from finqa_v2.retrieval.evaluate import _relevant, build_retriever, load_cases
 _KS = (1, 3, 5, 10)
 
 
-def _ndcg(rels: list[int], k: int) -> float:
+def _ndcg(rels: list[int], k: int, n_relevant: int = 0) -> float:
+    """`n_relevant`: how many relevant chunks exist in total (known for gold_chunk_ids cases);
+    the ideal ranking then counts the ones the retriever missed, not just those it returned."""
     dcg = sum(r / math.log2(i + 2) for i, r in enumerate(rels[:k]))
-    ideal = sorted(rels, reverse=True)
+    ideal = sorted(rels + [1] * max(0, n_relevant - sum(rels)), reverse=True)
     idcg = sum(r / math.log2(i + 2) for i, r in enumerate(ideal[:k]))
     return dcg / idcg if idcg else 0.0
 
@@ -37,14 +39,15 @@ def score_retrieval(retriever, repos, cases: list[dict], *, mode: str = "lexical
                                   mode=mode, filters=filters, rerank=True)
         lat.append((time.perf_counter() - t0) * 1000)
         rels = [1 if _relevant(h.chunk, case, cid) else 0 for h in hits]
+        n_rel = len(case.get("gold_chunk_ids") or [])
         first = next((i + 1 for i, r in enumerate(rels) if r), None)
         for k in _KS:
             if first is not None and first <= k:
                 hit_at[k] += 1
-            ndcg_at[k].append(_ndcg(rels, k))
+            ndcg_at[k].append(_ndcg(rels, k, n_rel))
         rr_sum += (1.0 / first) if first else 0.0
         per_case.append({"id": case["id"], "first_relevant_rank": first,
-                         "ndcg@10": round(_ndcg(rels, 10), 4)})
+                         "ndcg@10": round(_ndcg(rels, 10, n_rel), 4)})
     n = len(cases)
     return {
         "mode": mode, "n": n, "company_filter": filter_company,
@@ -64,7 +67,8 @@ class RetrievalEvaluator:
 
     def __init__(self, *, v2_db: Path, bm25: Path, vector_dir: Path,
                  cases_path: Path, modes=("lexical",), filter_company: bool = True,
-                 use_reranker: bool = False) -> None:
+                 use_reranker: bool = False, retriever=None) -> None:
+        self.retriever = retriever  # reuse the caller's retriever instead of loading BM25/vector again
         self.v2_db, self.bm25, self.vector_dir = v2_db, bm25, vector_dir
         self.cases_path, self.modes, self.filter_company = cases_path, tuple(modes), filter_company
         self.use_reranker = use_reranker
@@ -73,8 +77,10 @@ class RetrievalEvaluator:
         if not self.cases_path.exists():
             return {"skipped": f"cases file not found: {self.cases_path}"}
         cases = load_cases(self.cases_path)
-        retriever = build_retriever(repos, bm25_path=self.bm25, vector_dir=self.vector_dir,
-                                    use_reranker=self.use_reranker)
+        retriever = self.retriever
+        if retriever is None:
+            retriever = build_retriever(repos, bm25_path=self.bm25, vector_dir=self.vector_dir,
+                                        use_reranker=self.use_reranker)
         out: dict[str, Any] = {"cases": len(cases), "modes_available": list(retriever.modes)}
         for mode in self.modes:
             out[mode] = score_retrieval(retriever, repos, cases, mode=mode,

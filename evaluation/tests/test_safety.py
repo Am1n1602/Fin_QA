@@ -49,13 +49,29 @@ class Abstention(unittest.TestCase):
         self.assertEqual(r["verdict"], "fail")
 
     def test_warn_on_over_abstention(self):
-        r = self.ev.score({"should_abstain": False}, _result("no evidence"))
+        r = self.ev.score({"should_abstain": False}, _result("no evidence was found"))
         self.assertEqual(r["verdict"], "warn")
+
+    def test_empty_answer_is_not_an_abstention(self):
+        self.assertFalse(did_abstain(_result("")))
+        self.assertEqual(self.ev.score({"should_abstain": True}, _result(""))["verdict"], "fail")
+
+    def test_ordinary_answer_mentioning_evidence_is_not_an_abstention(self):
+        self.assertFalse(did_abstain(_result("There is no evidence of margin decline; ROE was 25.0%.")))
 
     def test_pass_when_answerable_and_answered(self):
         r = self.ev.score({"should_abstain": False},
                           _result("TCS revenue was 100.", claims=[{"status": "supported"}]))
         self.assertEqual(r["verdict"], "pass")
+
+
+class V1Abstention(unittest.TestCase):
+    def test_crashed_call_is_not_an_abstention(self):
+        from evaluation.evaluators import abstention_verdict
+
+        rec = {"should_abstain": True, "answer_type": "abstain"}
+        out = {"intent": "ERROR", "answer": "", "sources": []}
+        self.assertEqual(abstention_verdict(rec, out)["verdict"], "fail")
 
 
 class Unsupported(unittest.TestCase):

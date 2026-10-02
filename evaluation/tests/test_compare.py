@@ -53,6 +53,16 @@ class Compare(unittest.TestCase):
             operations={"latency_ms": {"p50": 30.0, "p95": 40.0},
                         "llm": {"tokens_per_question": 3000}}))["ok"])
 
+    def test_metric_dropped_from_candidate_is_a_regression(self):
+        cand = _report(numerical={"accuracy": None})
+        d = compare(_report(), cand)
+        self.assertFalse(d["ok"])
+        self.assertIn("numerical.accuracy", d["dropped"])
+
+    def test_error_count_is_gated(self):
+        base, cand = _report(errors=0), _report(errors=3)
+        self.assertFalse(compare(base, cand)["ok"])
+
     def test_improvement_detected(self):
         d = compare(_report(), _report(citation={"mean_f1": 0.9}))
         self.assertTrue(d["ok"])

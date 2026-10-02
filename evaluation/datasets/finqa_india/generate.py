@@ -184,7 +184,6 @@ def gen_why_how(engine, tickers, rng) -> tuple[list[dict], list[dict]]:
     why, how = [], []
     for t in tickers:
         for mname, phrase in T.CHANGE_RATIOS.items():
-            g = engine.get_growth(t, mname if mname in ("revenue", "net_profit") else "revenue", kind="yoy")
             # direction from the ratio's own two-endpoint move where possible
             a = engine.get_ratio(t, mname, period=_PRIOR).value
             b = engine.get_ratio(t, mname, period=_ANNUAL).value

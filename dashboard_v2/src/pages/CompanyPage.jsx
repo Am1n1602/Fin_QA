@@ -67,12 +67,15 @@ export default function CompanyPage() {
           </p>
 
           <div className="tab-bar">
-            <div className="tab-row" role="tablist" aria-label="Company sections">
+            {/* Plain toggle buttons (aria-pressed), not role="tab"/"radio": those roles
+                promise arrow-key navigation, roving tabindex and aria-controls wiring that
+                this page doesn't implement. */}
+            <div className="tab-row" role="group" aria-label="Company sections">
               {TABS.map((t) => (
                 <button
                   key={t.key}
-                  role="tab"
-                  aria-selected={tab === t.key}
+                  type="button"
+                  aria-pressed={tab === t.key}
                   className={"tab-button" + (tab === t.key ? " tab-button-active" : "")}
                   onClick={() => setTab(t.key)}
                 >
@@ -80,16 +83,12 @@ export default function CompanyPage() {
                 </button>
               ))}
             </div>
-            {/* Sibling of the tablist, not a child -- role="tablist" may only contain
-                role="tab" elements (WAI-ARIA required-children; axe-core:
-                aria-required-children). */}
-            <div className="basis-toggle" role="radiogroup" aria-label="Reporting basis">
+            <div className="basis-toggle" role="group" aria-label="Reporting basis">
               {["consolidated", "standalone"].map((b) => (
                 <button
                   key={b}
                   type="button"
-                  role="radio"
-                  aria-checked={basis === b}
+                  aria-pressed={basis === b}
                   className={"basis-toggle-option" + (basis === b ? " basis-toggle-option-active" : "")}
                   onClick={() => setBasis(b)}
                   title={
@@ -104,7 +103,7 @@ export default function CompanyPage() {
             </div>
           </div>
 
-          <div role="tabpanel" className="tab-panel">
+          <div className="tab-panel">
             {ActiveSection && <ActiveSection ticker={company.ticker} basis={basis} />}
           </div>
         </>

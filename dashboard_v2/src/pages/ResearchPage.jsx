@@ -14,7 +14,7 @@ export default function ResearchPage() {
   const [useLlm, setUseLlm] = useState(true);
 
   const { data: report, loading, error } = useApi(
-    () => (ticker ? api.getResearch(ticker, { useLlm }) : Promise.resolve(null)),
+    (signal) => (ticker ? api.getResearch(ticker, { useLlm, signal }) : Promise.resolve(null)),
     [ticker, useLlm]
   );
 

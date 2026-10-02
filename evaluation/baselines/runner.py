@@ -154,6 +154,9 @@ def main() -> int:
     ap.add_argument("--baselines", default=",".join(BASELINES))
     ap.add_argument("--label", default="baselines")
     ap.add_argument("--out", type=Path, default=None)
+    ap.add_argument("--no-retriever", action="store_true",
+                    help="skip wiring BM25/vector (Baseline B then has nothing to retrieve)")
+    ap.add_argument("--rerank", action="store_true", help="wire the real cross-encoder reranker (as the API does)")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--v2-db", type=Path, default=_DEFAULT_DB)
     ap.add_argument("--bm25", type=Path, default=_DEFAULT_BM25)
@@ -165,6 +168,9 @@ def main() -> int:
     records = load_dataset(args.dataset)
     sample = stratified_sample(records, args.sample, args.sample_seed)
     names = [n.strip() for n in args.baselines.split(",") if n.strip()]
+    unknown = [n for n in names if n not in BASELINES]
+    if unknown:
+        raise SystemExit(f"unknown baseline(s) {unknown}; choose from {list(BASELINES)}")
 
     if args.dry_run:
         by_cat: dict[str, int] = {}
@@ -186,14 +192,20 @@ def main() -> int:
     repos = SqliteRepositories(args.v2_db)
     try:
         engine = FinancialEngine(repos)
-        retriever = build_retriever(repos, bm25_path=args.bm25, vector_dir=args.vector_dir)
-        if "vector" not in retriever.modes:
+        retriever = None
+        if not args.no_retriever and args.bm25.exists():  # never trigger a full BM25 rebuild here
+            retriever = build_retriever(repos, bm25_path=args.bm25, vector_dir=args.vector_dir,
+                                        use_reranker=args.rerank)
+        if retriever is None or "vector" not in retriever.modes:
             print("WARNING: no vector index wired -- Baseline B will retrieve nothing "
-                 f"(modes={retriever.modes})")
+                 f"(modes={retriever.modes if retriever else None})")
 
         cap_for = budget_split(names, args.total_cost_usd, args.budget_split)
 
+        groq_budget = None  # one RateBudget shared by every groq baseline (the free tier is shared)
+
         def _make_provider(name: str):
+            nonlocal groq_budget
             if not args.llm:
                 return None
             if args.provider == "anthropic":
@@ -205,7 +217,9 @@ def main() -> int:
             from finqa_v2.llm import RateBudget, provider_from_env
 
             model = args.model or "openai/gpt-oss-120b"
-            return provider_from_env(model=model, budget=RateBudget.from_env())
+            if groq_budget is None:
+                groq_budget = RateBudget.from_env()
+            return provider_from_env(model=model, budget=groq_budget)
 
         if args.provider == "anthropic":
             print(f"cost cap: ${args.total_cost_usd:.2f} total -> {cap_for}")

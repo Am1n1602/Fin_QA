@@ -72,6 +72,7 @@ def abstention_verdict(record: dict[str, Any], result: dict[str, Any]) -> dict[s
     )
     abstained = any(s in answer for s in signals) or (
         not result.get("sources") and record.get("answer_type") == "abstain"
+        and result.get("intent") != "ERROR"  # a crashed call is not an abstention
     )
     if not should:
         return {"metrics": {"abstained": abstained}, "verdict": "na",

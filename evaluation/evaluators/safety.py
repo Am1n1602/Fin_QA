@@ -12,11 +12,13 @@ _ABSTAIN_SIGNALS = (
     "insufficient evidence",
     "not sufficient to answer",
     "was not sufficient",
-    "not reported",
+    "not reported for",
     "cannot be answered",
     "could not be answered",
-    "no evidence",
+    "no evidence was",
+    "no evidence found",
     "unable to answer",
+    "could not resolve a figure",
     "[unverified]",
 )
 
@@ -35,8 +37,7 @@ def did_abstain(result: dict[str, Any]) -> bool:
     verification = (result or {}).get("verification") or {}
     if verification.get("abstained"):
         return True
-    if not answer.strip():
-        return True
+    # NB: an empty answer is a crashed / budget-exhausted / no-LLM call, not an abstention.
     # NB: a confident `not_supported` adjudication (cross-validation / hypothesis) is a real
     # finding, not an abstention — do not infer abstention from low confidence alone.
     return False

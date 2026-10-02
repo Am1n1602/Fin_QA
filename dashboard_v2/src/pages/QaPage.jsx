@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { api } from "../api/client.js";
-import { useApi } from "../api/useApi.js";
 import { usePageTitle } from "../hooks/usePageTitle.js";
 import StatusBanner from "../components/StatusBanner.jsx";
 import EvidenceAnswer from "../components/EvidenceClaims.jsx";
@@ -44,7 +43,6 @@ function Message({ message }) {
 
 export default function QaPage() {
   usePageTitle("Financial QA");
-  useApi(() => api.health(), []); // warms the connection; not displayed here
   const [useLlm, setUseLlm] = useState(true);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
@@ -128,7 +126,7 @@ export default function QaPage() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask a financial question, e.g. 'What was ITC's revenue in FY2026?'"
-          disabled={isAsking}
+          readOnly={isAsking} // not `disabled`: that would drop keyboard focus mid-question
         />
         <button type="submit" className="qa-ask-button" disabled={isAsking || !input.trim()}>
           Ask

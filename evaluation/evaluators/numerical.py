@@ -13,7 +13,7 @@ _SCALE = {
     "million": 1e6, "mn": 1e6,
     "trillion": 1e12,
 }
-_NUM = r"[-+]?\d[\d,]*(?:\.\d+)?"
+_NUM = r"(?:(?<!\w)[-+])?\d[\d,]*(?:\.\d+)?"  # sign only when not glued to a word/digit: "10-12%" is a range
 _PCT_RE = re.compile(rf"({_NUM})\s*(?:%|percent|pct|pp|percentage points?)", re.I)
 _X_RE = re.compile(rf"({_NUM})\s*(?:x\b|times\b)", re.I)
 _SCALED_RE = re.compile(rf"(?:₹|rs\.?|inr)?\s*({_NUM})\s*(lakh crores?|crores?|cr\b|lakhs?|billion|bn\b|million|mn\b|trillion)", re.I)
@@ -29,26 +29,30 @@ def _f(s: str) -> float | None:
 
 
 def extract_figures(text: str, family: str) -> list[float]:
-    """All figures in `text` belonging to a unit family: 'pct' | 'x' | 'inr'."""
+    """All figures in `text` belonging to a unit family: 'pct' | 'x' | 'inr', in text order."""
     text = text or ""
-    out: list[float] = []
+    hits: list[tuple[int, float]] = []  # (position, value)
     if family == "pct":
-        out = [v for m in _PCT_RE.finditer(text) if (v := _f(m.group(1))) is not None]
+        hits = [(m.start(), v) for m in _PCT_RE.finditer(text) if (v := _f(m.group(1))) is not None]
     elif family == "x":
-        out = [v for m in _X_RE.finditer(text) if (v := _f(m.group(1))) is not None]
+        hits = [(m.start(), v) for m in _X_RE.finditer(text) if (v := _f(m.group(1))) is not None]
     elif family == "inr":
+        scaled_spans = []
         for m in _SCALED_RE.finditer(text):
             v = _f(m.group(1))
             if v is not None:
-                out.append(v * _SCALE.get(m.group(2).lower().rstrip("."), 1.0))
+                hits.append((m.start(), v * _SCALE.get(m.group(2).lower().rstrip("."), 1.0)))
+                scaled_spans.append(m.span())
         for m in _INR_RE.finditer(text):
+            if any(m.start() < e and s < m.end() for s, e in scaled_spans):
+                continue  # same figure, already captured with its scale
             v = _f(m.group(1) or m.group(2))
             if v is not None:
-                out.append(v)
-        if not out:  # bare grouped numbers, last resort
-            out = [v for m in _BARE_RE.finditer(text)
-                   if (v := _f(m.group(0))) is not None and abs(v) >= 1000]
-    return out
+                hits.append((m.start(), v))
+        if not hits:  # bare grouped numbers, last resort
+            hits = [(m.start(), v) for m in _BARE_RE.finditer(text)
+                    if (v := _f(m.group(0))) is not None and abs(v) >= 1000]
+    return [v for _, v in sorted(hits)]
 
 
 def unit_family(unit: str | None) -> str:
@@ -58,6 +62,17 @@ def unit_family(unit: str | None) -> str:
     if u in ("x", "ratio", "times"):
         return "x"
     return "inr"
+
+
+def _headline_text(answer: str, record: dict[str, Any]) -> str:
+    """The sentences that state the gold metric (the synthesizer lists component figures
+    before the headline one); the whole answer when the metric isn't named in it."""
+    name = str((record.get("gold_spec") or {}).get("name") or "").lower()
+    if not name:
+        return answer
+    keys = {name, name.replace("_", " ")}
+    hit = [s for s in re.split(r"(?<=\.)\s+(?=[A-Z])", answer) if any(k in s.lower() for k in keys)]
+    return " ".join(hit) or answer
 
 
 class NumericalEvaluator:
@@ -73,7 +88,7 @@ class NumericalEvaluator:
 
         answer = (result.get("response") or result).get("answer", "") if isinstance(result, dict) else ""
         family = unit_family(record.get("reference_unit"))
-        figs = extract_figures(answer, family)
+        figs = extract_figures(_headline_text(answer, record), family)
         tol_pct = record.get("tolerance_pct")
         tol_pct = self.default_tolerance_pct if tol_pct is None else tol_pct
         denom = abs(ref) if ref else 1.0
@@ -82,7 +97,9 @@ class NumericalEvaluator:
         abs_floor = 0.01 if family in ("x", "pct") else 0.0
         tol = max(denom * tol_pct / 100.0, abs_floor, 1e-9)
 
-        best = min((abs(v - ref) for v in figs), default=None)
+        # headline figure = the first one in the (headline) text; matching any figure would
+        # let a wrong answer pass on an incidental number (e.g. the prior-year value).
+        best = abs(figs[0] - ref) if figs else None
         within_tol = best is not None and best <= tol
         exact = best is not None and (best <= max(denom * 5e-4, 0.01))
         return {
@@ -97,6 +114,6 @@ class NumericalEvaluator:
             "verdict": "pass" if within_tol else "fail",
             "detail": (f"no figure in the '{family}' family found in the answer"
                        if best is None else
-                       f"closest {('matches' if within_tol else 'differs')} "
+                       f"first figure {('matches' if within_tol else 'differs')} "
                        f"(rel err {100.0 * best / denom:.3f}%, tol {tol_pct}%)"),
         }

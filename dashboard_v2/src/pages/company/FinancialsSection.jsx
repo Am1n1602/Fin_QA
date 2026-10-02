@@ -13,10 +13,11 @@ const METRICS = [
   { key: "cash_and_equivalents", label: "Cash & Equivalents" },
 ];
 
-export default function FinancialsSection({ ticker, period = "FY2026", basis = "consolidated" }) {
+export default function FinancialsSection({ ticker, basis = "consolidated" }) {
+  // No `period`: the API defaults to the latest annual period; each tile shows the one it used.
   const { data, loading, error } = useApi(
-    () => Promise.all(METRICS.map((m) => api.getFinancial(ticker, { metric: m.key, period, basis }))),
-    [ticker, period, basis]
+    () => Promise.all(METRICS.map((m) => api.getFinancial(ticker, { metric: m.key, basis }))),
+    [ticker, basis]
   );
 
   if (loading) return <StatusBanner loading loadingText="Loading financials..." />;
@@ -25,7 +26,7 @@ export default function FinancialsSection({ ticker, period = "FY2026", basis = "
   return (
     <div>
       <p className="section-note">
-        Raw or derived figures from the Financial Engine, period {period}, {basis} basis.
+        Raw or derived figures from the Financial Engine, latest annual period, {basis} basis.
       </p>
       <div className="stat-grid">
         {data.map((res, i) => (
