@@ -2,8 +2,9 @@
 
 **[Live demo](https://am1n1602.me/finqa-v2)** — the full 50-company dataset, hybrid
 (lexical + dense) retrieval, LLM synthesis on by default. Runs on Google Cloud Run +
-Firebase Hosting, both scaled to zero: the first request after any idle period takes
-~15 seconds while the full 261k-chunk corpus loads into a fresh container — an accepted
+Firebase Hosting, both scaled to zero: the first visit after any idle period waits
+roughly two minutes (~107s measured) while the full 261k-chunk corpus loads into a fresh
+container; the page shows a wait screen until the API answers — an accepted
 latency/cost trade-off, not a bug (detail in
 [`deployment/README.md`](deployment/README.md#public-demo-google-cloud-run--firebase-hosting)).
 This is a **frozen, manually-built snapshot**, not something that auto-updates with this

@@ -172,7 +172,7 @@ cannot split traffic by path across two services. Firebase Hosting can: `firebas
 `VITE_API_BASE_URL=""` at build time — identical same-origin pattern to the local
 nginx-proxy setup, just proxied by Firebase instead of nginx).
 
-**Three real, non-obvious bugs found wiring this up, each worth knowing before touching
+**Four real, non-obvious bugs found wiring this up, each worth knowing before touching
 this config again:**
 
 1. **Firebase's `run` rewrite forwards the original request path unchanged — it does not
@@ -197,6 +197,19 @@ this config again:**
    the public domain onto raw Cloud Run infrastructure. `nginx.standalone.conf` sets
    `absolute_redirect off;` so `Location` headers stay relative and resolve against
    whatever domain the browser actually requested.
+4. **The embedding model was downloaded from huggingface.co on every cold start, and
+   Hugging Face rate-limited it.** `SentenceTransformerEmbedder` loads `all-MiniLM-L6-v2`
+   by name, and a fresh Cloud Run instance starts with an empty Hugging Face cache, so
+   every new instance re-fetched it. Once enough instances had churned, the Hub began
+   answering `HTTP 429` (`Rate limited. Waiting 200.0s before retry [Retry 1/5]`); that
+   wait outlasted Cloud Run's startup probe (`STARTUP TCP probe failed ...
+   DEADLINE_EXCEEDED`), so the instance was killed before it served anything and the next
+   request started another instance that failed the same way. From outside: the static
+   dashboard loaded and then sat on its wake-up screen indefinitely while `/health` and
+   `/api/v2/*` timed out. `api.full.Dockerfile` now runs the project's own embedder once
+   at build time, so exactly the files the runtime loads are cached under
+   `HF_HOME=/app/.cache/huggingface`, and sets `HF_HUB_OFFLINE=1` so a running container
+   never contacts huggingface.co at all.
 
 **Deploy flow:**
 
@@ -208,6 +221,14 @@ cp database/data/finqa_v2.db database/data/finqa_v2_bm25.pkl deployment/docker/f
 cp -r database/data/finqa_v2_vec_minilm deployment/docker/full_data/finqa_v2_vec
 
 # 2. Build + push both images (Docker Hub, reusing the same login as the Render target).
+#
+#    Two things about the API image. It writes several GB into Docker's storage, and
+#    Docker Desktop's disk file never shrinks on its own: when the host drive filled up,
+#    the engine's disk flipped read-only mid-build and every call returned HTTP 500
+#    until space was freed and the disk file compacted -- check free space first.
+#    And ownership is set with `COPY --chown`, not a trailing `chown -R /app`: the
+#    recursive chown rewrote every file into a new layer, duplicating the whole dataset
+#    as an extra 1.98GB layer (seen in `docker history`) to build, store and upload.
 docker build -f deployment/docker/api.full.Dockerfile -t finqa-api-full .
 docker tag finqa-api-full am1n1602/finqa-api-full:latest && docker push am1n1602/finqa-api-full:latest
 
@@ -240,13 +261,33 @@ firebase deploy --only hosting
 #    alongside them, or resolution becomes non-deterministic between the two targets.
 ```
 
-**Cold starts are real and accepted, not fixed.** Both services scale to zero
-(`--min-instances` unset). Loading the full 261,479-chunk corpus (BM25 + vector index,
-torch/faiss) into a fresh container measured at 13-15 seconds before the first request
-after any idle period returns. `--min-instances=1` would eliminate this, but at
+**Verify after every API deploy.** `/health` and `/api/v2/companies` on the public domain
+should return 200. A hybrid search exercises the embedder, the part that failed in bug 4:
+`/api/v2/search?q=retail+segment+revenue&company=RELIANCE&mode=hybrid`. In the new
+revision's logs, `Retriever ready, modes=('lexical', 'vector', 'hybrid')` should appear
+and this should print nothing:
+
+```bash
+gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="finqa-api-public"' \
+  --limit 200 --freshness=30m --format="value(textPayload)" | grep -iE "huggingface.co|429|Rate limited"
+```
+
+**Cold starts are long and accepted, not fixed.** Both services scale to zero
+(`--min-instances` unset). One fresh API instance, timed from Cloud Run's own logs
+(revision `finqa-api-public-00003`, 2026-10-02, a single sample), took about 107 seconds
+from `Starting new instance` to `Application startup complete`: ~3s for the process,
+~27s to open the repositories, ~47s more until faiss was loaded (BM25 pickle, vector
+index, torch/faiss imports), and ~31s to warm the embedder and finish. Firebase Hosting
+enforces a hard 60-second timeout on Cloud Run rewrites
+([docs](https://firebase.google.com/docs/hosting/cloud-run)), so the first request after
+an idle period fails at the edge (5xx) while the instance keeps starting, and a retry
+about a minute later succeeds. The dashboard's `WakeGate` polls `/health` every 3 seconds
+and shows a wait screen until it answers, so a browser visitor sees a spinner rather than
+errors; a direct API client has to retry. `--min-instances=1` would remove this, but at
 8Gi/2 vCPU running continuously that's roughly 5.18M vCPU-seconds/month against Cloud
 Run's always-free 180,000 vCPU-seconds/month — real ongoing cost, not free-tier headroom.
-Decided to leave it: the same cold-start trade-off the Render target below already had.
+Left at zero for now; the first thing to revisit if the demo needs to answer a first
+visitor promptly.
 
 ## Public demo (Render)
 

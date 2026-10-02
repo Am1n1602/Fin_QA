@@ -21,13 +21,19 @@
 # estimate; re-measure for real before shrinking the allocation.
 FROM python:3.12-slim
 
+# Files are owned by `finqa` at COPY time (--chown) instead of a trailing `chown -R /app`:
+# that recursive chown writes a second copy of every file under /app into a new layer,
+# which here doubled the dataset -- a 1.98GB extra layer to build, store and upload.
+RUN groupadd -r finqa && useradd -r -g finqa -d /app finqa \
+    && mkdir -p /app && chown finqa:finqa /app
+
 WORKDIR /app
 
-COPY pyproject.toml ./
-COPY finqa_v2/ ./finqa_v2/
-COPY evaluation/regression/baselines/ ./evaluation/regression/baselines/
-COPY deployment/docker/full_data/finqa_v2.db deployment/docker/full_data/finqa_v2_bm25.pkl ./database/data/
-COPY deployment/docker/full_data/finqa_v2_vec ./database/data/finqa_v2_vec/
+COPY --chown=finqa:finqa pyproject.toml ./
+COPY --chown=finqa:finqa finqa_v2/ ./finqa_v2/
+COPY --chown=finqa:finqa evaluation/regression/baselines/ ./evaluation/regression/baselines/
+COPY --chown=finqa:finqa deployment/docker/full_data/finqa_v2.db deployment/docker/full_data/finqa_v2_bm25.pkl ./database/data/
+COPY --chown=finqa:finqa deployment/docker/full_data/finqa_v2_vec ./database/data/finqa_v2_vec/
 
 # CPU-only torch -- see api.Dockerfile's identical comment. This image actually needs
 # it at runtime (unlike api.public.Dockerfile): finqa_v2_vec/ is present, so
@@ -35,12 +41,25 @@ COPY deployment/docker/full_data/finqa_v2_vec ./database/data/finqa_v2_vec/
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir ".[api,anthropic,observability]"
 
-RUN groupadd -r finqa && useradd -r -g finqa -d /app finqa && chown -R finqa:finqa /app
+# Bake the actual embedding model weights into the image instead of fetching them from
+# huggingface.co on every cold start. Cloud Run containers are ephemeral -- with no
+# baked cache, SentenceTransformerEmbedder (finqa_v2/retrieval/embed.py) re-downloads
+# the model from the Hub on EVERY new instance, and this was observed in production to
+# actually break the service, not just slow it down: Hugging Face rate-limited those
+# repeated requests (HTTP 429, "Rate limited. Waiting 200.0s before retry"), which blew
+# past Cloud Run's startup probe timeout, so the instance was killed before it ever
+# came up -- and the next request just triggered another instance that failed the same
+# way, forever. HF_HOME must match where the `finqa` user's HOME resolves the default
+# cache to, and HF_HUB_OFFLINE=1 (set below, at runtime only) guarantees no request to
+# huggingface.co is ever attempted again regardless.
+ENV HF_HOME=/app/.cache/huggingface
 USER finqa
+RUN python -c "from finqa_v2.retrieval.embed import SentenceTransformerEmbedder; SentenceTransformerEmbedder('all-MiniLM-L6-v2').encode(['warm'])"
 
 ENV PYTHONUNBUFFERED=1 \
     FINQA_V2_API_HOST=0.0.0.0 \
-    FINQA_V2_API_PORT=8010
+    FINQA_V2_API_PORT=8010 \
+    HF_HUB_OFFLINE=1
 
 EXPOSE 8010
 
